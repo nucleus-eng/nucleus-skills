@@ -6,33 +6,61 @@ skills stay correct without hand-syncing copies.
 Findings this plan acts on come from an audit run on 2026-08-19 across
 nucleus-docs, doc2devnote, 2026-CERN-OHL-P, DNA, and `~/.claude/skills`.
 
-The phases are ordered by dependency. Phase 0 is a decision, not work, and
-blocks everything that ships. Phases 1–3 are safe to do in any order.
+The phases are ordered by dependency. Phases 0 and 1 are done. Phases 2–3
+are safe to do in any order.
 Phase 5 must come last — it deletes content from the source repos, and it
 is only safe once the replacements load.
 
 ---
 
-## Phase 0 — Decide how repos consume this one (BLOCKING)
+## Phase 0 — Distribution (DONE)
 
-A standalone repo loads nowhere. Claude Code reads `.claude/skills/` in the
-project directory and `~/.claude/skills/` globally. Nothing else. Until this
-is decided, this repo is a filing cabinet.
+**Decided: plugin marketplace.** This repo is now both the marketplace and
+the plugin it serves.
 
-Three real options:
+```
+.claude-plugin/marketplace.json      the catalog
+plugins/nucleus/.claude-plugin/plugin.json
+plugins/nucleus/skills/              all seven skills
+plugins/nucleus/references/
+```
 
-| Option | How | Cost | Works for teammates |
-| --- | --- | --- | --- |
-| **Plugin marketplace** *(recommended)* | Add `.claude-plugin/marketplace.json`; each repo installs the plugin | One-time setup, then `git pull` | Yes |
-| Git submodule | Submodule this repo into each consumer's `.claude/skills/` | Submodule friction on every clone | Yes |
-| Sync script | A script copies skills into each repo's `.claude/skills/` | Copies drift again — the problem we are fixing | Yes, but reintroduces drift |
+A consumer repo declares the dependency in its own `.claude/settings.json`:
 
-Recommend the plugin marketplace. It is the mechanism designed for this,
-it survives `git pull`, and it does not put generated copies back in the
-consumer repos. Reject the sync script — it recreates the exact failure
-this refactor exists to remove.
+```json
+{
+  "extraKnownMarketplaces": {
+    "nucleus": {
+      "source": { "source": "github", "repo": "nucleus-eng/nucleus-skills" }
+    }
+  },
+  "enabledPlugins": { "nucleus@nucleus": true }
+}
+```
 
-**Decision needed before Phase 4 ships.** Phases 1–3 are useful regardless.
+Claude Code registers the marketplace and enables the plugin once someone
+trusts the project folder. Nothing is copied into the consumer repo, which
+is the property that stops the drift this refactor exists to remove.
+
+**One plugin, not several.** Splitting by consumer repo was the obvious
+move and it breaks: `references/devnote-style-guide.md` is loaded by
+`ingest` and `migrate` and ports its units section from `lint-docs`. Across
+two plugins that becomes either a duplicated file or a dead reference. An
+unused skill costs one description line; a duplicated reference file costs
+correctness.
+
+**Rejected:** git submodules (submodule friction on every clone and update,
+same outcome); `~/.claude/skills/` (fixes it for one person, not the team);
+a sync script (reintroduces copies).
+
+**Known limits.** Project-scope plugins load only after the workspace trust
+dialog is accepted, so the skills are absent on the first run in a fresh
+clone until trust is granted. Plugin skills are namespaced by plugin name.
+
+**Remaining:** land the `.claude/settings.json` block in `nucleus-docs` and
+`2026-CERN-OHL-P` (tracked as issues in those repos). `doc2devnote` is a
+fork of `antonrmolina/doc2devnote` and not in the `nucleus-eng` org, so it
+needs an upstream PR or a fork-only setting — decide separately.
 
 ---
 
@@ -70,9 +98,9 @@ Draft descriptions:
 whose `name:` matches its directory. Bodies are unchanged; only frontmatter
 was rewritten.
 
-**Not yet verified:** that they actually load. That needs a session where
-these skills are on the load path, which needs Phase 0. Runtime proof is
-the only proof that matters here — the format failure stayed silent for
+**Not yet verified:** that they actually load. Phase 0 makes this testable —
+install the plugin and check the skill list. Runtime proof is the only proof
+that matters here — the format failure stayed silent for
 months precisely because nobody checked. Do not call Phase 1 closed until a
 fresh session lists all three.
 
@@ -278,6 +306,8 @@ another row's content is a bug.
 
 ### Checks worth automating
 
+0. `marketplace.json` and `plugin.json` parse, and every plugin `source`
+   path exists.
 1. Every `skills/*/` has a `SKILL.md` with `name:` matching the directory.
    This one check would have caught the dead-skill bug on day one.
 2. No two skills declare the same `name:`.
@@ -289,13 +319,13 @@ another row's content is a bug.
 
 ## Order of work
 
-1. Phase 1 — convert the three dead skills, verify they load.
-2. Phase 2 — fix the unit table, the migrate collision, the citation gap.
-3. Phase 3 — reconcile the fork, remove the internal duplication.
-4. Phase 0 — decide distribution. Needed before Phase 4 ships.
-5. Phase 4 — extract the three new skills.
-6. Phase 6 — README conventions and the CI checks.
+1. ~~Phase 1 — convert the three dead skills.~~ Done. Runtime check still open.
+2. ~~Phase 0 — decide and build distribution.~~ Done. Consumer settings still open.
+3. Phase 2 — fix the unit table, the migrate collision, the citation gap.
+4. Phase 3 — reconcile the fork, remove the internal duplication.
+5. Phase 4 — extract the three new skills from CLAUDE.md.
+6. Phase 6 — CI checks.
 7. Phase 5 — strip the source repos. One PR each. Last.
 
-Phase 1 alone recovers three working skills. Everything after that is
-consolidation.
+Phases 0 and 1 together make three dead skills reachable from every repo
+that wants them. Everything after that is consolidation.

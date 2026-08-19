@@ -3,9 +3,9 @@
 Claude skills for Nucleus work — DevNote authoring, docs-site maintenance,
 and the migrations between them.
 
-**Status: Phase 1 done.** All seven skills are now in loadable form. This
-repo is not yet the source of truth and nothing consumes it yet — that
-needs Phase 0 of `REFACTOR-PLAN.md`, which picks a distribution mechanism.
+**Status: Phases 0 and 1 done.** All seven skills are in loadable form, and
+this repo is now a Claude plugin marketplace that other repos can depend on.
+Content refactoring (Phases 2-6) is still open — see `REFACTOR-PLAN.md`.
 `PROVENANCE.md` maps every file back to where it came from.
 
 ## Why this repo exists
@@ -31,10 +31,24 @@ One repo makes the duplication visible and gives each rule one owner.
 ## Layout
 
 ```
-skills/                    one directory per skill, each with SKILL.md
-references/                shared material skills load on demand
+.claude-plugin/
+  marketplace.json         the catalog other repos subscribe to
+plugins/nucleus/
+  .claude-plugin/
+    plugin.json            the plugin manifest
+  skills/                  one directory per skill, each with SKILL.md
+  references/              shared material skills load on demand
 extraction-sources/        raw input for the refactor; delete when done
 ```
+
+One marketplace, one plugin. The plugin is not split by consumer repo
+because `references/devnote-style-guide.md` is loaded by `ingest` and
+`migrate` and ports its units section from `lint-docs`. Splitting those
+across plugins would force either a duplicate copy of that file or a broken
+reference, and removing duplicate copies is the reason this repo exists.
+
+An unused skill costs one description line of context. Its body is only
+read when the skill is actually invoked.
 
 ## Skills
 
@@ -48,9 +62,53 @@ extraction-sources/        raw input for the refactor; delete when done
 | `lint-docs` | Vale, codespell, lychee, strict MyST build |
 | `migrate-content` | DevNote or Notion export → nucleus-docs page |
 
-## How these get used
+## Use it from another repo
 
-Not decided yet. A standalone repo does not load anywhere on its own —
-Claude Code reads `.claude/skills/` in the project and `~/.claude/skills/`
-globally. Phase 0 of `REFACTOR-PLAN.md` picks the distribution mechanism.
-Until then, keep editing the copies in the source repos.
+Commit this to the consumer repo's `.claude/settings.json`. Claude Code
+registers the marketplace and enables the plugin once someone trusts the
+project folder. No install step, and nothing is copied into the consumer
+repo.
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "nucleus": {
+      "source": { "source": "github", "repo": "nucleus-eng/nucleus-skills" }
+    }
+  },
+  "enabledPlugins": {
+    "nucleus@nucleus": true
+  }
+}
+```
+
+Updates arrive by pushing here. Consumers pick them up with
+`/plugin marketplace update`.
+
+To try it locally before committing anything:
+
+```
+/plugin marketplace add nucleus-eng/nucleus-skills
+/plugin install nucleus@nucleus
+```
+
+Two things to know. Project-scope plugins load only after the workspace
+trust dialog is accepted, so the skills are absent on the very first run in
+a fresh clone until trust is granted. And plugin skills are namespaced by
+plugin name.
+
+## Contributing
+
+Skills live in `plugins/nucleus/skills/<name>/SKILL.md`, and the `name:`
+field must match the directory. Anything else does not load — silently.
+That is the bug this repo was created to fix, so check it.
+
+Three conventions, taken from `REFACTOR-PLAN.md` Phase 6:
+
+- **Descriptions are triggers, not summaries.** Say when to use the skill
+  and what it produces. Name the output format when a sibling skill could
+  match the same words.
+- **Cross-reference, never restate.** The model to copy is
+  `skills/migrate-devnote/references/snags.md`, which points at
+  `prepare.md §5` instead of repeating it.
+- **If a copy is unavoidable, label it and say what it tracks.**

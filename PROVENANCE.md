@@ -10,13 +10,13 @@ is complete, the source is authoritative.
 
 | File here | Copied from | Loads today? |
 | --- | --- | --- |
-| `skills/ingest/` | `bnext/doc2devnote/.claude/skills/ingest/` | Yes, scoped to doc2devnote |
-| `skills/migrate/` | `bnext/doc2devnote/.claude/skills/migrate/` | Yes, scoped to doc2devnote |
-| `skills/notion-corpus-to-outline/` | `bnext/doc2devnote/.claude/skills/notion-corpus-to-outline/` | Yes, scoped to doc2devnote |
-| `skills/migrate-devnote/` | `bnext/nucleus-eng/2026-CERN-OHL-P/.claude/skills/migrate-devnote/` | Yes, scoped to that repo |
-| `skills/build-boms/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/build-boms.md` | **No** |
-| `skills/lint-docs/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/lint-docs.md` | **No** |
-| `skills/migrate-content/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/migrate-content.md` | **No** |
+| `plugins/nucleus/skills/ingest/` | `bnext/doc2devnote/.claude/skills/ingest/` | Yes, scoped to doc2devnote |
+| `plugins/nucleus/skills/migrate/` | `bnext/doc2devnote/.claude/skills/migrate/` | Yes, scoped to doc2devnote |
+| `plugins/nucleus/skills/notion-corpus-to-outline/` | `bnext/doc2devnote/.claude/skills/notion-corpus-to-outline/` | Yes, scoped to doc2devnote |
+| `plugins/nucleus/skills/migrate-devnote/` | `bnext/nucleus-eng/2026-CERN-OHL-P/.claude/skills/migrate-devnote/` | Yes, scoped to that repo |
+| `plugins/nucleus/skills/build-boms/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/build-boms.md` | **No** |
+| `plugins/nucleus/skills/lint-docs/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/lint-docs.md` | **No** |
+| `plugins/nucleus/skills/migrate-content/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/migrate-content.md` | **No** |
 
 The "Loads today?" column describes the **source** copies, not the copies
 here. The three nucleus-docs skills were imported as flat `.md` files with
@@ -33,7 +33,7 @@ rather than what it covers.
 
 | File here | Copied from |
 | --- | --- |
-| `references/devnote-style-guide.md` | `bnext/doc2devnote/skills/devnote-style-guide.md` |
+| `plugins/nucleus/references/devnote-style-guide.md` | `bnext/doc2devnote/skills/devnote-style-guide.md` |
 
 Not a skill. A shared quality anchor that `ingest` and `migrate` both load
 on demand.

@@ -1,5 +1,6 @@
 ---
-description: Commands and interpretation guide for Vale, codespell, lychee, and the myst strict build check — run these before opening a PR or committing content.
+name: lint-docs
+description: Run and interpret the nucleus-docs quality tools — Vale, codespell, lychee, and the strict MyST build. Use before opening a PR or committing content, and whenever one of those tools reports an error you need to interpret, fix, or justify suppressing.
 ---
 
 ### Prose linting (Vale)

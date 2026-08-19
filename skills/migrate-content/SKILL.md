@@ -1,5 +1,6 @@
 ---
-description: Convention checklist for migrating content into nucleus-docs from Notion markdown exports or Curvenote DevNotes.
+name: migrate-content
+description: Migrate content into nucleus-docs from a Notion markdown export or a Curvenote DevNote, producing a module spec or process page. Use when moving source material into docs/, and for the table, admonition, citation, figure, and DNA construct conventions that a migration must satisfy. For producing a DevNote rather than a nucleus-docs page, use the migrate skill instead.
 ---
 
 ### Notion migration gotchas

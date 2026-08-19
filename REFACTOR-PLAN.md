@@ -36,7 +36,7 @@ this refactor exists to remove.
 
 ---
 
-## Phase 1 — Make the three dead skills load
+## Phase 1 — Make the three dead skills load (DONE in this repo)
 
 The highest-value fix in the plan and the cheapest. Roughly 21k of
 maintained pipeline knowledge is currently unreachable.
@@ -66,9 +66,18 @@ Draft descriptions:
   into `docs/`, and for the table, admonition, citation, figure, and DNA
   construct conventions that migration must satisfy."
 
-**Verify:** open a session in nucleus-docs and confirm all three appear in
-the skill list. This is the only proof that matters — the format failure
-was silent for months precisely because nobody checked.
+**Verified so far:** structural only. Every `skills/*/` has a `SKILL.md`
+whose `name:` matches its directory. Bodies are unchanged; only frontmatter
+was rewritten.
+
+**Not yet verified:** that they actually load. That needs a session where
+these skills are on the load path, which needs Phase 0. Runtime proof is
+the only proof that matters here — the format failure stayed silent for
+months precisely because nobody checked. Do not call Phase 1 closed until a
+fresh session lists all three.
+
+The originals in `nucleus-docs/.claude/skills/` are untouched and still
+broken. They get removed in Phase 5, once distribution is live.
 
 ---
 

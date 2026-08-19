@@ -10,10 +10,10 @@ The graph is read from each page's `# Constituent Modules` section, so the diagr
 is derived from the docs rather than maintained alongside them. Regenerating after
 a composition change is therefore a no-op unless the composition actually changed.
 
-Output is a `{mermaid}` block wrapped in marker comments:
+Output is a plain ```mermaid block wrapped in marker comments:
 
     <!-- gen:composition-diagram -->
-    ```{mermaid}
+    ```mermaid
     ...
     ```
     <!-- /gen:composition-diagram -->
@@ -32,8 +32,24 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
-MODULES = REPO / "docs" / "modules"
+
+def repo_root():
+    """The docs repository, resolved from the working directory.
+
+    This script lives in the skills repo and runs against a docs repo, so the
+    root can never be derived from `__file__`.
+    """
+    out = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                         capture_output=True, text=True)
+    if out.returncode:
+        sys.exit("not inside a git repository — run this from the docs repo")
+    root = Path(out.stdout.strip())
+    if not (root / "docs" / "modules").is_dir():
+        sys.exit(f"no docs/modules under {root} — run this from the docs repo")
+    return root
+
+
+REPO = repo_root()
 
 BEGIN = "<!-- gen:composition-diagram -->"
 END = "<!-- /gen:composition-diagram -->"
@@ -111,7 +127,7 @@ def build_diagram(slug, graph):
     involved = {s for s in involved if s in graph}
 
     lines = [
-        "```{mermaid}",
+        "```mermaid",
         "%%{init: {'theme': 'base', 'themeVariables': "
         "{'lineColor': '#555555', 'edgeLabelBackground': '#ffffff'}}}%%",
         "flowchart TD",
@@ -146,14 +162,19 @@ def build_diagram(slug, graph):
 
 
 def wrap(diagram, title):
+    """A tab-item, fenced at 4 colons to sit inside a 5-colon tab-set."""
     return (
         f"{BEGIN}\n"
-        f":::{{tab-item}} Composition\n"
+        f"::::{{tab-item}} Module Dependencies\n\n"
         f"{diagram}\n\n"
-        f"Composition path for {title}, generated from the "
-        f"`# Constituent Modules` section by "
-        f"`scripts/gen-module-diagrams.py`. Edit the composition, not this block.\n"
-        f":::\n"
+        f"What this Module is composed of. Arrows point from a constituent to the "
+        f"Module that contains it; the darker node is this page. Click any node to "
+        f"open its spec.\n\n"
+        f"This diagram shows composition only — it does not assert that any "
+        f"integration is confirmed.\n\n"
+        f"Generated from the `# Constituent Modules` section of each page by the "
+        f"`mermaid-diagrams` skill. Edit the composition, not this block.\n\n"
+        f"::::\n"
         f"{END}"
     )
 

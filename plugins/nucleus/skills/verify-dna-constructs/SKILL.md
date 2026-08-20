@@ -5,7 +5,7 @@ description: Verify that a DNA construct named in nucleus-docs matches a real se
 
 # Verify DNA constructs
 
-Sequence files for every plasmid and construct referenced in nucleus-docs live in a separate repository: **[nucleus-eng/DNA](https://github.com/nucleus-eng/DNA)** (local path: `~/src/nucleus-eng/DNA`). This skill covers how to check a construct claim against that repo.
+Sequence files for every plasmid and construct referenced in nucleus-docs live in a separate repository: **[nucleus-eng/DNA](https://github.com/nucleus-eng/DNA)** (local path: `~/src/bnext/nucleus-eng/DNA`, or `~/src/nucleus-eng/DNA` on older checkouts). This skill covers how to check a construct claim against that repo.
 
 ## Repository layout
 
@@ -30,19 +30,19 @@ The DNA repo evolves independently — always verify its current state before wr
 
 1. **Session start** — when beginning any work that involves DNA construct references, check recent activity in the DNA repo:
    ```bash
-   git -C ~/src/nucleus-eng/DNA log --oneline -5
+   git -C "${NUCLEUS_DNA_REPO:-$HOME/src/bnext/nucleus-eng/DNA}" log --oneline -5
    ```
    Commit messages will tell you if the structure or contents have changed since you last worked with it.
 
 2. **Before naming a specific construct** — before writing a protocol step that references a construct by filename (e.g., `pOpen-PURET7-3`), confirm the file exists:
    ```bash
-   ls ~/src/nucleus-eng/DNA/promoters/pOpen-PURET7-3.gb
+   ls "${NUCLEUS_DNA_REPO:-$HOME/src/bnext/nucleus-eng/DNA}"/promoters/pOpen-PURET7-3.gb
    ```
    If the file is missing, flag it to the developer — do not invent construct names or create placeholder references.
 
-3. **If folder structure is uncertain** — if you are unsure which subdirectory a part type lives in, read the DNA repo's README (`~/src/nucleus-eng/DNA/README.md`). The README is maintained as the canonical description of the repo structure.
+3. **If folder structure is uncertain** — if you are unsure which subdirectory a part type lives in, read the DNA repo's `README.md`. The README is maintained as the canonical description of the repo structure.
 
-4. **If `~/src/nucleus-eng/DNA` is not on this machine** — use the GitHub API as a fallback to browse the repo or inspect construct files without cloning:
+4. **If the DNA repo is not on this machine** — use the GitHub API as a fallback to browse the repo or inspect construct files without cloning:
    ```bash
    # Browse a directory (e.g. detectors/)
    gh api "repos/nucleus-eng/DNA/contents/detectors" --jq '.[].name'
@@ -78,7 +78,7 @@ python3 scripts/check-dna-refs.py                        # all of docs/
 python3 scripts/check-dna-refs.py docs/modules/<module>/ # one module
 ```
 
-Local-only (reads `~/src/nucleus-eng/DNA` directly, or `$NUCLEUS_DNA_REPO`) — not run in CI, since CI has no DNA-repo checkout.
+Local-only — it reads the DNA repo from disk, checking `$NUCLEUS_DNA_REPO` first, then `~/src/bnext/nucleus-eng/DNA`, then `~/src/nucleus-eng/DNA` — not run in CI, since CI has no DNA-repo checkout.
 
 Three levels:
 

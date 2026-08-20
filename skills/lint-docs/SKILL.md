@@ -61,14 +61,14 @@ Additionally, some rules (e.g., nucleus.range-styles) will require unit consiste
 | --- | --- |
 | Length | `nm`, `µm`, `mm`, `cm`, `km` |
 | Volume | `nL`, `µL`, `mL`, `L` |
-| Mass | `nL`, `µg`, `mg`, `g`, `kg` |
+| Mass | `µg`, `mg`, `g`, `kg` |
 | Concentration | `nM`, `µM`, `mM`, `M` |
 | Molecular weight | `Da`, `kDa` |
 | Time | `s`, `min`, `h`, `d` (SI); `yr`, `mo` (non-SI, no SI symbol exists) |
 | Centrifugation | `rcf`, `rpm` |
 | Temperature | `°C` |
 
-When adding a new unit to one rule, check whether the other rules (magnitude-unit-spacing, range-style, ousands-separator) should also be updated.
+When adding a new unit to one rule, check whether the other rules (magnitude-unit-spacing, range-style, thousands-separator) should also be updated.
 
 **Known NIST SP 811 divergences.** The following are deliberate departures from NIST SP 811, documented here so they read as decisions rather than oversights:
 
@@ -101,9 +101,28 @@ python3 scripts/check-links.py <file.md>              # both passes, one file
 python3 scripts/check-links.py --offline-only docs/   # internal links only, no network (~0.05 s)
 ```
 
-The script wraps `lychee` and runs two passes: an **offline pass** over internal/relative links, and a **network pass** over external URLs.
+The script wraps `lychee` and runs two passes: an **offline pass** over internal/relative links, and a **network pass** over external URLs. Exit codes are `0` (nothing blocking), `1` (broken links), `2` (the check could not run — e.g. lychee missing; distinct so tooling breakage isn't mistaken for broken docs).
 
-**Interpreting output.** The script will note how many HTTP/2 false positives were filtered from `sigmaaldrich.com` — these are valid URLs on a server that blocks automated crawlers at the protocol level and can be ignored. Any remaining errors are genuine and should be fixed before opening a PR.
+**A failure is judged by what it says about the link, not by which vendor served it.** Do not add vendor domains or status codes to a suppression list — there isn't one, deliberately (issues #193, #199).
+
+| Signal | Verdict |
+| --- | --- |
+| HTTP 404 or 410 | **blocking** — the resource is gone |
+| Hostname does not resolve | **blocking** — typo'd or dead domain |
+| Relative/root-relative link resolves to no file | **blocking** — this 404s the deployed site |
+| HTTP 401, 403, 429, any 5xx | tolerated, reported — crawler refused or server hiccup |
+| Any other 4xx (400, 405, 406, 451…) | tolerated, reported — bot-shaped rejection |
+| Timeout, TLS error, HTTP/2 reset, connection reset | tolerated, reported — says nothing about link validity |
+
+Tolerated failures are normal and expected: a clean run currently reports ~120 of them (Sigma-Aldrich and Cytiva reset HTTP/2 connections; many vendors and `doi.org` return 403 to crawlers). **`✅ no broken links` alongside a long tolerated list is a pass.**
+
+**Blame partitioning.** In CI the check runs with `--blame-changed <base-ref>`: external rot only blocks the PR if it's in a file the PR modified. Pre-existing rot elsewhere is reported under a "pre-existing broken link(s)" heading without failing the build, and is tracked by the weekly `link-rot` workflow, which keeps a single GitHub issue up to date. Internal-link failures block regardless of which files changed. Local runs omit the flag, so everything blocks.
+
+**What it does not catch.** Staleness detection only works where a vendor returns an honest status code, so its reach is narrower than it looks:
+- **Sigma-Aldrich and Cytiva never return one** — they reset the connection before any HTTP status. Between them that's ~40% of external links, and a discontinued part number there is undetectable at any frequency.
+- **Soft-404s are invisible** — a vendor serving "product not found" with HTTP 200 reads as a healthy link.
+
+Both still require manual review. `lychee` is pinned to 0.24.2 in both workflows because its JSON report is this script's input contract and has changed shape between releases before (#136); bump the pin and the local install together.
 
 ### Build error checking (myst strict build)
 

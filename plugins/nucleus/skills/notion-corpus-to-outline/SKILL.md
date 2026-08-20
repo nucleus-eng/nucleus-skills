@@ -19,6 +19,8 @@ live Notion workspace  ->  /notion-corpus-to-outline  ->  sourced outline  ->  /
 
 **Scope: reading and structuring. Not writing prose.** The output is an outline where every claim carries a source tag, not a draft manuscript.
 
+Everything below was learned by getting it wrong first.
+
 ## Reference
 
 Use `references/devnote-style-guide.md`, alongside the skills in this plugin, as the quality anchor for anything that will become a DevNote. This skill produces the layer above that — the outline the style guide is then applied to.
@@ -36,7 +38,7 @@ Use `references/devnote-style-guide.md`, alongside the skills in this plugin, as
 
 ### Large fetches
 
-A transcript-heavy fetch will exceed the token limit and be persisted to a file. **Do not slice it blindly.** Extract the `<transcript>` sections with a regex first — this routinely cuts a 130k-character fetch to around 20k of actual transcript.
+A transcript-heavy fetch will exceed the token limit and be persisted to a file. **Do not slice it blindly.** Extract the `<transcript>` sections with a regex first — this routinely cuts a 130k-character fetch to roughly a sixth of its size.
 
 ### Finding the rest of the corpus
 
@@ -71,7 +73,7 @@ Comment authors come back as UUIDs. Resolve them with `notion-get-users`. **The 
 
 ### Transcripts garble proper nouns — flag, never repair silently
 
-Cross-reference against the workspace user list and against any cited papers. Observed failures: a grant name rendered as a nonsense word; a French book title rendered as a person's name; two similarly-named colleagues collapsed into one person; a cited paper's author name transcribed two different ways in the same session, and never located as a result.
+Cross-reference against the workspace user list and against any cited papers. Observed in one session: "Slum v1" was the Sloan grant; "Stephanie Duke" and "Biology's Indicator" were both Stéphane Leduc's *La Biologie Synthétique*; "Zhanar" and "Gennar" were one author name transcribed two ways, and the paper was never located as a result; two similarly-named colleagues were repeatedly merged into one person.
 
 **Keep a "names to correct" section in the outline.** Silently fixing a name destroys the evidence that the transcript is unreliable at that point.
 
@@ -88,7 +90,7 @@ Before any `replace_content`:
 
 ### Re-fetch comments live and diff against a baseline
 
-People keep commenting while you work. Record a baseline count with a timestamp and re-check immediately before acting on it. Corrections arriving mid-session are common, and they tend to invalidate work already done.
+People keep commenting while you work. Record a baseline count with a timestamp and re-check immediately before acting on it. In one session three comments arrived mid-work and two of them corrected claims already written down.
 
 ### Check what has already been decided
 
@@ -118,7 +120,7 @@ Write the objection to actually bite, so a human can kill the claim in ten secon
 
 ### Prefer events to conclusions
 
-The recurring complaint that "the details aren't there" has one structural cause: **documents organised as conclusions cannot contain detail.** Organise by dated event and the specifics arrive for free. One dated sentence about what stalled and what unstalled it carries more than a page of characterisation.
+The recurring complaint that "the details aren't there" has one structural cause: **documents organised as conclusions cannot contain detail.** Organise by dated event and the specifics arrive for free. *"Development was stalled on DNA-encoded TetR, but we launched forward quickly once we switched to purified proteins"* carries more than a page of characterisation.
 
 When the corpus is thin on events, say so plainly and name who could supply one.
 
@@ -152,6 +154,12 @@ When a claim is wrong, mark it dead in place — struck through, with the correc
 
 ## 4. Conventions worth adopting
 
+### Check for tooling that already exists
+
+Look before building anything. `doc2devnote` already turned Google Docs into DevNotes
+with Claude, and a whole session once existed to generate test cases for a tool that
+was already written.
+
 ### The `CONTEXT.md` file
 
 Ten lines at the root of the work: who is involved and what they are doing, why this session exists, and a Resources list of every Drive folder, Notion page and repo. It is the difference between a session that starts cleanly and one that spends its first hour orienting.
@@ -173,7 +181,7 @@ Follow parent and grandparent project pages for inherited context. When they tur
 3. **Record a baseline.** Thread count and timestamp.
 4. **Collate, tagged by source.** Organise by what the language *does*, not by which page it came from. Flag where two documents say the same thing differently.
 5. **Synthesise, in a separate file.** Claims that appear in no source, each with the sources it bridges, what changes if true, and its strongest objection. State the count.
-6. **Stop. Let the human read it.** A real gate, not a formality — expect claims to be killed here.
+6. **Stop. Let the human read it.** The outline's framing depends on what survives. A real gate, not a formality — expect claims to be killed here, and expect the reader to catch over-claiming that you missed.
 7. **Re-fetch comments and diff.** Then outline: every bullet source-tagged, every deferred item routed.
 8. **Preserve, then write back.** Archive the threads, then update Notion with a dated callout explaining what changed.
 9. **Hand off to `/ingest`** if the outline is destined to become a DevNote.

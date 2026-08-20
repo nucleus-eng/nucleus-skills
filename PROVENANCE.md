@@ -49,7 +49,7 @@ owns. Delete them when the extraction is done.
 | --- | --- | --- |
 | `extraction-sources/nucleus-docs-CLAUDE.md` | `bnext/nucleus-eng/nucleus-docs/CLAUDE.md` | 424 lines. Holds 3 skills' worth of procedure that must be extracted, and ~130 lines that duplicate `lint-docs.md`. Line numbers in `REFACTOR-PLAN.md` refer to this file. |
 | `extraction-sources/doc2devnote-CLAUDE.md` | `bnext/doc2devnote/CLAUDE.md` | 83 lines. Two small blocks duplicate `ingest`. |
-| `extraction-sources/notion-corpus-to-outline-global-fork.md` | `~/.claude/skills/notion-corpus-to-outline/SKILL.md` | The other half of a two-way fork. Must be reconciled against `skills/notion-corpus-to-outline/SKILL.md`. |
+| `extraction-sources/notion-corpus-to-outline-global-fork.md` | `~/.claude/skills/notion-corpus-to-outline/SKILL.md` | The other half of a two-way fork. **Reconciled** — folded into `plugins/nucleus/skills/notion-corpus-to-outline/SKILL.md`, and the global copy deleted. Kept here as the record of what was merged. |
 | `extraction-sources/CERN-MIGRATION-PLAYBOOK.md` | `bnext/nucleus-eng/2026-CERN-OHL-P/MIGRATION-PLAYBOOK.md` | The human entry point for `migrate-devnote`. Correctly a pointer doc, not a duplicate. Kept as a model for how README-to-skill pointers should read. |
 
 ## Not copied

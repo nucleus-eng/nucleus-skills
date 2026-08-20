@@ -93,21 +93,8 @@ You are converting raw research materials into a Nucleus DevNote.
 
 ## Fidelity rules (absolute — override all other instructions)
 
-**Narrative content:** Never rewrite, paraphrase, expand, or add
-interpretive language to prose from the source. If the source says
-"to test whether X", the output says "to test whether X" — not
-"to determine whether X" or "to confirm whether X". Preserve the
-author's words. You may move prose between sections but you may
-not change it.
-
-**Parameter values:** Never change a numeric value, unit,
-concentration, volume, temperature, wavelength, or duration
-from the source. Copy exactly as stated. If a value is missing
-or ambiguous, use — and add a REVIEW flag.
-
-**Table structure:** You may restructure tables to the Nucleus
-six-column schema and separate conditions into tab-sets. The
-organization of data may change. The data itself does not.
+<paste the "Fidelity rules" section from this skill here, verbatim — the
+prompt has to stand on its own once it leaves this file>
 
 ## Quality reference
 

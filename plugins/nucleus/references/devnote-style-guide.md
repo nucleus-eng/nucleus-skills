@@ -68,7 +68,7 @@ Caption text here.
 
 The `#` prefix syntax tells MyST to look up the figure from an embedded notebook output. The `04_ppk` and `10-nucleus_cytosol_v05` DevNotes use this pattern exclusively for their results figures, because all result plots are generated inside the analysis notebooks. The `cytosol-lifetime` DevNote uses the static file path pattern because the normalized kinetics PNGs are pre-committed output artifacts.
 
-> **Known issue — Pattern 2 figures are missing in the published site.** The `#fig:name` reference requires that notebook output cells carry a matching `label` in their cell metadata (or use the `glue` API). The migrated `04_ppk` and `nucleus-cytosol-v05` notebooks have `display_data` outputs but no `label` metadata, so all `#fig:` directives render blank. Fix: either add `label: fig:name` to each output cell's metadata, or replace `#fig:` directives with static PNG file references (Pattern 1). See `migrate.md` → "§ #fig: notebook figure references" for details.
+> **Known issue — Pattern 2 figures are missing in the published site.** The `#fig:name` reference requires that notebook output cells carry a matching `label` in their cell metadata (or use the `glue` API). The migrated `04_ppk` and `nucleus-cytosol-v05` notebooks have `display_data` outputs but no `label` metadata, so all `#fig:` directives render blank. Fix: either add `label: fig:name` to each output cell's metadata, or replace `#fig:` directives with static PNG file references (Pattern 1). See the `migrate` skill → "§ #fig: notebook figure references" for details.
 
 Cross-references to figures use `{ref}`label`` inline, e.g. `({ref}`fig:PPK-illustration`)` or `({ref}`fig1-kinetics` and {ref}`fig1-endpoint`)`.
 

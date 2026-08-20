@@ -105,7 +105,7 @@ Skills live in `plugins/nucleus/skills/<name>/SKILL.md`, and the `name:`
 field must match the directory. Anything else does not load — silently.
 That is the bug this repo was created to fix, so check it.
 
-Three conventions, taken from `REFACTOR-PLAN.md` Phase 6:
+Four conventions, taken from `REFACTOR-PLAN.md` Phase 6:
 
 - **Descriptions are triggers, not summaries.** Say when to use the skill
   and what it produces. Name the output format when a sibling skill could
@@ -114,3 +114,44 @@ Three conventions, taken from `REFACTOR-PLAN.md` Phase 6:
   `skills/migrate-devnote/references/snags.md`, which points at
   `prepare.md §5` instead of repeating it.
 - **If a copy is unavoidable, label it and say what it tracks.**
+  `references/devnote-style-guide.md` does this: it says it is a port and
+  asks to be kept in sync. That is the minimum bar.
+- **Reference files hold detail; SKILL.md holds the flow.** `migrate-devnote`
+  is the model — a short index over four reference files, loaded on demand.
+
+## One owner per domain
+
+This table is the contract. Content that restates another row's domain is a
+bug, not untidiness. That is how the unit table came to exist twice and
+disagree with itself.
+
+| Domain | Owner |
+| --- | --- |
+| Live Notion → sourced outline | `notion-corpus-to-outline` |
+| Raw material → draft DevNote | `ingest` |
+| Curvenote DevNote → MyST registry | `migrate` |
+| Published DevNote → CERN repo republish | `migrate-devnote` |
+| DevNote or Notion export → nucleus-docs page | `migrate-content` |
+| BOM tables, protocol PDFs, generated artifacts | `build-boms` |
+| Vale, codespell, lychee, strict build | `lint-docs` |
+| DNA construct identity claims | `verify-dna-constructs` |
+| MyST authoring conventions, page status | `author-myst-content` |
+| Prose style, notation, units | `references/devnote-style-guide.md` (a reference, not a skill) |
+
+## Checks
+
+```bash
+python3 scripts/check-skills.py
+```
+
+Runs on every push and pull request (`.github/workflows/check-skills.yml`).
+It confirms that every skill directory holds a `SKILL.md` whose `name:`
+matches the directory, that no two skills claim the same name, that every
+skill has a `description:`, and that relative links in `plugins/` resolve.
+
+The first of those is the one that matters. A skill whose `name:` is wrong
+or missing does not load, and nothing anywhere reports an error — it simply
+never appears. Three skills failed that way in nucleus-docs for months.
+
+Not yet automated: Vale over the skill files themselves. They state unit
+conventions they do not currently obey.

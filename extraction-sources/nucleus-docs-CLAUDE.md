@@ -1,3 +1,32 @@
+<!--
+PROVENANCE WARNING — read before deriving anything from this file.
+
+This snapshot was copied from a working tree that was parked on the branch
+`docs/devcells-integration-pages`. It is NOT `nucleus-docs` main, and it does
+not match main at any commit.
+
+Known divergence, verified 2026-08-19: it contains a "Mass-to-molar conversions
+use the functionally active stoichiometry" paragraph that exists on main in no
+commit. It was added in fb3d46b and removed in d1994f5, "Revert out-of-scope
+changes to published pages" — a deliberate revert, not an oversight. The
+snapshot was taken inside that two-commit window.
+
+Consequences, both of which already happened once:
+
+- Every line number in REFACTOR-PLAN.md and in nucleus-docs#214 derives from
+  this file. Below the mass-to-molar block they run 6 lines ahead of main.
+- Phase 4's extraction list names that paragraph, so following it verbatim
+  reinstates a rule the repo owner deliberately reverted — arriving in a skill,
+  which reads with more authority than the diff that was rejected.
+
+Do not re-derive from this file. Re-derive from `origin/main:CLAUDE.md` and cite
+section headings rather than line ranges: nucleus-docs#216 alone cuts CLAUDE.md
+from 433 lines to 168, so any line number recomputed today is wrong again after
+the next merge.
+
+Kept as the record of what was captured, not as a description of the repo.
+-->
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.

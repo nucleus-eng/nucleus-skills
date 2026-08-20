@@ -109,28 +109,41 @@ why       = "page says SUV but states a particle size >=100 nm; conventionally S
 
 
 # ----------------------------------------------------------- tier 3: REVIEW --
-# Terms whose every use might be fine. These are counted and located so a human
-# can skim them; they never fail a run. Expect most hits to be legitimate.
+# Terms whose every use might be fine. Counted and located so a human can skim
+# them; they never fail a run. Expect most hits to be legitimate.
+#
+# EVERY TIER-3 RULE IS TEMPORARY. A rule belongs here while a term is either
+#   (a) being retired — the count should fall toward zero, or
+#   (b) under active decision — you want every use listed before ruling on it.
+#
+# Once a term is ruled IN, delete its rule. Otherwise the rule starts counting
+# correct usage, the count climbs as the rename succeeds, and the tier fills with
+# noise that buries the rules still doing work. This is not hypothetical: leaving
+# the preferred terms in here produced 345 hits out of 370, all of them correct,
+# while the two rules that mattered contributed 25.
 
+# (a) Retiring. Old umbrella term, replaced by the specific size class or by
+#     "liposome". Legitimate survivors: quoted source text, and acronym
+#     expansions ("small unilamellar vesicle").
 [[review]]
 name    = "bare-vesicle"
 pattern = '(?<!\w)(?<!G)(?<!S)(?<!L)(?<!U)vesicles?\b'
 
+# (a) Retiring. Replaced by "integration path".
 [[review]]
 name    = "bare-leg"
 pattern = '\blegs?\b'
 
-[[review]]
-name    = "synthetic-cell"
-pattern = '\bsynthetic cells?\b'
-
-[[review]]
-name    = "liposome"
-pattern = '\bliposomes?\b'
-
+# (b) Under decision. Singular "DevCell" is right for a demo device and for a
+#     document title; it is wrong where the program is meant. Not separable by
+#     pattern, so it is listed rather than enforced.
 [[review]]
 name    = "bare-DevCell"
 pattern = '\bDevCell\b(?!s)(?! Studio)'
+
+# Ruled in, so NOT listed here: "liposome" and "synthetic cell". Both were under
+# decision during an earlier sweep and both were kept, so counting them now
+# measures success rather than drift.
 
 
 # ------------------------------------------------------- framework-term map --

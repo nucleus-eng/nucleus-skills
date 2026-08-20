@@ -96,6 +96,22 @@ from a source document, three in acronym expansions ("small unilamellar
 vesicle"). **That is a healthy tier-3 result, not a backlog.** Quoted source text
 and acronym expansions are meant to keep the old word.
 
+### Every tier-3 rule is temporary
+
+A term belongs in `[[review]]` while it is either **being retired** (the count
+should fall toward zero) or **under active decision** (you want every use listed
+before ruling on it). **When a term is ruled in, delete its rule.**
+
+Skip that step and the rule starts counting correct usage. The count then *climbs
+as the rename succeeds*, and the tier fills with noise that buries the rules still
+doing work. Measured: leaving two ruled-in terms in `[[review]]` produced 345 of
+370 hits, every one of them correct, while the two rules that mattered accounted
+for 25. A reviewer looking at "370 to review" reasonably concludes the check is
+broken — and stops reading it.
+
+So a rising tier-3 count means one of two things, and they are opposite: drift is
+getting worse, or a rule has outlived its decision. Check which before acting.
+
 **Framework-term map** — counts per file for words that have a defined technical
 sense in your project *and* an ordinary English sense (Composition, Function,
 Requirements, Module…). Whether a given use carries the defined sense is not

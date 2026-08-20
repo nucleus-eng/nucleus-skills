@@ -10,6 +10,12 @@ Three checks, all of which catch failures that are otherwise silent:
 2. No two skills declare the same `name:`.
 3. Relative links, and inline-code paths naming a plugin directory, resolve
    to a real file.
+4. No stray `skills/` directory at the repo root. Skills lived there before
+   this repo became a plugin marketplace. A skill left behind at the old
+   path merges cleanly and is simply absent from the plugin, with nothing
+   reporting an error — the same silent omission this whole repo exists to
+   stop. This is an assertion that the old location is gone, not a check of
+   its contents, so it costs nothing once true and retires itself.
 
 Exit codes: 0 clean, 1 findings, 2 the check could not run.
 """
@@ -106,6 +112,16 @@ def main() -> int:
 
     findings: list[str] = []
     seen: dict[str, Path] = {}
+
+    stray = ROOT / "skills"
+    if stray.is_dir():
+        names = sorted(d.name for d in stray.iterdir() if d.is_dir())
+        listed = ", ".join(names) if names else "no skill directories"
+        findings.append(
+            f"skills/ still exists at the repo root ({listed}) — skills live in "
+            f"plugins/nucleus/skills/ and anything here ships in no plugin"
+        )
+
     directories = sorted(d for d in SKILLS.iterdir() if d.is_dir())
     if not directories:
         print(f"error: no skill directories under {SKILLS.relative_to(ROOT)}", file=sys.stderr)

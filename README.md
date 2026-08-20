@@ -147,7 +147,8 @@ python3 scripts/check-skills.py
 Runs on every push and pull request (`.github/workflows/check-skills.yml`).
 It confirms that every skill directory holds a `SKILL.md` whose `name:`
 matches the directory, that no two skills claim the same name, that every
-skill has a `description:`, and that relative links in `plugins/` resolve.
+skill has a `description:`, that relative links in `plugins/` resolve, and
+that no stray `skills/` directory survives at the repo root.
 
 The first of those is the one that matters. A skill whose `name:` is wrong
 or missing does not load, and nothing anywhere reports an error — it simply

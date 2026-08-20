@@ -15,7 +15,7 @@ is always required before publishing.
 
 ## Reference
 
-Always use `skills/devnote-style-guide.md` (repo root) as the quality anchor.
+Always use `references/devnote-style-guide.md`, alongside the skills in this plugin, (repo root) as the quality anchor.
 The target output should match the structure, tone, and conventions
 observed in the migrated DevNotes. When in doubt, refer to a specific
 migrated example.

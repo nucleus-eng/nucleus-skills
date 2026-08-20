@@ -8,7 +8,8 @@ Three checks, all of which catch failures that are otherwise silent:
    reports an error — it simply never appears. That bug went unnoticed in
    nucleus-docs for months.
 2. No two skills declare the same `name:`.
-3. Relative links inside skill and reference files resolve to a real file.
+3. Relative links, and inline-code paths naming a plugin directory, resolve
+   to a real file.
 
 Exit codes: 0 clean, 1 findings, 2 the check could not run.
 """
@@ -25,6 +26,12 @@ SKILLS = ROOT / "plugins" / "nucleus" / "skills"
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 FIELD = re.compile(r"^(name|description):\s*(.+?)\s*$", re.MULTILINE)
 MD_LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
+# Inline-code paths naming a directory this plugin owns. Narrow on purpose: a
+# bare `main.md` usually points at a consumer repo, and so does `scripts/` —
+# but `skills/x.md` and `references/x.md` claim to be ours and can be resolved.
+# Markdown-link checking misses these entirely, which is how
+# `skills/devnote-style-guide.md` survived the move to `references/`.
+CODE_PATH = re.compile(r"`((?:skills|references)/[A-Za-z0-9_./-]+\.md)`")
 FENCE = re.compile(r"^(?P<fence>```+|~~~+).*?^(?P=fence)", re.DOTALL | re.MULTILINE)
 CODE_SPAN = re.compile(r"`+[^`\n]*`+")
 
@@ -75,7 +82,14 @@ def check_skill(directory: Path, findings: list[str], seen: dict[str, Path]) -> 
 
 
 def check_links(path: Path, findings: list[str]) -> None:
-    text = strip_code(path.read_text(encoding="utf-8"))
+    raw = path.read_text(encoding="utf-8")
+    plugin_root = ROOT / "plugins" / "nucleus"
+    for target in sorted(set(CODE_PATH.findall(raw))):
+        # Either plugin-root-relative or relative to the file that names it.
+        if not ((plugin_root / target).exists() or (path.parent / target).exists()):
+            findings.append(f"{path.relative_to(ROOT)}: names a plugin path that does not exist — {target}")
+
+    text = strip_code(raw)
     for target in MD_LINK.findall(text):
         target = target.split("#", 1)[0].split(" ", 1)[0].strip()
         if not target or "://" in target or target.startswith(("#", "mailto:")):

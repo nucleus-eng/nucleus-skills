@@ -21,7 +21,7 @@ live Notion workspace  ->  /notion-corpus-to-outline  ->  sourced outline  ->  /
 
 ## Reference
 
-Use `skills/devnote-style-guide.md` as the quality anchor for anything that will become a DevNote. This skill produces the layer above that — the outline the style guide is then applied to.
+Use `references/devnote-style-guide.md`, alongside the skills in this plugin, as the quality anchor for anything that will become a DevNote. This skill produces the layer above that — the outline the style guide is then applied to.
 
 ---
 

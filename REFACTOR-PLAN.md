@@ -226,7 +226,7 @@ Line numbers refer to `extraction-sources/nucleus-docs-CLAUDE.md`.
 | New skill | Source | Notes |
 | --- | --- | --- |
 | `verify-dna-constructs` | lines 62-121 + 409-418 | Tiered cross-repo verification, GitHub API fallback, the attention-block template, and `check-dna-refs.py`. The script is documented in no skill today. |
-| `author-myst-content` | lines 208-266 | MyST conventions — fence depth, figure placement, composition-table flattening, mass-to-molar stoichiometry — plus the empty-dropdown policy. |
+| `author-myst-content` | lines 208-266 | MyST conventions — fence depth, figure placement, composition-table flattening — plus the empty-dropdown policy. |
 | `page-status` | lines 154-180 | Draft/published frontmatter and banner snippets. Small. Fold into `author-myst-content` unless it earns its own trigger. |
 
 Also fold, rather than extract:

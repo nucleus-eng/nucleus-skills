@@ -1,0 +1,144 @@
+# Terminology rules for a Nucleus docs corpus.
+#
+# Copy this to the repo root as `terminology.toml` and edit. The script finds it
+# there automatically; this shipped copy is the fallback so a first run does
+# something useful rather than erroring.
+#
+# Three tiers, in ascending order of doubt:
+#   [[errors]]   exact wrong strings. Mechanically certain. These fail the run.
+#   [[suspects]] co-occurrences that need a human. Reported, never auto-fixed.
+#   [[review]]   terms that MAY collapse a distinction. Counted for triage.
+#
+# Only [[errors]] gates. Putting a doubtful rule in that tier is how a check
+# gets ignored.
+
+
+# ------------------------------------------------------------------ glossary --
+# Printed at the top of the report so a reviewer reads the definitions before
+# the findings. Documentation only; no rule is derived from it.
+
+[[glossary]]
+term  = "Developer Cell"
+means = "the technology — the cell itself"
+notes = ""
+
+[[glossary]]
+term  = "DevCells"
+means = "the multi-node program"
+notes = ""
+
+[[glossary]]
+term  = "DevStudio"
+means = "the 3-week studio where nodes visit b.next"
+notes = ""
+
+[[glossary]]
+term  = "GUV"
+means = "giant unilamellar liposome, >1 µm"
+notes = "what inverted-emulsion phase transfer produces"
+
+[[glossary]]
+term  = "LUV"
+means = "large unilamellar liposome, ~100 nm–1 µm"
+notes = "a 400 nm extruded prep is this"
+
+[[glossary]]
+term  = "SUV"
+means = "small unilamellar liposome, conventionally <100 nm"
+notes = ""
+
+[[glossary]]
+term  = "liposome"
+means = "the preferred general term"
+notes = "never 'vesicle'"
+
+[[glossary]]
+term  = "synthetic cell"
+means = "a cytosol and a membrane, composed"
+notes = ""
+
+[[glossary]]
+term  = "integration path"
+means = "one branch of a multi-part integration"
+notes = "never 'leg'"
+
+
+# ------------------------------------------------------------ tier 1: ERROR --
+# An exact string that is simply wrong. Every one of these should be a rename
+# that has already been decided — not a preference under discussion.
+
+[[errors]]
+pattern = "DevCell Studio"
+correct = "DevStudio"
+why     = "program name: the studio is DevStudio"
+
+[[errors]]
+pattern = "DevCells Studio"
+correct = "DevStudio"
+why     = "program name: the studio is DevStudio"
+
+[[errors]]
+pattern = "Dev Studio"
+correct = "DevStudio"
+why     = "program name: one word"
+
+
+# ---------------------------------------------------------- tier 2: SUSPECT --
+# A co-occurrence rule has four parts, and the last two are what keep it honest:
+#
+#   trigger  must appear somewhere in the file for the rule to apply at all
+#   match    the candidate token, matched per line
+#   require  semantic confirmation, same line — without this you get noise
+#   veto     semantic exclusion, same line — the token means something else here
+#
+# The `require`/`veto` pair is not optional polish. The first version of the
+# rule below had neither: it flagged every "<N> nm" on any page mentioning SUV,
+# and 24 of its 28 hits were wavelengths (570 nm CPRG absorbance, 405 nm PEGDA
+# crosslinking) read as particle sizes. Adding the pair took it to 3 hits, all
+# genuine. A tier-2 rule without semantic context is a tier-3 rule wearing a
+# costume.
+
+[[suspects]]
+name      = "suv-size"
+trigger   = '\bSUVs?\b'
+match     = '\b(\d{2,4})\s*nm\b'
+require   = '\b(diameter|extrud\w*|pore|DLS|dynamic light scattering|size|polycarbonate|filter|particle|unilamellar)\b'
+veto      = '\b(absorb\w*|A\d{3}|OD\b|excitation|emission|wavelength|read at|monitor\w*|crosslink\w*|cure\w*|UV|laser|photomask|spectro\w*)\b'
+min_value = 100
+why       = "page says SUV but states a particle size >=100 nm; conventionally SUV is <100 nm, LUV is 100 nm-1 um"
+
+
+# ----------------------------------------------------------- tier 3: REVIEW --
+# Terms whose every use might be fine. These are counted and located so a human
+# can skim them; they never fail a run. Expect most hits to be legitimate.
+
+[[review]]
+name    = "bare-vesicle"
+pattern = '(?<!\w)(?<!G)(?<!S)(?<!L)(?<!U)vesicles?\b'
+
+[[review]]
+name    = "bare-leg"
+pattern = '\blegs?\b'
+
+[[review]]
+name    = "synthetic-cell"
+pattern = '\bsynthetic cells?\b'
+
+[[review]]
+name    = "liposome"
+pattern = '\bliposomes?\b'
+
+[[review]]
+name    = "bare-DevCell"
+pattern = '\bDevCell\b(?!s)(?! Studio)'
+
+
+# ------------------------------------------------------- framework-term map --
+# Words with a defined technical sense in this project that are also ordinary
+# English. Whether a given use carries the defined sense is not mechanically
+# decidable, so the report gives counts per file — a map of where to look, not a
+# list of violations.
+
+[framework]
+terms = ["Composition", "Composing", "Component", "Function",
+         "Requirements", "Module", "Specification", "Integration"]

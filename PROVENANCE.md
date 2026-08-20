@@ -17,6 +17,8 @@ is complete, the source is authoritative.
 | `plugins/nucleus/skills/build-boms/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/build-boms.md` | **No** |
 | `plugins/nucleus/skills/lint-docs/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/lint-docs.md` | **No** |
 | `plugins/nucleus/skills/migrate-content/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/migrate-content.md` | **No** |
+| `plugins/nucleus/skills/verify-dna-constructs/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/CLAUDE.md` (Companion DNA repository, DNA reference checking) | **No** — was never a skill |
+| `plugins/nucleus/skills/author-myst-content/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/CLAUDE.md` (Page status, MyST syntax conventions, Overview card dropdowns) | **No** — was never a skill |
 
 The "Loads today?" column describes the **source** copies, not the copies
 here. The three nucleus-docs skills were imported as flat `.md` files with

@@ -61,6 +61,8 @@ read when the skill is actually invoked.
 | `build-boms` | BOM tables and the lab-ready protocol pipeline |
 | `lint-docs` | Vale, codespell, lychee, strict MyST build |
 | `migrate-content` | DevNote or Notion export → nucleus-docs page |
+| `verify-dna-constructs` | DNA construct identity claims against `nucleus-eng/DNA` |
+| `author-myst-content` | MyST authoring conventions and page status |
 
 ## Use it from another repo
 

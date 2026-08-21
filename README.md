@@ -3,10 +3,12 @@
 Claude skills for Nucleus work — DevNote authoring, docs-site maintenance,
 and the migrations between them.
 
-**Status: Phases 0 and 1 done.** All seven skills are in loadable form, and
-this repo is now a Claude plugin marketplace that other repos can depend on.
-Content refactoring (Phases 2-6) is still open — see `REFACTOR-PLAN.md`.
-`PROVENANCE.md` maps every file back to where it came from.
+**Status: Phases 0-4 and 6 done.** Every skill here is in loadable form, and
+this repo is a Claude plugin marketplace that other repos can depend on.
+What remains is Phase 5 — removing the now-duplicated copies from the source
+repos — plus a content review of the skills themselves, which has never been
+done. See `REFACTOR-PLAN.md`. `PROVENANCE.md` maps every file back to where it
+came from.
 
 ## Why this repo exists
 
@@ -145,10 +147,16 @@ python3 scripts/check-skills.py
 ```
 
 Runs on every push and pull request (`.github/workflows/check-skills.yml`).
-It confirms that every skill directory holds a `SKILL.md` whose `name:`
-matches the directory, that no two skills claim the same name, that every
-skill has a `description:`, that relative links in `plugins/` resolve, and
-that no stray `skills/` directory survives at the repo root.
+It confirms that the marketplace and plugin manifests parse and agree, that
+every skill directory holds a `SKILL.md` whose `name:` matches the directory,
+that no two skills claim the same name, that every skill has a
+`description:`, that relative links in `plugins/` resolve, and that no stray
+`skills/` directory survives at the repo root.
+
+It is a required status check on `main`, with "require branches to be up to
+date" on. That second setting matters: a PR can pass on its own branch and
+still break `main` if `main` moved under it, which is exactly how two skills
+came to sit at a path that ships in no plugin.
 
 The first of those is the one that matters. A skill whose `name:` is wrong
 or missing does not load, and nothing anywhere reports an error — it simply

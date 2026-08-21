@@ -47,9 +47,8 @@ owns. Delete them when the extraction is done.
 
 | File here | Copied from | Why it is here |
 | --- | --- | --- |
-| `extraction-sources/nucleus-docs-CLAUDE.md` | `bnext/nucleus-eng/nucleus-docs/CLAUDE.md` | 424 lines. Holds 3 skills' worth of procedure that must be extracted, and ~130 lines that duplicate `lint-docs.md`. Line numbers in `REFACTOR-PLAN.md` refer to this file. |
+| `extraction-sources/nucleus-docs-CLAUDE.md` | `bnext/nucleus-eng/nucleus-docs/CLAUDE.md` | Holds 3 skills' worth of procedure to extract, and a block that duplicates `lint-docs.md`. **Copied from a working tree on a feature branch, not `main`** — it carries a paragraph `main` does not have, and every line number derived from it is off by six after line 243. Cite section headings, not line numbers. Delete once nucleus-docs#216 lands. |
 | `extraction-sources/doc2devnote-CLAUDE.md` | `bnext/doc2devnote/CLAUDE.md` | 83 lines. Two small blocks duplicate `ingest`. |
-| `extraction-sources/notion-corpus-to-outline-global-fork.md` | `~/.claude/skills/notion-corpus-to-outline/SKILL.md` | The other half of a two-way fork. **Reconciled** — folded into `plugins/nucleus/skills/notion-corpus-to-outline/SKILL.md`, and the global copy deleted. Kept here as the record of what was merged. |
 | `extraction-sources/CERN-MIGRATION-PLAYBOOK.md` | `bnext/nucleus-eng/2026-CERN-OHL-P/MIGRATION-PLAYBOOK.md` | The human entry point for `migrate-devnote`. Correctly a pointer doc, not a duplicate. Kept as a model for how README-to-skill pointers should read. |
 
 ## Not copied

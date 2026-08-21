@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: Convert an existing Nucleus DevNote from the old Curvenote/mixed format (main.md + curvenote.yml) into the current MyST schema, verbatim, with no content rewriting. Use when the source has a curvenote.yml; otherwise use the ingest skill for raw/unstructured materials.
+description: Convert an existing Nucleus DevNote from the old Curvenote/mixed format (main.md + curvenote.yml) into the current MyST schema for the internal DevNotes registry, verbatim, with no content rewriting. Output is index.md plus a minimal myst.yml. Use when the source has a curvenote.yml and the destination is the internal registry; use migrate-devnote instead when the DevNote is already published on the Curvenote venue and is being recovered and republished there, and ingest for raw or unstructured materials.
 ---
 
 # Nucleus DevNote Migration Skill

@@ -118,6 +118,8 @@ Tolerated failures are normal and expected: a clean run currently reports ~120 o
 
 **Blame partitioning.** In CI the check runs with `--blame-changed <base-ref>`: external rot only blocks the PR if it's in a file the PR modified. Pre-existing rot elsewhere is reported under a "pre-existing broken link(s)" heading without failing the build, and is tracked by the weekly `link-rot` workflow, which keeps a single GitHub issue up to date. Internal-link failures block regardless of which files changed. Local runs omit the flag, so everything blocks.
 
+**Anchor fragments are checked, with a MyST correction applied.** A link to `spec.md#some-heading` is verified against the target's real headings and labels, on the offline pass only — a remote page's anchors are its owner's business. lychee alone cannot be trusted here: it slugs headings the GitHub way, MyST does not, and the two disagree whenever a heading contains spaced or doubled punctuation — GitHub turns `" / "` into `--`, MyST collapses it to `-`. MyST builds the deployed site, so the wrapper re-tests every fragment lychee rejects against MyST's own rule (`myst_html_id`, a port of `createHtmlId` in `myst-common`) and drops the ones MyST would resolve — that drop is not "tolerated," it is not a finding at all. It also collects `:label:`, `:name:` and `(target)=` anchors, which lychee cannot see at all. A fragment MyST does not resolve either is a genuine dead anchor and a hard failure naming the fragment. **Do not "fix" a fragment mismatch by matching lychee's slug** — that retargets the link away from what MyST will actually generate and breaks the live page. `myst-common` is not a declared dependency of this check; the slug rule is a hand port that will drift if MyST changes it (the same undeclared-external-dependency shape as `myst` itself, above) — a pinned test over a handful of punctuated headings is the thing that would notice. Renaming a heading is a link change: run the checker after any rename.
+
 **What it does not catch.** Staleness detection only works where a vendor returns an honest status code, so its reach is narrower than it looks:
 - **Sigma-Aldrich and Cytiva never return one** — they reset the connection before any HTTP status. Between them that's ~40% of external links, and a discontinued part number there is undetectable at any frequency.
 - **Soft-404s are invisible** — a vendor serving "product not found" with HTTP 200 reads as a healthy link.
@@ -128,12 +130,20 @@ Both still require manual review. `lychee` is pinned to 0.24.2 in both workflows
 
 **Run this if you touched any link, image reference, directive, or table syntax.** `myst build --html` emits ⛔️-prefixed errors for broken links, missing images, and malformed directives but exits 0 regardless. `scripts/check-myst-build.py` wraps `myst build --html --strict` and fails only when an unfiltered ⛔️ error survives. This is what the `build-protocols` CI job gates on (`.github/workflows/protocols.yml`, issue #176).
 
+**Preflight `myst` before trusting the result.** `check-myst-build.py` exits 1 both when the build finds real errors and when the `myst` binary is simply missing — those two cases look identical from the exit code alone. Check for the binary first, and branch on it explicitly:
+
 ```bash
-python3 scripts/build-protocols.py            # generates process/module PDFs the Downloads cards link to
-python3 scripts/build-materials-reference.py  # generates the guides/materials-reference.md include
-python3 scripts/check-myst-build.py
+if command -v myst >/dev/null 2>&1; then
+  python3 scripts/build-protocols.py            # generates process/module PDFs the Downloads cards link to
+  python3 scripts/build-materials-reference.py  # generates the guides/materials-reference.md include
+  python3 scripts/check-myst-build.py
+else
+  echo "SKIP: myst not installed — build check not run"
+fi
 ```
 
 Run the two generator scripts first — without them, `guides/materials-reference.md`'s `{include}` and every process page's Downloads `{button}` card report their gitignored `generated/` target as a genuinely missing file.
+
+**Never report a myst build result — pass or fail — unless the preflight confirmed the binary was present.** If `myst` is missing, the correct thing to report back is "myst build: not run (myst not installed)", not a pass and not a content failure. Reporting a pass you did not actually observe is worse than reporting nothing.
 
 **Interpreting output.** ⛔️ (error) fails the build; ⚠️ (warning) is summarized but never fails it — this repo deliberately leaves warnings (legacy link syntax, duplicate identifiers, unrecognized frontmatter keys like `status`) non-blocking. Treat every ⛔️ as real **except** where `scripts/myst-build-false-positives.toml` documents a specific known false positive (currently: a figure in `membrane-pore-cx43/spec.md` sourced from a remote DevNote via `xref:`, which myst still checks for on local disk even though the file only exists remotely). Any new suppression belongs in that TOML file as an exact `file` + message `substring` match, not in `myst.yml`'s `error_rules:` — mystmd's `image-exists` rule (and potentially others) carries no per-file `key` in its warning payload, so `error_rules[].keys` file-scoping can never match it; a `myst.yml`-level suppression for such a rule would be repo-wide and would blind the check to a genuinely missing file anywhere else in the docs.

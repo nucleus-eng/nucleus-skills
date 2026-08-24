@@ -162,18 +162,21 @@ def build_diagram(slug, graph):
 
 
 def wrap(diagram, title):
-    """A tab-item, fenced at 4 colons to sit inside a 5-colon tab-set."""
+    """A tab-item, fenced at 4 colons to sit inside a 5-colon tab-set.
+
+    Emits the diagram and nothing else. Three explanatory paragraphs used to
+    follow it — how to read the arrows, a note that composition is not a claim
+    about integration, and a line telling the reader this block is generated.
+    They were removed because docs pages address the compositional biology
+    community, who are reading them as reference documentation: the first
+    restated what a clickable flowchart already shows, and the other two spoke
+    to editors rather than to that audience. The BEGIN/END markers already mark
+    the block as generated for anyone editing the source.
+    """
     return (
         f"{BEGIN}\n"
         f"::::{{tab-item}} Module Dependencies\n\n"
         f"{diagram}\n\n"
-        f"What this Module is composed of. Arrows point from a constituent to the "
-        f"Module that contains it; the darker node is this page. Click any node to "
-        f"open its spec.\n\n"
-        f"This diagram shows composition only — it does not assert that any "
-        f"integration is confirmed.\n\n"
-        f"Generated from the `# Constituent Modules` section of each page by the "
-        f"`mermaid-diagrams` skill. Edit the composition, not this block.\n\n"
         f"::::\n"
         f"{END}"
     )

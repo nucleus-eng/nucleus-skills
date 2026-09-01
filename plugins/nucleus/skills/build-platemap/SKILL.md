@@ -39,7 +39,15 @@ instead of asking when one is supplied.
 
 - **Instrument** — plate reader or microscope. This changes the edge rule in
   step 2, so it is not optional.
-- **Plate format** — 96 or 384 well.
+- **Plate format** — **384 unless there is evidence otherwise.** That is the
+  default in this field. Infer before asking, and ask only when inference
+  genuinely fails:
+  - A row letter past `H` (e.g. `J`) exists only on 384. That settles it.
+  - A column number past 12 does the same.
+  - **Reaction volume is not evidence.** Up to roughly 50 µL is normal in a
+    standard 384 well, so a 35 µL reaction says nothing about the format.
+  - Ask when the evidence contradicts itself or the default — for example
+    rows past `H` on a sheet that says 96 somewhere else.
 - Conditions, and the reagents and volumes that make each one up.
 - In-well concentrations, and artifact IDs for anything with a stock.
 - Replicate count, controls, standards, total reaction volume.

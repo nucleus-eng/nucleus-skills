@@ -142,7 +142,7 @@ def check_wells(rows, plate, instrument, margin, report):
     limit = {name: index for index, name in enumerate(row_names)}
 
     edge_level = "blocking" if instrument == "microscope" else "warn"
-    edge_rows, edge_cols = [], []
+    edge_rows, edge_cols, off_plate = [], [], []
 
     for row in rows:
         well = str(row.get("Well", "")).strip().replace(":", "")
@@ -161,12 +161,26 @@ def check_wells(rows, plate, instrument, margin, report):
         column = int(digits)
         if letters not in limit or column < 1 or column > last_col:
             report.add("blocking", f"well {well!r}: outside a {plate}-well plate (max {last_row}{last_col})")
+            off_plate.append(well)
             continue
         index = limit[letters]
         if index < margin or index > limit[last_row] - margin:
             edge_rows.append(well)
         elif column <= margin or column > last_col - margin:
             edge_cols.append(well)
+
+    # 384 is the default format in this field. If wells fall off a smaller
+    # plate but would sit on a 384, say so rather than only reporting the
+    # failure -- the flag is more likely wrong than the platemap.
+    if plate != 384 and off_plate:
+        fits = [w for w in off_plate
+                if (m := WELL.match(w)) and m.group("row") <= "P" and int(m.group("col")) <= 24]
+        if fits:
+            report.add(
+                "info",
+                f"{len(fits)} of those well(s) are valid on a 384-well plate, which is the "
+                f"default format -- if that is the plate, re-run with --plate 384",
+            )
 
     for wells, axis in ((edge_rows, "row"), (edge_cols, "column")):
         wells = list(dict.fromkeys(wells))  # a duplicated well is its own finding

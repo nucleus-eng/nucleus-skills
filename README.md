@@ -67,7 +67,6 @@ read when the skill is actually invoked.
 | `author-myst-content` | MyST authoring conventions and page status |
 | `mermaid-diagrams` | Mermaid source for module, process, and implementation diagrams |
 | `terminology-sweep` | Corpus sweep for terminology drift, stale renames, and project-defined words |
-| `build-platemap` | Experiment description → CDK-compatible platemap CSV/TSV |
 | `extract-conditions` | ELN page, protocol or prose → condition table (no wells) |
 | `build-platemap` | Condition table or description → CDK-compatible platemap CSV/TSV |
 

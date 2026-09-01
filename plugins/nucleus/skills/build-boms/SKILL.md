@@ -1,5 +1,6 @@
 ---
-description: Full spec and rules for the lab-ready protocol pipeline — build-protocols.py, BOM tables, check-bom-labels.py, download buttons, and generated/ artifacts.
+name: build-boms
+description: Generate lab-ready protocol PDFs, BOM PDFs, and materials CSVs from nucleus-docs process and module spec pages. Use when adding or editing a bom-<slug> table, adding a download button, running or debugging build-protocols.py or check-bom-labels.py, or when a generated artifact is missing, stale, or wrongly committed.
 ---
 
 ### Lab-ready protocol pipeline (issue #10)

@@ -65,6 +65,7 @@ read when the skill is actually invoked.
 | `migrate-content` | DevNote or Notion export → nucleus-docs page |
 | `verify-dna-constructs` | DNA construct identity claims against `nucleus-eng/DNA` |
 | `author-myst-content` | MyST authoring conventions and page status |
+| `mermaid-diagrams` | Mermaid source for module, process, and implementation diagrams |
 
 ## Use it from another repo
 
@@ -138,6 +139,7 @@ disagree with itself.
 | Vale, codespell, lychee, strict build | `lint-docs` |
 | DNA construct identity claims | `verify-dna-constructs` |
 | MyST authoring conventions, page status | `author-myst-content` |
+| Mermaid diagram source for Nucleus docs | `mermaid-diagrams` |
 | Prose style, notation, units | `references/devnote-style-guide.md` (a reference, not a skill) |
 
 ## Checks

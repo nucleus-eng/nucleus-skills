@@ -13,7 +13,7 @@ is complete, the source is authoritative.
 | `plugins/nucleus/skills/ingest/` | `bnext/doc2devnote/.claude/skills/ingest/` | Yes, scoped to doc2devnote |
 | `plugins/nucleus/skills/migrate/` | `bnext/doc2devnote/.claude/skills/migrate/` | Yes, scoped to doc2devnote |
 | `plugins/nucleus/skills/notion-corpus-to-outline/` | `bnext/doc2devnote/.claude/skills/notion-corpus-to-outline/` | Yes, scoped to doc2devnote |
-| `plugins/nucleus/skills/migrate-devnote/` | `bnext/nucleus-eng/2026-CERN-OHL-P/.claude/skills/migrate-devnote/` | Yes, scoped to that repo |
+| `plugins/nucleus/skills/migrate-devnote/` | `bnext/nucleus-eng/nucleus-devnote-archive-1/.claude/skills/migrate-devnote/` | Yes, scoped to that repo |
 | `plugins/nucleus/skills/build-boms/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/build-boms.md` | **No** |
 | `plugins/nucleus/skills/lint-docs/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/lint-docs.md` | **No** |
 | `plugins/nucleus/skills/migrate-content/SKILL.md` | `bnext/nucleus-eng/nucleus-docs/.claude/skills/migrate-content.md` | **No** |
@@ -49,7 +49,7 @@ owns. Delete them when the extraction is done.
 | --- | --- | --- |
 | `extraction-sources/nucleus-docs-CLAUDE.md` | `bnext/nucleus-eng/nucleus-docs/CLAUDE.md` | Holds 3 skills' worth of procedure to extract, and a block that duplicates `lint-docs.md`. **Copied from a working tree on a feature branch, not `main`** — it carries a paragraph `main` does not have, and every line number derived from it is off by six after line 243. Cite section headings, not line numbers. Delete once nucleus-docs#216 lands. |
 | `extraction-sources/doc2devnote-CLAUDE.md` | `bnext/doc2devnote/CLAUDE.md` | 83 lines. Two small blocks duplicate `ingest`. |
-| `extraction-sources/CERN-MIGRATION-PLAYBOOK.md` | `bnext/nucleus-eng/2026-CERN-OHL-P/MIGRATION-PLAYBOOK.md` | The human entry point for `migrate-devnote`. Correctly a pointer doc, not a duplicate. Kept as a model for how README-to-skill pointers should read. |
+| `extraction-sources/CERN-MIGRATION-PLAYBOOK.md` | `bnext/nucleus-eng/nucleus-devnote-archive-1/MIGRATION-PLAYBOOK.md` | The human entry point for `migrate-devnote`. Correctly a pointer doc, not a duplicate. Kept as a model for how README-to-skill pointers should read. |
 
 ## Not copied
 

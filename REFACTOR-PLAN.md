@@ -4,7 +4,7 @@ Goal: every Nucleus rule has exactly one owner, every skill loads, and the
 skills stay correct without hand-syncing copies.
 
 Findings this plan acts on come from an audit run on 2026-08-19 across
-nucleus-docs, doc2devnote, 2026-CERN-OHL-P, DNA, and `~/.claude/skills`.
+nucleus-docs, doc2devnote, nucleus-devnote-archive-1, DNA, and `~/.claude/skills`.
 
 The phases are ordered by dependency. Phases 0 and 1 are done. Phases 2–3
 are safe to do in any order.
@@ -58,7 +58,7 @@ dialog is accepted, so the skills are absent on the first run in a fresh
 clone until trust is granted. Plugin skills are namespaced by plugin name.
 
 **Remaining:** land the `.claude/settings.json` block in `nucleus-docs` and
-`2026-CERN-OHL-P` (tracked as issues in those repos). `doc2devnote` is a
+`nucleus-devnote-archive-1` (tracked as issues in those repos). `doc2devnote` is a
 fork of `antonrmolina/doc2devnote` and not in the `nucleus-eng` org, so it
 needs an upstream PR or a fork-only setting — decide separately.
 

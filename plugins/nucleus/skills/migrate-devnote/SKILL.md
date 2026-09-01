@@ -1,6 +1,6 @@
 ---
 name: migrate-devnote
-description: Recover a DevNote already published on the Curvenote venue into the 2026-CERN-OHL-P repository, make it build, and re-submit it to that venue. Output keeps the Curvenote main.md plus curvenote.yml format. Use when moving DevNotes into devnotes/, recovering a DevNote's source from a MECA archive, fixing a live DevNote that is not yet in the repo, or debugging a DevNote that fails curvenote check, fails its Typst PDF export, or raises ModuleNotFoundError for cdk in live compute. Use migrate instead when converting a local DevNote into MyST for the internal registry.
+description: Recover a DevNote already published on the Curvenote venue into the nucleus-devnote-archive-1 repository, make it build, and re-submit it to that venue. Output keeps the Curvenote main.md plus curvenote.yml format. Use when moving DevNotes into devnotes/, recovering a DevNote's source from a MECA archive, fixing a live DevNote that is not yet in the repo, or debugging a DevNote that fails curvenote check, fails its Typst PDF export, or raises ModuleNotFoundError for cdk in live compute. Use migrate instead when converting a local DevNote into MyST for the internal registry.
 ---
 
 # Migrate a DevNote

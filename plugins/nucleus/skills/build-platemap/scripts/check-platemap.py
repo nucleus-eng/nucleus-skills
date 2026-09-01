@@ -212,15 +212,67 @@ def check_missing_information(rows, volumes, concentrations, ids, report):
     if not volumes:
         return
 
-    compartments = sorted({m.group(1).upper() for c in volumes + concentrations
-                           if (m := COMPARTMENT.match(c))})
-    if len(compartments) > 1:
+    # A reagent's compartment decides what its volume means, so resolve the
+    # coordinate BEFORE reading the amount -- and per row, not per column. A
+    # substance can sit in different compartments in different wells; in one
+    # real plate `[aTc]` was ambient in 25 wells and interior in the 26th,
+    # which was the control. Skipping the sum entirely (the earlier fix here)
+    # traded false findings for no coverage at all.
+    by_compartment: dict[str, list[str]] = defaultdict(list)
+    for column in volumes:
+        match = COMPARTMENT.match(column)
+        by_compartment[match.group(1).upper() if match else ""].append(column)
+
+    columns_present = [c for c in (rows[0] if rows else {}) if c]
+    totals = {}
+    for compartment in by_compartment:
+        if not compartment:
+            continue
+        for column in columns_present:
+            m = re.match(rf"^{compartment}\s+Volume\s*\(\s*u?[mµ]?[lL]\s*\)$", column, re.I)
+            if m:
+                totals[compartment] = column
+
+    named = sorted(c for c in by_compartment if c)
+    if len(named) > 1:
         report.add(
             "info",
-            f"this platemap describes {len(compartments)} compartments per well "
-            f"({', '.join(compartments)}) -- component volumes are not summed against "
-            f"{RXN_VOLUME}, which describes one compartment, not the whole well",
+            f"{len(named)} compartments per well ({', '.join(named)}) -- volumes are summed "
+            f"within each, never across, because {RXN_VOLUME} describes one compartment",
         )
+        # In a multi-compartment plate, a volume column with no compartment
+        # cannot be summed against anything: nothing says which side of the
+        # membrane it is on.
+        for column in by_compartment.get("", []):
+            report.add(
+                "warn",
+                f"{column!r} names no compartment on a plate that has {', '.join(named)} -- "
+                f"prefix it (e.g. 'IS {column}') so it can be checked",
+            )
+
+    for row in rows:
+        for compartment, columns in sorted(by_compartment.items()):
+            target_column = totals.get(compartment)
+            if len(by_compartment) > 1 and not target_column:
+                continue          # no stated total for this compartment; nothing to check against
+            # A compartment's own total is not one of its components.
+            parts = [c for c in columns if c != target_column]
+            present = [as_number(row[c]) for c in parts if not is_blank(row.get(c))]
+            if not present or None in present:
+                continue
+            target = as_number(row.get(target_column) if target_column else row.get(RXN_VOLUME))
+            if target is None:
+                continue
+            total = sum(present)
+            if abs(total - target) > 0.01:
+                where = f" in {compartment}" if compartment else ""
+                report.add(
+                    "warn",
+                    f"well {row.get('Well')} ({row.get('Name')}): components{where} sum to "
+                    f"{total:g} uL but {target_column or RXN_VOLUME} is {target:g}",
+                )
+
+    if len(by_compartment) > 1:
         return
 
     for row in rows:

@@ -148,6 +148,7 @@ disagree with itself.
 | Reaction composition read out of unstructured sources | `extract-conditions` |
 | Platemap layout, columns, and CDK compatibility | `build-platemap` |
 | Prose style, notation, units | `references/devnote-style-guide.md` (a reference, not a skill) |
+| Assay frame vs specimen, compartments, sub-mix expansion | `references/assay-and-specimen.md` (a reference, not a skill) |
 
 ## Checks
 

@@ -115,25 +115,28 @@ means one attribute was not recorded for part of the plate.
 
 ## Two compartments in one well
 
-A synthetic cell is an **inner solution (IS)** inside a membrane, sitting in
-an **outer solution (OS)**. The well holds both. This breaks two assumptions
-that hold everywhere else:
+A well can hold an inner solution inside a membrane, sitting in an outer
+solution, and then `Rxn Volume (uL)` describes one compartment rather than
+the well. The rules for reading that — resolve the compartment before the
+amount, per row — are owned by
+[`references/assay-and-specimen.md`](../../../references/assay-and-specimen.md),
+because `extract-conditions` needs them too.
 
-- **`Rxn Volume (uL)` describes one compartment, not the well.** A real plate
-  had 30 µL IS and 300 µL OS. Summing component volumes against a single
-  total is meaningless — `check-platemap.py` detects `IS`/`OS` columns and
-  skips the sum rather than reporting a false mismatch on every row.
-- **A reagent has a location as well as an amount.** A column like
-  `aTc (OS/IS)` says *which side of the membrane* the aTc went. That is not a
-  concentration or a volume, and no naming convention catches it. Keep it.
+## Absence has three states, and this is provenance
 
-Prefix compartment-specific columns: `[OS-glucose] (mM)`,
-`IS Volume (uL)`, `OS Volume (uL)`.
+This is a **reading convention, not domain structure.** The test: it would be
+true of any spreadsheet in any domain. It records how strong a claim a cell
+makes, which is provenance — so it lives here, in the skill, and not in a
+semantics file. Filing this kind of rule as domain structure is how a shared
+reference becomes a junk drawer.
 
-## `N/A` is data
+| Cell | Claim |
+| --- | --- |
+| an explicit `0` | there is none, and someone says so |
+| `N/A` | the question does not apply to this well |
+| blank | nobody made a claim |
 
-In these sheets `N/A` means "not applicable to this well" — no liposome in a
-bulk-solution control, no compartment to name. It is the text form of the
-deliberate zero from the fill rule above, **not** a missing value. Do not
-treat it as a placeholder; doing so buries the real findings under one
-warning per well.
+`N/A` is data. In these sheets it means "no liposome in this bulk control",
+"no compartment to name". Treating it as a missing value buries the real
+findings under one warning per well — it did exactly that, thirteen times,
+before this was written down.

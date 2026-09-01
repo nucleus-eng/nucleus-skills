@@ -31,7 +31,10 @@ tutorial**:
 | `Type` | `Sample`, `Standard`, `Control`, `Positive Control`, `Negative Control` |
 | `Rxn Volume (uL)` | Total liquid volume in the well |
 
-Two reference files hold the detail:
+[`references/assay-and-specimen.md`](../../references/assay-and-specimen.md)
+holds the rules shared with `extract-conditions`: the assay-frame/specimen
+split, resolving a reagent's compartment before its amount, and expanding a
+named sub-mix. Two skill-local reference files hold the rest:
 
 - `references/cdk-behaviour.md` — what the CDK does that the tutorial does
   not say, including the ways a platemap fails **silently**. Read it before

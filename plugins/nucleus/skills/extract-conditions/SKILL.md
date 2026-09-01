@@ -94,6 +94,36 @@ Nucleus files are named `<YYYYMMDD>-<slug>` — `20250612-PPK.csv`,
 date is very often in the name of the file holding it. Check there before
 reporting the field as unrecoverable.
 
+## 3b. Resolve names you do not know — do not guess, do not glossarise
+
+Sources are full of shorthand: `MM`, `RNA ihb.`, `Optiprep`, `Sol A`. Look
+them up. **Do not write a glossary** — nucleus-docs owns these and a copy
+here drifts, which is the bug this repo exists to fix.
+
+Lookup order, most specific first:
+
+1. **nucleus-docs module specs** — authoritative for composition and
+   reference concentrations. `~/src/bnext/nucleus-eng/nucleus-docs/docs/modules/`,
+   falling back to `docs.nucleus.engineering` when there is no checkout.
+2. **Anything construct-shaped** — hand to `verify-dna-constructs`. It owns
+   construct identity, the `nucleus-eng/DNA` lookup, and the
+   identity-versus-equivalence discipline that stops a name-similarity match
+   being asserted as sequence identity.
+3. **DevNotes** — for experiment-specific terms the docs do not carry.
+4. **Ask.** Never expand an abbreviation you could not confirm.
+
+This is not optional polish. On a real sheet the assembly tab said
+`pT7-deGFP` at 3.0 µL and the platemap said `pT7-tetO-plamGFP` at 0.5 µL.
+The module spec settled it — `pT7-tetO-plamGFP` is the module's reference
+construct, its reference reaction uses 0.5 µL, and its reference TetR
+concentration matched the platemap exactly. Three independent numbers said
+the assembly tab was a stale carry-over. Guessing would have picked the
+wrong reporter.
+
+**A failed lookup is itself a finding.** `IS` and `OS` are used throughout
+lab spreadsheets and are defined nowhere in nucleus-docs. That is a gap in
+the docs, worth reporting, not a licence to invent a definition.
+
 ## 4. Report what is wrong, do not fix it
 
 Source pages carry notation errors that change meaning:
@@ -114,4 +144,7 @@ layout. Then ask `build-platemap` for wells, giving it: the condition table,
 the plate format if the source implies one, the replicate count, and the
 instrument.
 
-See `references/recipe-tables.md` for the table shapes seen in practice.
+See `references/recipe-tables.md` for the table shapes seen in practice, and
+[`references/assay-and-specimen.md`](../../references/assay-and-specimen.md)
+for compartments, sub-mix expansion and its guard — shared with
+`build-platemap`, which needs the same rules from the other side.

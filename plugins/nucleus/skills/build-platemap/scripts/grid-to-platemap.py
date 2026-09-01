@@ -24,6 +24,9 @@ import re
 import sys
 from pathlib import Path
 
+# Run from anywhere: platemap_common.py sits beside this file.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from platemap_common import REQUIRED, is_blank, load_grid  # one owner
 PLATE_ROW = re.compile(r"^[A-Z]{1,2}$")
 

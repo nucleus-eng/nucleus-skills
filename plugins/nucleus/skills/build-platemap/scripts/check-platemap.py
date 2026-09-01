@@ -25,6 +25,9 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+# Run from anywhere: platemap_common.py sits beside this file.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from platemap_common import (  # one owner for these -- see platemap_common.py
     ANALYSED, PLATES, REQUIRED, RXN_VOLUME, TYPES, is_blank, plate_rows,
 )

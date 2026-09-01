@@ -173,3 +173,15 @@ never appears. Three skills failed that way in nucleus-docs for months.
 
 Not yet automated: Vale over the skill files themselves. They state unit
 conventions they do not currently obey.
+
+## Platemap test corpus
+
+Real bench fixtures and a manifest for testing `build-platemap`'s scripts
+(`check-platemap.py`, `flatten-platemap.py`, `grid-to-platemap.py`,
+`scale-recipe.py`) live in a companion repo:
+
+[nucleus-eng/nucleus-platemap-corpus](https://github.com/nucleus-eng/nucleus-platemap-corpus)
+
+Each fixture is documented in `manifest.yaml` with its origin, which checks
+it exercises, and the tier of confidence in the expected findings. The scripts
+require CSV input — `.xlsx` source files are kept alongside their exports.

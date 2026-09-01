@@ -27,7 +27,7 @@ from pathlib import Path
 # Run from anywhere: platemap_common.py sits beside this file.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from platemap_common import REQUIRED, is_blank, load_grid  # one owner
+from platemap_common import PLATEMAP_COLUMNS, is_blank, load_grid  # one owner
 PLATE_ROW = re.compile(r"^[A-Z]{1,2}$")
 
 
@@ -106,7 +106,7 @@ def read_grid_wells(rows, header_index, columns) -> list[tuple[str, str]]:
 def find_table(rows: list[list]) -> tuple[list[str], list[dict[str, str]]] | None:
     for index, row in enumerate(rows):
         labels = [text(c) for c in row]
-        if sum(1 for column in REQUIRED if column in labels) >= 3:
+        if sum(1 for column in PLATEMAP_COLUMNS if column in labels) >= 3:
             header = labels
             out = []
             for line in rows[index + 1:]:
@@ -196,7 +196,7 @@ def main() -> int:
 
     if args.output:
         layer_columns = [column_name(name) for name, _, _ in layers]
-        header = REQUIRED + [c for c in layer_columns if c not in REQUIRED]
+        header = PLATEMAP_COLUMNS + [c for c in layer_columns if c not in PLATEMAP_COLUMNS]
         delimiter = "\t" if args.output.suffix.lower() in {".tsv", ".tab"} else ","
         with args.output.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.writer(handle, delimiter=delimiter)
@@ -211,7 +211,7 @@ def main() -> int:
                     source = next((n for n, _, _ in layers if column_name(n) == column), None)
                     row.append(values.get(source, "") if source else "")
                 writer.writerow(row)
-        blank = [c for c in REQUIRED if c != "Well" and
+        blank = [c for c in PLATEMAP_COLUMNS if c != "Well" and
                  not any(column_name(n) == c for n, _, _ in layers)]
         print(f"wrote {args.output} -- {', '.join(blank)} are blank "
               f"and must be filled in before this is a valid platemap")

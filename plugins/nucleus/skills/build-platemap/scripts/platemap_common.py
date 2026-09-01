@@ -1,9 +1,20 @@
 """Shared definitions for the platemap scripts.
 
-The six required columns are owned by the platemap tutorial at
-docs.nucleus.engineering/guides/platemap-tutorial/. This is a port -- keep it
-in sync with that page. It lives here, once, because three scripts need it,
-and three copies of a definition is how two copies come to disagree.
+The column and type definitions are owned by the original DevNote,
+`2026-CERN-OHL-P/devnotes/2026-bhasin-platemaps/main.md`. This is a port --
+keep it in sync with that page. It lives here, once, because three scripts
+need it, and three copies of a definition is how two copies come to disagree.
+
+Where the published tutorial at
+docs.nucleus.engineering/guides/platemap-tutorial/ disagrees with the
+DevNote, the DevNote wins. It differs in two places:
+
+- the tutorial makes `Rxn Volume (uL)` a sixth required column; the DevNote
+  lists reaction volume among the optional ones. It is strongly recommended
+  here, and its absence is a warning rather than an error.
+- the tutorial omits `Blank` from the type vocabulary. The DevNote lists it,
+  and the CDK's `blank_data()` uses it as its default `blank_type`, so the
+  tutorial is the outlier.
 """
 
 from __future__ import annotations
@@ -11,10 +22,17 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-REQUIRED = ["Date", "Experiment", "Well", "Name", "Type", "Rxn Volume (uL)"]
 RXN_VOLUME = "Rxn Volume (uL)"
 
-TYPES = {"Sample", "Standard", "Control", "Positive Control", "Negative Control"}
+# Required: absence is an error. Five columns, per the DevNote.
+REQUIRED = ["Date", "Experiment", "Well", "Name", "Type"]
+# Recommended: absence is a warning. Analysis runs; the record is poorer.
+RECOMMENDED = [RXN_VOLUME]
+# What a platemap this repo writes should carry.
+PLATEMAP_COLUMNS = REQUIRED + RECOMMENDED
+
+TYPES = {"Sample", "Standard", "Blank",
+         "Control", "Positive Control", "Negative Control"}
 # DEFAULT_ANALYSIS_COLUMNS in the CDK's platereader.py -- kinetics runs on these only.
 ANALYSED = {"Sample", "Control", "Positive Control"}
 

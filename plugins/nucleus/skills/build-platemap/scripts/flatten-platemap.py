@@ -25,7 +25,7 @@ from pathlib import Path
 # Run from anywhere: platemap_common.py sits beside this file.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from platemap_common import REQUIRED, is_blank, load_grid  # one owner
+from platemap_common import PLATEMAP_COLUMNS, is_blank, load_grid  # one owner
 
 
 
@@ -95,12 +95,12 @@ def flatten(wells, recipes, concentration_units: str):
 
     volume_columns = [f"{base} Vol (uL)" for base in components]
     concentration_columns = [f"[{base}] ({concentration_units})" for base in annotated]
-    header = REQUIRED + volume_columns + concentration_columns
+    header = PLATEMAP_COLUMNS + volume_columns + concentration_columns
 
     out = []
     for well in wells:
         recipe = recipes.get(str(well.get("Name", "")).strip())
-        row = [format_cell(well.get(column)) for column in REQUIRED]
+        row = [format_cell(well.get(column)) for column in PLATEMAP_COLUMNS]
         for base in components:
             if recipe is None:
                 row.append("")          # no recipe at all -> unknown, and that is a finding

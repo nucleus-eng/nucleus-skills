@@ -29,7 +29,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from platemap_common import (  # one owner for these -- see platemap_common.py
-    ANALYSED, PLATES, REQUIRED, RXN_VOLUME, TYPES, is_blank, plate_rows,
+    ANALYSED, PLATES, PLATEMAP_COLUMNS, RECOMMENDED, REQUIRED, RXN_VOLUME,
+    TYPES, is_blank, plate_rows,
 )
 # `<artifact> Vol (uL)`, but not the required `Rxn Volume (uL)` itself.
 VOL_COL = re.compile(r"^(?P<name>.+?)\s+vol(?:ume)?\s*\(\s*u?[mµ]?l\s*\)$", re.I)
@@ -77,7 +78,7 @@ def find_header(grid: list[list[str]]) -> int:
     best, best_score = 0, -1
     for index, row in enumerate(grid):
         labels = {str(cell).strip() for cell in row}
-        score = sum(1 for column in REQUIRED if column in labels)
+        score = sum(1 for column in PLATEMAP_COLUMNS if column in labels)
         # A near-miss on the volume column still marks the header row.
         if score and any(
             str(cell).strip().lower().endswith("volume (ul)")
@@ -401,7 +402,7 @@ def check_consistency(rows, report):
 
     # Same Name, different composition.
     composition = defaultdict(set)
-    tracked = [c for c in (rows[0] if rows else {}) if c and c not in REQUIRED]
+    tracked = [c for c in (rows[0] if rows else {}) if c and c not in PLATEMAP_COLUMNS]
     for row in rows:
         key = tuple((c, str(row.get(c, "")).strip()) for c in tracked)
         composition[str(row.get("Name", "")).strip()].add(key)
@@ -483,8 +484,15 @@ def main() -> int:
     missing = [c for c in REQUIRED if c not in fieldnames]
     for column in missing:
         report.add("blocking", f"required column {column!r} is missing")
+    for column in RECOMMENDED:
+        if column not in fieldnames:
+            report.add(
+                "warn",
+                f"{column!r} is missing -- the DevNote lists it as optional, but without it "
+                f"nothing can check that a well's components account for its volume",
+            )
 
-    for column in [c for c in REQUIRED if c in fieldnames]:
+    for column in [c for c in PLATEMAP_COLUMNS if c in fieldnames]:
         if column == "Well" and wells_blank:
             continue        # already reported once, above
         blanks = [str(r.get("Well", "?")) or "?" for r in rows if is_blank(r.get(column))]
@@ -512,10 +520,7 @@ def main() -> int:
         for value, count in sorted(seen.items()):
             if value in TYPES:
                 continue
-            if value == "Blank":
-                report.add("warn", f"Type 'Blank' on {count} row(s): used by blank_data() but absent from the tutorial's vocabulary")
-            else:
-                report.add("blocking", f"Type {value!r} on {count} row(s) is outside the vocabulary {sorted(TYPES)}")
+            report.add("blocking", f"Type {value!r} on {count} row(s) is outside the vocabulary {sorted(TYPES)}")
         if not any(str(r.get("Type", "")).strip() in ANALYSED for r in rows):
             report.add("warn", f"no row has an analysed type {sorted(ANALYSED)} -- kinetics will return nothing")
 

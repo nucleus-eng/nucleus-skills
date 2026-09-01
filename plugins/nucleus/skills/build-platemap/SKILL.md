@@ -15,21 +15,36 @@ it. That boundary is real: a write-up records composition and never records
 layout, so plate format, replicate count and well IDs must be asked for, not
 inferred from the page.
 
-The column requirements are owned by the
-[platemap tutorial](https://docs.nucleus.engineering/guides/platemap-tutorial/)
-(source: `nucleus-docs/guides/platemap_tutorial.md`). Read it for the
-authoritative list. The six required columns are restated here because every
-step below depends on them — **this is a port; keep it in sync with the
-tutorial**:
+The column requirements are owned by the original DevNote,
+`2026-CERN-OHL-P/devnotes/2026-bhasin-platemaps/main.md`. **Where the
+published [platemap tutorial](https://docs.nucleus.engineering/guides/platemap-tutorial/)
+disagrees with it, the DevNote wins.** Restated here because every step below
+depends on it — **this is a port; keep it in sync with the DevNote**:
+
+**Five required columns.** Absence is an error.
 
 | Column | Holds |
 | --- | --- |
-| `Date` | Experiment date |
-| `Experiment` | Short description of the run |
 | `Well` | Alphanumeric location, e.g. `K13` |
-| `Name` | What is in the well. Identical material gets an identical name. |
-| `Type` | `Sample`, `Standard`, `Control`, `Positive Control`, `Negative Control` |
-| `Rxn Volume (uL)` | Total liquid volume in the well |
+| `Date` | Experiment date, **`yyyy-mm-dd`** — never `mm/dd/yy`, which reads differently by country |
+| `Experiment` | Short description of the run |
+| `Name` | A brief description of the well's contents. **Unique per condition, identical across replicates** — the second is what makes statistics possible. |
+| `Type` | `Sample`, `Standard`, `Blank`, `Control`, `Positive Control`, `Negative Control` |
+
+**Strongly recommended:** `Rxn Volume (uL)`, the total liquid volume. The
+DevNote lists it among the optional columns, so its absence is a warning —
+but without it nothing can check that a well's components account for its
+volume.
+
+Two places where the tutorial is the outlier and should not be followed:
+
+- it makes `Rxn Volume (uL)` a sixth *required* column
+- it omits `Blank` from the type vocabulary, which both the DevNote and the
+  CDK's `blank_data()` use
+
+Anything else is optional. The DevNote's guidance: record the variables you
+control, plus any you think may influence the outcome — reagent lot numbers,
+reporter identity, the experimentalist.
 
 [`references/assay-and-specimen.md`](../../references/assay-and-specimen.md)
 holds the rules shared with `extract-conditions`: the assay-frame/specimen

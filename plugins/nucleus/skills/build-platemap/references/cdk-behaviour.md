@@ -37,10 +37,10 @@ nothing and loses every one of those wells at the merge.
 correct. A well typed `sample` in lower case is not in the list either, and
 that is not correct — it is simply absent from the results.
 
-`blank_data()` defaults to `blank_type="Blank"` (line 522). **`Blank` is not
-in the tutorial's vocabulary**, but the CDK's own test fixtures use it. Treat
-it as a gap between the docs and the code: accept it with a warning, and do
-not emit it in a draft without saying so.
+`blank_data()` defaults to `blank_type="Blank"` (line 522). `Blank` **is** in
+the DevNote's vocabulary and is used by the CDK's own test fixtures. The
+published tutorial omits it, which makes the tutorial the outlier — treat
+`Blank` as a legitimate type.
 
 `Type` is optional in practice. Two call sites warn and carry on when the
 column is absent (lines 1084, 1346).

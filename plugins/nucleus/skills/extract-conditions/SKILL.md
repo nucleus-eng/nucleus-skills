@@ -22,12 +22,12 @@ One row per condition, and **it carries all six required platemap columns.**
 
 | Column | Holds |
 | --- | --- |
-| `Date` | The experiment date — fill it; it is usually recoverable |
+| `Date` | The experiment date as `yyyy-mm-dd` — fill it; it is usually recoverable |
 | `Experiment` | The run — fill it; usually the page title or filename slug |
 | `Well` | **Blank.** A write-up records no layout, and inventing one is fabrication |
 | `Name` | The condition, named the same way every time it appears |
-| `Type` | `Sample`, `Standard`, `Control`, `Positive Control`, `Negative Control` |
-| `Rxn Volume (uL)` | Volume **per reaction**, not per master mix |
+| `Type` | `Sample`, `Standard`, `Blank`, `Control`, `Positive Control`, `Negative Control` |
+| `Rxn Volume (uL)` | Volume **per reaction**, not per master mix. Recommended, not required. |
 | `<component> Vol (uL)` | Volume of a component, per reaction |
 | `[<component>] (<units>)` | Concentration **in the reaction** |
 

@@ -66,6 +66,7 @@ read when the skill is actually invoked.
 | `verify-dna-constructs` | DNA construct identity claims against `nucleus-eng/DNA` |
 | `author-myst-content` | MyST authoring conventions and page status |
 | `mermaid-diagrams` | Mermaid source for module, process, and implementation diagrams |
+| `terminology-sweep` | Corpus sweep for terminology drift, stale renames, and project-defined words |
 
 ## Use it from another repo
 
@@ -140,6 +141,7 @@ disagree with itself.
 | DNA construct identity claims | `verify-dna-constructs` |
 | MyST authoring conventions, page status | `author-myst-content` |
 | Mermaid diagram source for Nucleus docs | `mermaid-diagrams` |
+| Terminology drift sweep | `terminology-sweep` |
 | Prose style, notation, units | `references/devnote-style-guide.md` (a reference, not a skill) |
 
 ## Checks

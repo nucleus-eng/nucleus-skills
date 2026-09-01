@@ -6,12 +6,12 @@ The full procedure lives in the `migrate-devnote` skill, so that Claude Code
 loads it on demand. This page is the human entry point. It does not repeat the
 content — follow the links.
 
-Written to support [#21](https://github.com/nucleus-eng/2026-CERN-OHL-P/issues/21)
+Written to support [#21](https://github.com/nucleus-eng/nucleus-devnote-archive-1/issues/21)
 (finish the migration programmatically). Every command has been run against the
-live site. Sources: PRs [#9](https://github.com/nucleus-eng/2026-CERN-OHL-P/pull/9),
-[#13](https://github.com/nucleus-eng/2026-CERN-OHL-P/pull/13),
-[#16](https://github.com/nucleus-eng/2026-CERN-OHL-P/pull/16) and
-[#20](https://github.com/nucleus-eng/2026-CERN-OHL-P/pull/20).
+live site. Sources: PRs [#9](https://github.com/nucleus-eng/nucleus-devnote-archive-1/pull/9),
+[#13](https://github.com/nucleus-eng/nucleus-devnote-archive-1/pull/13),
+[#16](https://github.com/nucleus-eng/nucleus-devnote-archive-1/pull/16) and
+[#20](https://github.com/nucleus-eng/nucleus-devnote-archive-1/pull/20).
 
 > **Licensing gate — read first.** This repo is only for DevNotes released fully
 > in the open, under CC-BY or a CERN-OHL-P equivalent. Deciding whether a DevNote

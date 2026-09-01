@@ -48,6 +48,10 @@ PLACEHOLDER = re.compile(r"(?:^|\b)(?:XX+|TBD|TODO|\?+|<[^>]*>)(?:\b|$)", re.I)
 # anything meaningful.
 COMPARTMENT = re.compile(r"^\[?(IS|OS)[\s\-]", re.I)
 DATE_PREFIX = re.compile(r"^(\d{6,8})[-_](.+)$")
+# The DevNote mandates yyyy-mm-dd and warns against mm/dd/yy and dd/mm/yy by
+# name, "that can cause confusion due to differences in use by country".
+ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$")
+SEPARATED = re.compile(r"^(\d{1,4})[/.\-](\d{1,2})[/.\-](\d{1,4})$")
 
 
 class Report:
@@ -372,6 +376,52 @@ def check_substituted_zeros(rows, volumes, concentrations, report):
         )
 
 
+def check_date_format(rows, report):
+    """Dates must read the same way in every country.
+
+    `11/19/25` happens to resolve -- 19 is not a month -- but `01/02/25` does
+    not, and no later reader can recover which was meant. The record is wrong
+    in a way that cannot be repaired, which is why an ambiguous date is worth
+    saying more loudly than a merely non-standard one.
+    """
+    seen = Counter(str(r.get("Date", "")).strip() for r in rows if not is_blank(r.get("Date")))
+    if not seen:
+        return
+
+    shapes = set()
+    for value, count in sorted(seen.items()):
+        if ISO_DATE.match(value):
+            shapes.add("yyyy-mm-dd")
+            continue
+        match = SEPARATED.match(value)
+        if not match:
+            shapes.add("other")
+            report.add("warn", f"Date {value!r} on {count} row(s) is not yyyy-mm-dd")
+            continue
+        first, second, third = match.groups()
+        shapes.add("separated")
+        problems = []
+        if len(first) <= 2 and int(first) <= 12 and int(second) <= 12:
+            problems.append(
+                f"{first}/{second} could be month/day or day/month, and no later reader "
+                f"can tell which was meant"
+            )
+        if len(third) <= 2:
+            problems.append(f"the year {third!r} has no century")
+        detail = "; ".join(problems) if problems else "the DevNote asks for yyyy-mm-dd"
+        report.add(
+            "warn" if problems else "info",
+            f"Date {value!r} on {count} row(s): {detail}",
+        )
+
+    if len(shapes) > 1:
+        report.add(
+            "warn",
+            f"{len(shapes)} different date formats in one platemap ({', '.join(sorted(shapes))}) "
+            f"-- whichever is right, they cannot all be",
+        )
+
+
 def check_consistency(rows, report):
     by_experiment = defaultdict(list)
     for row in rows:
@@ -550,6 +600,9 @@ def main() -> int:
                 report.add("blocking", f"well {row.get('Well')}: {RXN_VOLUME} {row.get(RXN_VOLUME)!r} is not a number")
             elif value <= 0:
                 report.add("blocking", f"well {row.get('Well')}: {RXN_VOLUME} is {value:g}")
+
+    if "Date" in fieldnames:
+        check_date_format(rows, report)
 
     volumes, concentrations, ids = column_roles(fieldnames)
     if not concentrations and not volumes:

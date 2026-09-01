@@ -26,7 +26,7 @@ depends on it — **this is a port; keep it in sync with the DevNote**:
 | Column | Holds |
 | --- | --- |
 | `Well` | Alphanumeric location, e.g. `K13` |
-| `Date` | Experiment date, **`yyyy-mm-dd`** — never `mm/dd/yy`, which reads differently by country |
+| `Date` | Experiment date, **`yyyy-mm-dd`** — never `mm/dd/yy`. `01/02/25` is a date nobody can recover: month/day or day/month, and a year with no century. |
 | `Experiment` | Short description of the run |
 | `Name` | A brief description of the well's contents. **Unique per condition, identical across replicates** — the second is what makes statistics possible. |
 | `Type` | `Sample`, `Standard`, `Blank`, `Control`, `Positive Control`, `Negative Control` |

@@ -18,18 +18,26 @@ hand over and ask for the rest — do not guess a plate.
 
 ## The condition table
 
-One row per condition. No `Well` column, by design.
+One row per condition, and **it carries all six required platemap columns.**
 
 | Column | Holds |
 | --- | --- |
+| `Date` | The experiment date — fill it; it is usually recoverable |
+| `Experiment` | The run — fill it; usually the page title or filename slug |
+| `Well` | **Blank.** A write-up records no layout, and inventing one is fabrication |
 | `Name` | The condition, named the same way every time it appears |
 | `Type` | `Sample`, `Standard`, `Control`, `Positive Control`, `Negative Control` |
 | `Rxn Volume (uL)` | Volume **per reaction**, not per master mix |
 | `<component> Vol (uL)` | Volume of a component, per reaction |
 | `[<component>] (<units>)` | Concentration **in the reaction** |
 
-`build-platemap` consumes this directly: it adds `Date`, `Experiment` and
-`Well` and writes one row per well.
+**`Well` is present and empty, not absent.** The difference matters: an absent
+column is not a platemap at all, while an empty one is a platemap awaiting a
+layout, and `check-platemap.py` reports the second as exactly that — naming
+what is missing rather than what is wrong. Dropping the column turns one
+informative finding into three "required column missing" errors.
+
+`build-platemap` consumes this directly and fills `Well`.
 
 ## 1. Read the prose, not only the tables
 
@@ -119,6 +127,12 @@ construct, its reference reaction uses 0.5 µL, and its reference TetR
 concentration matched the platemap exactly. Three independent numbers said
 the assembly tab was a stale carry-over. Guessing would have picked the
 wrong reporter.
+
+**A failed lookup decides whether you may write a zero.** A component whose
+recipe you found is *transparent* — you can see everything in it, so a
+substance it does not contain is genuinely absent. A component you could not
+resolve is *opaque*, and anything it might contain is unknown. See
+[`references/assay-and-specimen.md`](../../references/assay-and-specimen.md).
 
 **A failed lookup is itself a finding.** `IS` and `OS` are used throughout
 lab spreadsheets and are defined nowhere in nucleus-docs. That is a gap in

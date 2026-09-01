@@ -295,6 +295,82 @@ def check_missing_information(rows, volumes, concentrations, ids, report):
                 )
 
 
+def check_substituted_zeros(rows, volumes, concentrations, report):
+    """Find zeros that may be false claims of absence.
+
+    A `0` asserts there is none. That is only true when the whole recipe is
+    visible. If a row draws on an opaque component -- a commercial kit whose
+    contents are not recorded anywhere -- then a substance missing from the
+    itemised list may still be in the well, and the honest value is blank.
+
+    This needs no registry of kit names. The signature is structural: a column
+    that is zero in some rows and real in others, where the zero rows all
+    contain something the real rows never do. That something is a substitute,
+    and the zero is a question rather than a fact.
+    """
+    def value(row, column):
+        return as_number(row.get(column))
+
+    # substitute component -> the columns it may be silently supplying
+    # Concentration columns only. A VOLUME of 0 is a fact about pipetting --
+    # a NEB reaction really does contain 0 uL of SMix, even though it contains
+    # small molecules by another route. A CONCENTRATION of 0 is a claim about
+    # what is in the well, and that is the claim an opaque component falsifies.
+    # A fold unit (`x`, `1x`, `3.33x`) is a PRODUCT's dilution, not a
+    # substance's presence. "0x Sol A" in a reaction that uses no Sol A is a
+    # fact, not a claim about contents. Only molar and mass units describe
+    # what is in the well.
+    def is_fold(column):
+        m = CONC_COL.match(column)
+        return bool(m) and m.group("units").strip().lower() in {"x", "\u00d7", "fold"}
+
+    suspects: dict[str, list[str]] = defaultdict(list)
+    for column in concentrations:
+        if is_fold(column):
+            continue
+        zero_rows, real_rows = [], []
+        for row in rows:
+            v = value(row, column)
+            if v is None:
+                continue
+            (zero_rows if v == 0 else real_rows).append(row)
+        if not zero_rows or not real_rows:
+            continue
+        for other in volumes:
+            if other == column:
+                continue
+            if not all((value(r, other) or 0) > 0 for r in zero_rows):
+                continue
+            if not all((value(r, other) or 0) == 0 for r in real_rows):
+                continue
+            share = min((value(r, other) or 0) / (as_number(r.get(RXN_VOLUME)) or 1)
+                        for r in zero_rows)
+            if share < 0.05:
+                continue        # a trace component substitutes for nothing
+            # The relation is otherwise symmetric -- each column looks like the
+            # other's substitute. A substitute supplies more than it replaces,
+            # so break the tie on volume.
+            suspects[other].append(column)
+            break
+
+    # The relation can still look mutual across a volume/concentration pair.
+    # Keep the side that explains more, and drop the mirror.
+    for candidate in list(suspects):
+        for rival, columns in suspects.items():
+            if rival != candidate and candidate in columns and len(columns) > len(suspects[candidate]):
+                del suspects[candidate]
+                break
+
+    for other, columns in sorted(suspects.items()):
+        shown = ", ".join(columns[:4]) + (", ..." if len(columns) > 4 else "")
+        report.add(
+            "warn",
+            f"{len(columns)} column(s) are 0 only on rows containing {other!r}, which no other "
+            f"row has ({shown}). If {other!r} supplies them, those zeros claim an absence that "
+            f"is not true -- blank means unknown, 0 means none",
+        )
+
+
 def check_consistency(rows, report):
     by_experiment = defaultdict(list)
     for row in rows:
@@ -474,6 +550,7 @@ def main() -> int:
     if not concentrations and not volumes:
         report.add("info", "no composition columns -- the tutorial recommends recording what is in each well")
     check_missing_information(rows, volumes, concentrations, ids, report)
+    check_substituted_zeros(rows, volumes, concentrations, report)
     if not missing:
         check_consistency(rows, report)
 

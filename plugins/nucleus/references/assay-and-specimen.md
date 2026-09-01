@@ -79,6 +79,42 @@ expand(sub-mix) -> its components
 The inequality is the content. An equality there would fail on every correct
 sheet.
 
+## Zero is a claim of absence; blank is a claim of ignorance
+
+Both are claims. The difference is what they assert — `0` says *there is
+none*, blank says *nobody recorded it*. A wrong zero is worse than a blank
+because it is confidently false and it computes: a blank propagates as
+unknown, a zero propagates as fact.
+
+**You may only write `0` when you can see the whole recipe.** Absent from the
+itemised list is not the same as absent from the well.
+
+Whether you can see it is a matter of **findability, not of the source
+document**. A component is:
+
+- **transparent** — its recipe is on the page, or in nucleus-docs. SMix, PMix,
+  ribosomes and tRNA are all documented in `docs/modules/base-cytosol/spec.md`
+  with in-reaction concentrations, so they are transparent even when the ELN
+  page never expands them.
+- **opaque** — proprietary or unrecorded, and no lookup will resolve it. A
+  commercial kit's solutions are the usual case.
+
+One opaque component in a row, and a substance not itemised there becomes
+**blank**, not zero. This is substitution rather than omission: a reaction
+using a commercial kit does not *omit* nucleotides, it sources them
+differently, and those two facts look identical in a volume table.
+
+**Volumes are exempt.** A reaction really does contain 0 µL of a product it
+does not use, even when it contains that product's substances by another
+route. It is the *concentration* of a substance that a zero falsifies. A fold
+unit (`1x`, `3.33x`) describes a product's dilution, not a substance's
+presence, so it is exempt too.
+
+`check-platemap.py` finds these structurally, with no list of kit names to
+maintain: a concentration column that is zero only on rows containing
+something no other row has. That something is a substitute, and the zero is a
+question.
+
 ## Two instances, one lab
 
 The per-row compartment finding above has two known instances: a reagent in

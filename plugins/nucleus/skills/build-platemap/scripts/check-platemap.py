@@ -52,10 +52,42 @@ class Report:
         return sum(1 for lv, _ in self.items if lv == level)
 
 
-def read_rows(path: Path) -> list[dict[str, str]]:
+def read_grid(path: Path) -> list[list[str]]:
     delimiter = "\t" if path.suffix.lower() in {".tsv", ".tab"} else ","
     with path.open(newline="", encoding="utf-8-sig") as handle:
-        return list(csv.DictReader(handle, delimiter=delimiter))
+        return [list(row) for row in csv.reader(handle, delimiter=delimiter)]
+
+
+def find_header(grid: list[list[str]]) -> int:
+    """Find the row that names the platemap columns.
+
+    Do not assume row 1. A bench sheet often puts a spatial plate grid, or
+    notes, above the well table -- and a header found by position rather than
+    by content reports every required column as missing, which is a true
+    statement about the wrong row.
+    """
+    best, best_score = 0, -1
+    for index, row in enumerate(grid):
+        labels = {str(cell).strip() for cell in row}
+        score = sum(1 for column in REQUIRED if column in labels)
+        # A near-miss on the volume column still marks the header row.
+        if score and any(
+            str(cell).strip().lower().endswith("volume (ul)")
+            or str(cell).strip().lower() == "volume (ul)"
+            for cell in row
+        ):
+            score += 1
+        if score > best_score:
+            best, best_score = index, score
+    return best if best_score >= 3 else 0
+
+
+def rows_from(grid: list[list[str]], header_index: int) -> tuple[list[str], list[dict[str, str]]]:
+    header = [str(cell).strip() for cell in grid[header_index]]
+    out = []
+    for row in grid[header_index + 1:]:
+        out.append({name: (row[i] if i < len(row) else "") for i, name in enumerate(header) if name})
+    return [h for h in header if h], out
 
 
 def is_blank(value) -> bool:
@@ -256,16 +288,23 @@ def main() -> int:
         return 2
 
     try:
-        rows = read_rows(args.platemap)
+        grid = read_grid(args.platemap)
     except (OSError, UnicodeDecodeError, csv.Error) as exc:
         print(f"error: could not read {args.platemap}: {exc}", file=sys.stderr)
         return 2
-    if not rows:
+    if len(grid) < 2:
         print(f"error: {args.platemap} has no data rows", file=sys.stderr)
         return 2
 
-    fieldnames = [f for f in rows[0] if f is not None]
     report = Report()
+    header_index = find_header(grid)
+    fieldnames, rows = rows_from(grid, header_index)
+    if header_index:
+        report.add(
+            "info",
+            f"the column header is on line {header_index + 1}; the {header_index} line(s) "
+            f"above it are a different table and were not checked",
+        )
 
     rows, trailing = split_blocks(rows, fieldnames)
     if trailing:
@@ -318,6 +357,25 @@ def main() -> int:
                 report.add("blocking", f"Type {value!r} on {count} row(s) is outside the vocabulary {sorted(TYPES)}")
         if not any(str(r.get("Type", "")).strip() in ANALYSED for r in rows):
             report.add("warn", f"no row has an analysed type {sorted(ANALYSED)} -- kinetics will return nothing")
+
+        # `Standard` means a calibration standard -- fluorescein, HPTS -- and
+        # those wells are excluded from kinetic analysis. It is also an
+        # ordinary English word, so it gets used for "the standard protocol"
+        # or "the standard prep". That reads as valid and silently drops the
+        # wells from the results.
+        standards = [r for r in rows if str(r.get("Type", "")).strip() == "Standard"]
+        if standards:
+            has_concentration = any(
+                CONC_COL.match(c) or "concentration" in c.lower() for c in fieldnames
+            )
+            if not has_concentration:
+                report.add(
+                    "warn",
+                    f"{len(standards)} row(s) typed 'Standard' with no concentration column. "
+                    f"'Standard' means a calibration standard and those wells are excluded "
+                    f"from kinetics -- if it means 'the standard method' here, these are "
+                    f"Samples and they will silently vanish from the results",
+                )
 
     if RXN_VOLUME in fieldnames:
         for row in rows:

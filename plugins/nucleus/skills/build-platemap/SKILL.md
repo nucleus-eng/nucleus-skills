@@ -79,6 +79,31 @@ flatten it — `references/assembly-blocks.md` covers the parse, the join, and
 the three-state fill rule that keeps "deliberately none" apart from
 "nobody wrote it down".
 
+```bash
+python3 scripts/flatten-platemap.py sheet.xlsx --sheet <name> -o flat.tsv
+```
+
+If the source is a **spatial plate grid** — plate rows down the left, plate
+columns across the top, contents in the cells — convert it, and cross-check
+it against any written table on the same sheet:
+
+```bash
+python3 scripts/grid-to-platemap.py sheet.xlsx -o wells.tsv
+```
+
+The grid is what happened at the bench; the table is what someone typed up
+afterwards. When they disagree, the disagreement is the finding. A table
+covering 7 of 20 wells will analyse a third of the run and report nothing
+wrong.
+
+### `Standard` is a trap
+
+`Standard` means a calibration standard — fluorescein, HPTS — and those wells
+are **excluded from kinetic analysis**. It is also an ordinary English word,
+so it gets written for "the standard prep" or "the standard protocol". That
+reads as valid vocabulary and silently drops the wells from the results. If a
+`Standard` row has no concentration, it is probably a `Sample`.
+
 ## 4. Flag what is missing
 
 **Report incomplete information; never fill it in silently.** A platemap is a
@@ -110,6 +135,10 @@ object the CDK hands back — see `references/assembly-blocks.md`.
 ```bash
 python3 scripts/check-platemap.py <file> --instrument platereader --plate 384
 ```
+
+The checker finds the header row by content rather than by position, so a
+grid or notes sitting above the well table do not matter. It reports what it
+skipped.
 
 Three levels. **Blocking** means the CDK will silently produce wrong or
 missing data. **Warn** means the analysis runs but the record is incomplete.

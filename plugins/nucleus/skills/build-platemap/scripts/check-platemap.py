@@ -394,16 +394,30 @@ def main() -> int:
         if column.startswith("Unnamed:") or column in {"Row", "Column"}:
             report.add("info", f"{column!r} is dropped by the CDK loader")
 
+    # A condition table is a legitimate intermediate artifact -- extract-conditions
+    # produces one, with no Well column by design, because a write-up records
+    # chemistry and never records layout. Say that once, rather than reporting
+    # every row as a broken well.
+    wells_blank = "Well" in fieldnames and all(is_blank(r.get("Well")) for r in rows)
+    if wells_blank:
+        report.add(
+            "blocking",
+            f"every 'Well' is empty across {len(rows)} rows -- this is a condition table, "
+            f"not a platemap. It needs a layout: plate format, replicate count, and wells",
+        )
+
     missing = [c for c in REQUIRED if c not in fieldnames]
     for column in missing:
         report.add("blocking", f"required column {column!r} is missing")
 
     for column in [c for c in REQUIRED if c in fieldnames]:
-        blanks = [str(r.get("Well", "?")) for r in rows if is_blank(r.get(column))]
+        if column == "Well" and wells_blank:
+            continue        # already reported once, above
+        blanks = [str(r.get("Well", "?")) or "?" for r in rows if is_blank(r.get(column))]
         if blanks:
             report.add("blocking", f"required column {column!r} is empty on {len(blanks)} row(s): {', '.join(blanks[:6])}")
 
-    if "Well" in fieldnames:
+    if "Well" in fieldnames and not wells_blank:
         check_wells(rows, args.plate, args.instrument, args.edge_margin, report)
         counts = Counter(
             (str(r.get("Date", "")).strip(), str(r.get("Experiment", "")).strip(), str(r.get("Well", "")).strip())

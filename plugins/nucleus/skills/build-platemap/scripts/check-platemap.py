@@ -25,13 +25,9 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-REQUIRED = ["Date", "Experiment", "Well", "Name", "Type", "Rxn Volume (uL)"]
-TYPES = {"Sample", "Standard", "Control", "Positive Control", "Negative Control"}
-ANALYSED = {"Sample", "Control", "Positive Control"}  # DEFAULT_ANALYSIS_COLUMNS
-
-PLATES = {96: ("H", 12), 384: ("P", 24), 1536: ("AF", 48)}
-
-RXN_VOLUME = "Rxn Volume (uL)"
+from platemap_common import (  # one owner for these -- see platemap_common.py
+    ANALYSED, PLATES, REQUIRED, RXN_VOLUME, TYPES, is_blank, plate_rows,
+)
 # `<artifact> Vol (uL)`, but not the required `Rxn Volume (uL)` itself.
 VOL_COL = re.compile(r"^(?P<name>.+?)\s+vol(?:ume)?\s*\(\s*u?[mµ]?l\s*\)$", re.I)
 CONC_COL = re.compile(r"^\[(?P<name>.+?)\]\s*\((?P<units>.+?)\)$")
@@ -90,10 +86,6 @@ def rows_from(grid: list[list[str]], header_index: int) -> tuple[list[str], list
     return [h for h in header if h], out
 
 
-def is_blank(value) -> bool:
-    return value is None or str(value).strip() == ""
-
-
 def as_number(value):
     try:
         return float(str(value).strip())
@@ -130,16 +122,7 @@ def column_roles(fieldnames: list[str]) -> tuple[list[str], list[str], list[str]
 
 def check_wells(rows, plate, instrument, margin, report):
     last_row, last_col = PLATES[plate]
-    row_names = []
-    for first in range(0, 27):
-        for second in range(1, 27):
-            name = (chr(64 + first) if first else "") + chr(64 + second)
-            row_names.append(name)
-            if name == last_row:
-                break
-        if row_names and row_names[-1] == last_row:
-            break
-    limit = {name: index for index, name in enumerate(row_names)}
+    limit = {name: index for index, name in enumerate(plate_rows(last_row))}
 
     edge_level = "blocking" if instrument == "microscope" else "warn"
     edge_rows, edge_cols, off_plate = [], [], []

@@ -24,12 +24,9 @@ import re
 import sys
 from pathlib import Path
 
-REQUIRED = ["Date", "Experiment", "Well", "Name", "Type", "Rxn Volume (uL)"]
+from platemap_common import REQUIRED, is_blank, load_grid  # one owner
 PLATE_ROW = re.compile(r"^[A-Z]{1,2}$")
 
-
-def is_blank(value) -> bool:
-    return value is None or str(value).strip() == ""
 
 
 def text(value) -> str:
@@ -39,23 +36,6 @@ def text(value) -> str:
         return value.isoformat()
     return "" if value is None else str(value).strip()
 
-
-def load_grid(path: Path, sheet: str | None) -> list[list]:
-    if path.suffix.lower() in {".xlsx", ".xlsm"}:
-        try:
-            import openpyxl
-        except ImportError:
-            print("error: reading .xlsx needs openpyxl (pip install openpyxl)", file=sys.stderr)
-            raise SystemExit(2)
-        book = openpyxl.load_workbook(path, data_only=True)
-        worksheet = book[sheet] if sheet else book.worksheets[0]
-        return [
-            [worksheet.cell(r, c).value for c in range(1, worksheet.max_column + 1)]
-            for r in range(1, worksheet.max_row + 1)
-        ]
-    delimiter = "\t" if path.suffix.lower() in {".tsv", ".tab"} else ","
-    with path.open(newline="", encoding="utf-8-sig") as handle:
-        return [list(row) for row in csv.reader(handle, delimiter=delimiter)]
 
 
 def as_int(value):

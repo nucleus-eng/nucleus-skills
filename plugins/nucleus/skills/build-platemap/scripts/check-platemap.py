@@ -1,0 +1,353 @@
+#!/usr/bin/env python3
+"""Check a platemap against the Nucleus CDK's requirements.
+
+Three levels, and the split between the first two is the point:
+
+  blocking  The CDK will silently produce wrong or missing data. The merge is
+            an inner join, so an unmatched well is dropped with no error at
+            all. You cannot trust the analysis.
+  warn      The analysis runs correctly, but the record is incomplete. The
+            science is missing something; the code is not.
+  info      Cosmetic, or handled by the loader.
+
+Standard library only, so it runs in any checkout. Export .xlsx to CSV or TSV
+first -- that is what you should be committing next to the data anyway.
+
+Exit codes: 0 clean, 1 findings, 2 the check could not run.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import re
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+REQUIRED = ["Date", "Experiment", "Well", "Name", "Type", "Rxn Volume (uL)"]
+TYPES = {"Sample", "Standard", "Control", "Positive Control", "Negative Control"}
+ANALYSED = {"Sample", "Control", "Positive Control"}  # DEFAULT_ANALYSIS_COLUMNS
+
+PLATES = {96: ("H", 12), 384: ("P", 24), 1536: ("AF", 48)}
+
+RXN_VOLUME = "Rxn Volume (uL)"
+# `<artifact> Vol (uL)`, but not the required `Rxn Volume (uL)` itself.
+VOL_COL = re.compile(r"^(?P<name>.+?)\s+vol(?:ume)?\s*\(\s*u?[mµ]?l\s*\)$", re.I)
+CONC_COL = re.compile(r"^\[(?P<name>.+?)\]\s*\((?P<units>.+?)\)$")
+ID_COL = re.compile(r"^(?P<name>.+?)\s+ID$", re.I)
+WELL = re.compile(r"^(?P<row>[A-Z]+)(?P<col>\d+)$")
+PLACEHOLDER = re.compile(r"(?:^|\b)(?:XX+|TBD|TODO|N/?A|\?+|<[^>]*>)(?:\b|$)", re.I)
+DATE_PREFIX = re.compile(r"^(\d{6,8})[-_](.+)$")
+
+
+class Report:
+    def __init__(self) -> None:
+        self.items: list[tuple[str, str]] = []
+
+    def add(self, level: str, message: str) -> None:
+        self.items.append((level, message))
+
+    def count(self, level: str) -> int:
+        return sum(1 for lv, _ in self.items if lv == level)
+
+
+def read_rows(path: Path) -> list[dict[str, str]]:
+    delimiter = "\t" if path.suffix.lower() in {".tsv", ".tab"} else ","
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        return list(csv.DictReader(handle, delimiter=delimiter))
+
+
+def is_blank(value) -> bool:
+    return value is None or str(value).strip() == ""
+
+
+def as_number(value):
+    try:
+        return float(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def split_blocks(rows: list[dict], fieldnames: list[str]) -> tuple[list[dict], int]:
+    """Return the well rows, and how many rows sat below the first blank one.
+
+    A stacked sheet puts assembly recipes under the platemap. Everything from
+    the first fully blank row on is a different table -- see
+    references/assembly-blocks.md.
+    """
+    for index, row in enumerate(rows):
+        if all(is_blank(row.get(f)) for f in fieldnames):
+            return rows[:index], len(rows) - index
+    return rows, 0
+
+
+def column_roles(fieldnames: list[str]) -> tuple[list[str], list[str], list[str]]:
+    volumes, concentrations, ids = [], [], []
+    for name in fieldnames:
+        if name is None or name == RXN_VOLUME:
+            continue
+        if CONC_COL.match(name):
+            concentrations.append(name)
+        elif VOL_COL.match(name):
+            volumes.append(name)
+        elif ID_COL.match(name):
+            ids.append(name)
+    return volumes, concentrations, ids
+
+
+def check_wells(rows, plate, instrument, margin, report):
+    last_row, last_col = PLATES[plate]
+    row_names = []
+    for first in range(0, 27):
+        for second in range(1, 27):
+            name = (chr(64 + first) if first else "") + chr(64 + second)
+            row_names.append(name)
+            if name == last_row:
+                break
+        if row_names and row_names[-1] == last_row:
+            break
+    limit = {name: index for index, name in enumerate(row_names)}
+
+    edge_level = "blocking" if instrument == "microscope" else "warn"
+    edge_rows, edge_cols = [], []
+
+    for row in rows:
+        well = str(row.get("Well", "")).strip().replace(":", "")
+        match = WELL.match(well)
+        if not match:
+            report.add("blocking", f"well {well!r}: not an alphanumeric well ID -- will not merge")
+            continue
+        letters, digits = match.group("row"), match.group("col")
+        if digits != str(int(digits)):
+            report.add(
+                "blocking",
+                f"well {well!r}: leading zero. The reader emits {letters}{int(digits)}, "
+                f"so this well is dropped by the merge",
+            )
+            continue
+        column = int(digits)
+        if letters not in limit or column < 1 or column > last_col:
+            report.add("blocking", f"well {well!r}: outside a {plate}-well plate (max {last_row}{last_col})")
+            continue
+        index = limit[letters]
+        if index < margin or index > limit[last_row] - margin:
+            edge_rows.append(well)
+        elif column <= margin or column > last_col - margin:
+            edge_cols.append(well)
+
+    for wells, axis in ((edge_rows, "row"), (edge_cols, "column")):
+        wells = list(dict.fromkeys(wells))  # a duplicated well is its own finding
+        if wells:
+            report.add(
+                edge_level,
+                f"{len(wells)} well(s) within {margin} of a plate edge by {axis} "
+                f"({', '.join(wells[:6])}{', ...' if len(wells) > 6 else ''}) -- "
+                + (
+                    "meniscus curvature makes edge wells optically unusable"
+                    if instrument == "microscope"
+                    else "edge wells evaporate faster and read differently"
+                ),
+            )
+
+
+def check_missing_information(rows, volumes, concentrations, ids, report):
+    """Warn level by definition: the analysis runs, the record is incomplete."""
+    for column in concentrations + ids:
+        blanks = [r["Well"] for r in rows if is_blank(r.get(column))]
+        if len(blanks) == len(rows):
+            report.add("warn", f"{column!r} is empty on every row -- this experiment needs it")
+        elif blanks:
+            report.add("warn", f"{column!r} is empty on {len(blanks)} row(s): {', '.join(blanks[:6])}")
+
+    for row in rows:
+        for column, value in row.items():
+            if column and not is_blank(value) and PLACEHOLDER.search(str(value)):
+                report.add(
+                    "warn",
+                    f"well {row.get('Well')}: {column!r} holds the placeholder {str(value).strip()!r}",
+                )
+
+    if not volumes:
+        return
+    for row in rows:
+        present = [as_number(row[c]) for c in volumes if not is_blank(row.get(c))]
+        target = as_number(row.get(RXN_VOLUME))
+        if not present:
+            report.add(
+                "warn",
+                f"well {row.get('Well')} ({row.get('Name')}): no assembly recorded, but "
+                f"{RXN_VOLUME} claims {row.get(RXN_VOLUME)} -- volumes unaccounted for",
+            )
+            continue
+        if None in present:
+            report.add("warn", f"well {row.get('Well')}: a volume column is not a number")
+            continue
+        total = sum(present)
+        if target is not None and abs(total - target) > 0.01:
+            report.add(
+                "warn",
+                f"well {row.get('Well')} ({row.get('Name')}): components sum to {total:g} uL "
+                f"but {RXN_VOLUME} is {target:g}",
+            )
+
+
+def check_consistency(rows, report):
+    by_experiment = defaultdict(list)
+    for row in rows:
+        by_experiment[str(row.get("Experiment", "")).strip()].append(row)
+
+    for experiment, group in by_experiment.items():
+        dates = {str(r.get("Date", "")).strip() for r in group}
+        if len(group) > 2 and len(dates) == len(group):
+            report.add(
+                "warn",
+                f"experiment {experiment!r}: {len(group)} rows with {len(dates)} distinct "
+                f"dates, one per row -- this is the shape of a fill-down artifact",
+            )
+
+    # Experiment names that differ only in their leading date token.
+    suffixes = defaultdict(set)
+    for experiment in by_experiment:
+        match = DATE_PREFIX.match(experiment)
+        if match:
+            suffixes[match.group(2)].add(match.group(1))
+    for suffix, prefixes in suffixes.items():
+        if len(prefixes) > 1:
+            report.add(
+                "warn",
+                f"experiment {suffix!r} appears under {len(prefixes)} different date "
+                f"prefixes ({', '.join(sorted(prefixes))}) -- likely one experiment, two labels",
+            )
+
+    # Same Name, different composition.
+    composition = defaultdict(set)
+    tracked = [c for c in (rows[0] if rows else {}) if c and c not in REQUIRED]
+    for row in rows:
+        key = tuple((c, str(row.get(c, "")).strip()) for c in tracked)
+        composition[str(row.get("Name", "")).strip()].add(key)
+    for name, variants in composition.items():
+        if len(variants) > 1:
+            report.add(
+                "warn",
+                f"name {name!r} has {len(variants)} different compositions -- identical "
+                f"material must use an identical name, or these are different conditions",
+            )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("platemap", type=Path)
+    parser.add_argument("--plate", type=int, default=384, choices=sorted(PLATES))
+    parser.add_argument(
+        "--instrument",
+        default="platereader",
+        choices=["platereader", "microscope"],
+        help="microscope makes the edge-margin rule blocking rather than a warning",
+    )
+    parser.add_argument("--edge-margin", type=int, default=1, help="rows/columns to keep clear of the edge")
+    args = parser.parse_args()
+
+    if not args.platemap.is_file():
+        print(f"error: no such file: {args.platemap}", file=sys.stderr)
+        return 2
+    if args.platemap.suffix.lower() in {".xlsx", ".xls"}:
+        print("error: export to CSV or TSV first -- .xlsx does not diff", file=sys.stderr)
+        return 2
+
+    try:
+        rows = read_rows(args.platemap)
+    except (OSError, UnicodeDecodeError, csv.Error) as exc:
+        print(f"error: could not read {args.platemap}: {exc}", file=sys.stderr)
+        return 2
+    if not rows:
+        print(f"error: {args.platemap} has no data rows", file=sys.stderr)
+        return 2
+
+    fieldnames = [f for f in rows[0] if f is not None]
+    report = Report()
+
+    rows, trailing = split_blocks(rows, fieldnames)
+    if trailing:
+        report.add(
+            "info",
+            f"{trailing} row(s) below a blank row are a second table (assembly blocks) "
+            f"and were not checked as wells -- export the well table alone",
+        )
+    if not rows:
+        print("error: no well rows above the first blank row", file=sys.stderr)
+        return 2
+
+    for column in fieldnames:
+        if column.startswith("Unnamed:") or column in {"Row", "Column"}:
+            report.add("info", f"{column!r} is dropped by the CDK loader")
+
+    missing = [c for c in REQUIRED if c not in fieldnames]
+    for column in missing:
+        report.add("blocking", f"required column {column!r} is missing")
+
+    for column in [c for c in REQUIRED if c in fieldnames]:
+        blanks = [str(r.get("Well", "?")) for r in rows if is_blank(r.get(column))]
+        if blanks:
+            report.add("blocking", f"required column {column!r} is empty on {len(blanks)} row(s): {', '.join(blanks[:6])}")
+
+    if "Well" in fieldnames:
+        check_wells(rows, args.plate, args.instrument, args.edge_margin, report)
+        counts = Counter(
+            (str(r.get("Date", "")).strip(), str(r.get("Experiment", "")).strip(), str(r.get("Well", "")).strip())
+            for r in rows
+        )
+        repeated = [(w, e, n) for (_, e, w), n in sorted(counts.items()) if n > 1]
+        for well, experiment, count in repeated[:5]:
+            report.add(
+                "blocking",
+                f"well {well!r} appears {count} times in experiment {experiment!r} -- "
+                f"duplicates multiply rows at the merge",
+            )
+        if len(repeated) > 5:
+            report.add("blocking", f"...and {len(repeated) - 5} further duplicated well(s)")
+
+    if "Type" in fieldnames:
+        seen = Counter(str(r.get("Type", "")).strip() for r in rows)
+        for value, count in sorted(seen.items()):
+            if value in TYPES:
+                continue
+            if value == "Blank":
+                report.add("warn", f"Type 'Blank' on {count} row(s): used by blank_data() but absent from the tutorial's vocabulary")
+            else:
+                report.add("blocking", f"Type {value!r} on {count} row(s) is outside the vocabulary {sorted(TYPES)}")
+        if not any(str(r.get("Type", "")).strip() in ANALYSED for r in rows):
+            report.add("warn", f"no row has an analysed type {sorted(ANALYSED)} -- kinetics will return nothing")
+
+    if RXN_VOLUME in fieldnames:
+        for row in rows:
+            value = as_number(row.get(RXN_VOLUME))
+            if value is None:
+                report.add("blocking", f"well {row.get('Well')}: {RXN_VOLUME} {row.get(RXN_VOLUME)!r} is not a number")
+            elif value <= 0:
+                report.add("blocking", f"well {row.get('Well')}: {RXN_VOLUME} is {value:g}")
+
+    volumes, concentrations, ids = column_roles(fieldnames)
+    if not concentrations and not volumes:
+        report.add("info", "no composition columns -- the tutorial recommends recording what is in each well")
+    check_missing_information(rows, volumes, concentrations, ids, report)
+    if not missing:
+        check_consistency(rows, report)
+
+    order = {"blocking": 0, "warn": 1, "info": 2}
+    if not report.items:
+        print(f"OK  {len(rows)} wells, {len(fieldnames)} columns, no findings")
+        return 0
+
+    print(f"{args.platemap}: {len(rows)} wells, {len(fieldnames)} columns\n")
+    for level, message in sorted(report.items, key=lambda item: order[item[0]]):
+        print(f"  [{level:<8}] {message}")
+    print(
+        f"\n{report.count('blocking')} blocking, {report.count('warn')} warn, "
+        f"{report.count('info')} info"
+    )
+    return 1 if report.count("blocking") or report.count("warn") else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -36,7 +36,16 @@ VOL_COL = re.compile(r"^(?P<name>.+?)\s+vol(?:ume)?\s*\(\s*u?[mµ]?l\s*\)$", re.
 CONC_COL = re.compile(r"^\[(?P<name>.+?)\]\s*\((?P<units>.+?)\)$")
 ID_COL = re.compile(r"^(?P<name>.+?)\s+ID$", re.I)
 WELL = re.compile(r"^(?P<row>[A-Z]+)(?P<col>\d+)$")
-PLACEHOLDER = re.compile(r"(?:^|\b)(?:XX+|TBD|TODO|N/?A|\?+|<[^>]*>)(?:\b|$)", re.I)
+# `N/A` is deliberately NOT here. In a platemap it means "not applicable to
+# this well" -- no liposome, no second compartment -- which is data, the text
+# form of the deliberate zero. Treating it as a missing value buries a real
+# finding under a warning per well.
+PLACEHOLDER = re.compile(r"(?:^|\b)(?:XX+|TBD|TODO|\?+|<[^>]*>)(?:\b|$)", re.I)
+
+# A well can hold more than one compartment: an inner solution encapsulated
+# in a membrane, sitting in an outer solution. Their volumes do not add up to
+# anything meaningful.
+COMPARTMENT = re.compile(r"^\[?(IS|OS)[\s\-]", re.I)
 DATE_PREFIX = re.compile(r"^(\d{6,8})[-_](.+)$")
 
 
@@ -202,6 +211,18 @@ def check_missing_information(rows, volumes, concentrations, ids, report):
 
     if not volumes:
         return
+
+    compartments = sorted({m.group(1).upper() for c in volumes + concentrations
+                           if (m := COMPARTMENT.match(c))})
+    if len(compartments) > 1:
+        report.add(
+            "info",
+            f"this platemap describes {len(compartments)} compartments per well "
+            f"({', '.join(compartments)}) -- component volumes are not summed against "
+            f"{RXN_VOLUME}, which describes one compartment, not the whole well",
+        )
+        return
+
     for row in rows:
         present = [as_number(row[c]) for c in volumes if not is_blank(row.get(c))]
         target = as_number(row.get(RXN_VOLUME))

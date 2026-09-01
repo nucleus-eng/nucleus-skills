@@ -88,3 +88,52 @@ give nine columns, six of them zero. Twenty conditions over forty reagents
 give a very wide, very sparse sheet that is worse to read than the lookup it
 replaced. Past roughly a dozen components, keep the recipes as a separate
 file keyed on `Name` and export only block A.
+
+## Layered plate grids
+
+A microscopy sheet often stacks one plate grid per variable — same geometry,
+a different attribute in each, named in the header row's first cell:
+
+```
+Experiment          2   3   4        [aTc] (uM)      2       3
+A            tetR-aTc ...            A           0.625  0.3125
+D                 aTc ...            D           0.625  0.3125
+
+aTc (OS/IS)         2   3            lipids          2       3
+A                  OS  OS            A            POPC    POPC
+D                  OS  OS            D             N/A     N/A
+```
+
+Each layer becomes one column. `grid-to-platemap.py` finds them all and
+writes the wide table. Layer names that already follow a convention are kept
+(`[aTc] (uM)`); a bare `<thing> (uL)` gains the `Vol` the convention wants;
+anything else is kept verbatim, because renaming a variable an experimenter
+chose loses more than it tidies.
+
+A layer that is missing wells the other layers describe is a finding — it
+means one attribute was not recorded for part of the plate.
+
+## Two compartments in one well
+
+A synthetic cell is an **inner solution (IS)** inside a membrane, sitting in
+an **outer solution (OS)**. The well holds both. This breaks two assumptions
+that hold everywhere else:
+
+- **`Rxn Volume (uL)` describes one compartment, not the well.** A real plate
+  had 30 µL IS and 300 µL OS. Summing component volumes against a single
+  total is meaningless — `check-platemap.py` detects `IS`/`OS` columns and
+  skips the sum rather than reporting a false mismatch on every row.
+- **A reagent has a location as well as an amount.** A column like
+  `aTc (OS/IS)` says *which side of the membrane* the aTc went. That is not a
+  concentration or a volume, and no naming convention catches it. Keep it.
+
+Prefix compartment-specific columns: `[OS-glucose] (mM)`,
+`IS Volume (uL)`, `OS Volume (uL)`.
+
+## `N/A` is data
+
+In these sheets `N/A` means "not applicable to this well" — no liposome in a
+bulk-solution control, no compartment to name. It is the text form of the
+deliberate zero from the fill rule above, **not** a missing value. Do not
+treat it as a placeholder; doing so buries the real findings under one
+warning per well.

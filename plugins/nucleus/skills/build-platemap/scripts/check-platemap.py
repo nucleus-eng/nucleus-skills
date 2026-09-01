@@ -257,44 +257,42 @@ def check_missing_information(rows, volumes, concentrations, ids, report):
                 continue          # no stated total for this compartment; nothing to check against
             # A compartment's own total is not one of its components.
             parts = [c for c in columns if c != target_column]
-            present = [as_number(row[c]) for c in parts if not is_blank(row.get(c))]
-            if not present or None in present:
+            if not parts:
+                # This compartment has a stated total and no component columns
+                # at all -- an outer solution given only as a concentration,
+                # for instance. That is a fact about the schema, not about a
+                # row, so it is not reported once per well.
                 continue
+            values = {c: as_number(row[c]) for c in parts if not is_blank(row.get(c))}
             target = as_number(row.get(target_column) if target_column else row.get(RXN_VOLUME))
+            where = f" in {compartment}" if compartment else ""
+            if not values:
+                if target is not None:
+                    report.add(
+                        "warn",
+                        f"well {row.get('Well')} ({row.get('Name')}): no assembly recorded{where}, "
+                        f"but {target_column or RXN_VOLUME} claims {target:g} -- volumes unaccounted for",
+                    )
+                continue
+            if None in values.values():
+                report.add("warn", f"well {row.get('Well')}: a volume column{where} is not a number")
+                continue
             if target is None:
                 continue
-            total = sum(present)
+            total = sum(values.values())
             if abs(total - target) > 0.01:
-                where = f" in {compartment}" if compartment else ""
+                # A named sub-mix expanded into its parts must not also be
+                # counted as itself. When the excess equals one column exactly,
+                # that column is almost always the un-dropped roll-up.
+                excess = total - target
+                culprit = next((c for c, v in values.items() if abs(v - excess) < 0.01), None)
+                hint = (f" -- the excess is exactly {culprit!r}; if that is a sub-mix whose "
+                        f"components are also listed, it is being counted twice") if culprit else ""
                 report.add(
                     "warn",
                     f"well {row.get('Well')} ({row.get('Name')}): components{where} sum to "
-                    f"{total:g} uL but {target_column or RXN_VOLUME} is {target:g}",
+                    f"{total:g} uL but {target_column or RXN_VOLUME} is {target:g}{hint}",
                 )
-
-    if len(by_compartment) > 1:
-        return
-
-    for row in rows:
-        present = [as_number(row[c]) for c in volumes if not is_blank(row.get(c))]
-        target = as_number(row.get(RXN_VOLUME))
-        if not present:
-            report.add(
-                "warn",
-                f"well {row.get('Well')} ({row.get('Name')}): no assembly recorded, but "
-                f"{RXN_VOLUME} claims {row.get(RXN_VOLUME)} -- volumes unaccounted for",
-            )
-            continue
-        if None in present:
-            report.add("warn", f"well {row.get('Well')}: a volume column is not a number")
-            continue
-        total = sum(present)
-        if target is not None and abs(total - target) > 0.01:
-            report.add(
-                "warn",
-                f"well {row.get('Well')} ({row.get('Name')}): components sum to {total:g} uL "
-                f"but {RXN_VOLUME} is {target:g}",
-            )
 
 
 def check_consistency(rows, report):

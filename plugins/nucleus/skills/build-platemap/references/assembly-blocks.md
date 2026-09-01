@@ -81,6 +81,21 @@ Split annotations off reagent names and promote them to real columns:
 an empty `[pOpen-T7-deGFP] (ng/uL)` column. A placeholder inside a label is
 invisible; an empty column with a unit on it is a question.
 
+## An expanded sub-mix replaces itself
+
+Once a named sub-mix is expanded, **its own volume column must go.** Leaving
+both means the well's components sum to the reaction volume plus the sub-mix,
+and every row fails arithmetic for a reason that looks like a recipe error.
+
+The roll-up still carries information — that 3.33 µL of a premade 3× solution
+was pipetted, not nine separate reagents. Keep it as **provenance, not a
+volume**: a `Premix` column naming the solution and its fold. Then the parts
+are the only things summed, and the record still says what was on the bench.
+
+`check-platemap.py` names the culprit when this happens: if the excess over
+the stated total equals one volume column exactly, it says so, because a
+sub-mix counted twice is by far the most common cause.
+
 ## When not to flatten
 
 Flattening produces a dense matrix. Two conditions sharing three reagents

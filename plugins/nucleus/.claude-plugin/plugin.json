@@ -5,5 +5,8 @@
   "description": "Claude skills for Nucleus work: DevNote authoring, docs-site maintenance, and the migrations between them.",
   "author": {
     "name": "nucleus-eng"
+  },
+  "externalTools": {
+    "lint-docs": ["vale", "codespell", "lychee", "myst"]
   }
 }

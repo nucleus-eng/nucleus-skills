@@ -68,6 +68,8 @@ read when the skill is actually invoked.
 | `mermaid-diagrams` | Mermaid source for module, process, and implementation diagrams |
 | `terminology-sweep` | Corpus sweep for terminology drift, stale renames, and project-defined words |
 | `build-platemap` | Experiment description → CDK-compatible platemap CSV/TSV |
+| `extract-conditions` | ELN page, protocol or prose → condition table (no wells) |
+| `build-platemap` | Condition table or description → CDK-compatible platemap CSV/TSV |
 
 ## Use it from another repo
 
@@ -143,6 +145,7 @@ disagree with itself.
 | MyST authoring conventions, page status | `author-myst-content` |
 | Mermaid diagram source for Nucleus docs | `mermaid-diagrams` |
 | Terminology drift sweep | `terminology-sweep` |
+| Reaction composition read out of unstructured sources | `extract-conditions` |
 | Platemap layout, columns, and CDK compatibility | `build-platemap` |
 | Prose style, notation, units | `references/devnote-style-guide.md` (a reference, not a skill) |
 

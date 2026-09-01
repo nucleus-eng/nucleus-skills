@@ -8,6 +8,13 @@ description: Draft, flatten, and check Nucleus platemaps for the CDK. Use when a
 A platemap records what went in each well and where. The CDK merges it into
 plate reader data on the `Well` column and groups replicates on `Name`.
 
+**This skill owns layout.** If the source is an experiment write-up — an ELN
+page, a protocol, meeting notes — the chemistry comes from
+`extract-conditions` first, which produces a condition table with no wells in
+it. That boundary is real: a write-up records composition and never records
+layout, so plate format, replicate count and well IDs must be asked for, not
+inferred from the page.
+
 The column requirements are owned by the
 [platemap tutorial](https://docs.nucleus.engineering/guides/platemap-tutorial/)
 (source: `nucleus-docs/guides/platemap_tutorial.md`). Read it for the
@@ -48,7 +55,12 @@ instead of asking when one is supplied.
     standard 384 well, so a 35 µL reaction says nothing about the format.
   - Ask when the evidence contradicts itself or the default — for example
     rows past `H` on a sheet that says 96 somewhere else.
-- Conditions, and the reagents and volumes that make each one up.
+- Conditions, and the reagents and volumes that make each one up. From a
+  write-up, this is `extract-conditions`' output — do not re-read the source.
+- **Replicates per condition.** Three is usual. Reactions are assembled as a
+  master mix with overage, so a `Rxn Volume (uL)` of 10 with a 35 µL recipe
+  means 3 × 10 µL plus 5 µL spare — the recipe's total is not the well
+  volume.
 - In-well concentrations, and artifact IDs for anything with a stock.
 - Replicate count, controls, standards, total reaction volume.
 
@@ -111,6 +123,36 @@ are **excluded from kinetic analysis**. It is also an ordinary English word,
 so it gets written for "the standard prep" or "the standard protocol". That
 reads as valid vocabulary and silently drops the wells from the results. If a
 `Standard` row has no concentration, it is probably a `Sample`.
+
+## 3a. Impute what is absent; flag what is present but wrong
+
+These are two different actions and confusing them destroys data.
+
+**Absent** — the column or cell is not there. Recover it from context, fill
+it in, and list it as imputed. Leaving a recoverable field blank is not
+caution; it throws away information the reviewer has to find again.
+
+**Present but non-conforming** — a value exists and breaks a convention.
+Report it. Never overwrite it. It is somebody's record of what they did.
+
+Sources worth checking before declaring a field missing:
+
+| Field | Recoverable from |
+| --- | --- |
+| `Date` | The source page's date heading, **and the filename** — Nucleus files are named `<YYYYMMDD>-<slug>` |
+| `Experiment` | The page title, or the filename slug |
+| `Type` | The prose. "a control CP/CK reaction" names the type of those wells |
+| `Rxn Volume (uL)` | The recipe total divided by the replicate count, once overage is accounted for |
+| Concentrations | Parsed out of a free-text `Name` — `PolyP + PPK + 10 mM Mg` gives `[Mg-Acetate] (mM)` of 10 |
+| Replicate count | The platemap itself: wells sharing a `Name` |
+| Reporter | The construct name — `plam-GFP` implies a GFP reporter |
+
+**Never drop a column you were given.** A design-factor column like `CP` with
+values `1`/`0` matches no naming convention, so it is easy to discard while
+"tidying". Keep it, and add the quantity it stands for
+(`[Creatine phosphate] (mM)`) beside it. The flag says which arm a well is
+in; the concentration says what is in the well. They must agree, and that
+agreement is worth checking.
 
 ## 4. Flag what is missing
 

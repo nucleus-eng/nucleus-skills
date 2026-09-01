@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate the skills in this repo.
 
-Three checks, all of which catch failures that are otherwise silent:
+Five checks, all of which catch failures that are otherwise silent:
 
 1. Every skill directory holds a SKILL.md whose `name:` matches the
    directory name. A skill that fails this does not load, and nothing
@@ -10,7 +10,11 @@ Three checks, all of which catch failures that are otherwise silent:
 2. No two skills declare the same `name:`.
 3. Relative links, and inline-code paths naming a plugin directory, resolve
    to a real file.
-4. No stray `skills/` directory at the repo root. Skills lived there before
+4. The marketplace and plugin manifests parse, and every plugin `source`
+   resolves to a directory holding its own plugin manifest. A broken
+   manifest is the one failure that stops everything installing, and it
+   reports nothing useful when it happens.
+5. No stray `skills/` directory at the repo root. Skills lived there before
    this repo became a plugin marketplace. A skill left behind at the old
    path merges cleanly and is simply absent from the plugin, with nothing
    reporting an error — the same silent omission this whole repo exists to
@@ -22,12 +26,14 @@ Exit codes: 0 clean, 1 findings, 2 the check could not run.
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS = ROOT / "plugins" / "nucleus" / "skills"
+MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 FIELD = re.compile(r"^(name|description):\s*(.+?)\s*$", re.MULTILINE)
@@ -105,6 +111,51 @@ def check_links(path: Path, findings: list[str]) -> None:
             findings.append(f"{path.relative_to(ROOT)}: link target does not exist — {target}")
 
 
+def check_manifests(findings: list[str]) -> None:
+    """Validate the marketplace catalog and every plugin it lists."""
+    if not MARKETPLACE.is_file():
+        findings.append(
+            f"{MARKETPLACE.relative_to(ROOT)} is missing — without it no repo can "
+            f"subscribe to this marketplace"
+        )
+        return
+
+    try:
+        catalog = json.loads(MARKETPLACE.read_text())
+    except json.JSONDecodeError as exc:
+        findings.append(f"{MARKETPLACE.relative_to(ROOT)}: invalid JSON — {exc}")
+        return
+
+    for field in ("name", "owner", "plugins"):
+        if field not in catalog:
+            findings.append(f"{MARKETPLACE.relative_to(ROOT)}: no `{field}` field")
+
+    for entry in catalog.get("plugins", []):
+        name = entry.get("name", "<unnamed>")
+        source = entry.get("source")
+        if not isinstance(source, str):
+            # Non-local sources (github, url, git-subdir) cannot be checked here.
+            continue
+        directory = (ROOT / source).resolve()
+        if not directory.is_dir():
+            findings.append(f"marketplace plugin `{name}`: source does not exist — {source}")
+            continue
+        manifest = directory / ".claude-plugin" / "plugin.json"
+        if not manifest.is_file():
+            findings.append(f"marketplace plugin `{name}`: no .claude-plugin/plugin.json in {source}")
+            continue
+        try:
+            plugin = json.loads(manifest.read_text())
+        except json.JSONDecodeError as exc:
+            findings.append(f"{manifest.relative_to(ROOT)}: invalid JSON — {exc}")
+            continue
+        if plugin.get("name") != name:
+            findings.append(
+                f"{manifest.relative_to(ROOT)}: `name: {plugin.get('name')}` does not match "
+                f"the marketplace entry `{name}`"
+            )
+
+
 def main() -> int:
     if not SKILLS.is_dir():
         print(f"error: {SKILLS.relative_to(ROOT)} does not exist", file=sys.stderr)
@@ -112,6 +163,8 @@ def main() -> int:
 
     findings: list[str] = []
     seen: dict[str, Path] = {}
+
+    check_manifests(findings)
 
     stray = ROOT / "skills"
     if stray.is_dir():
@@ -139,7 +192,7 @@ def main() -> int:
             print(f"  {finding}")
         return 1
 
-    print(f"✅ {len(directories)} skills, all loadable, no duplicate names, links resolve")
+    print(f"✅ manifests valid, {len(directories)} skills, all loadable, no duplicate names, links resolve")
     return 0
 
 

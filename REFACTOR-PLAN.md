@@ -21,7 +21,7 @@ the plugin it serves.
 ```
 .claude-plugin/marketplace.json      the catalog
 plugins/nucleus/.claude-plugin/plugin.json
-plugins/nucleus/skills/              all seven skills
+plugins/nucleus/skills/              one directory per skill
 plugins/nucleus/references/
 ```
 

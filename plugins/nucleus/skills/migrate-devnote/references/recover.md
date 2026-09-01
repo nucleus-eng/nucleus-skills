@@ -165,11 +165,15 @@ Two things make it work:
    `figures/viz-01-test-split-sigmoid_rate-1-h.png` is published as
    `viz-01-test-split-si-<hash>.png`.
 
-`scripts/recover-no-meca.py` does this. It reports the work key, the `toc`,
-every file it resolved, and anything it could not:
+`recover-no-meca.py` does this. It reports the work key, the `toc`, every file
+it resolved, and anything it could not.
+
+The script ships beside this skill, at `scripts/recover-no-meca.py` relative to
+the skill's own directory — not relative to the repository you are working in.
+Resolve it from the directory holding this file and pass that path to Python:
 
 ```bash
-python3 .claude/skills/migrate-devnote/scripts/recover-no-meca.py \
+python3 <skill-dir>/scripts/recover-no-meca.py \
   bnext-devnotes-igor-260324 recovered/
 ```
 

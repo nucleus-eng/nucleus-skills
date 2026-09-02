@@ -44,6 +44,27 @@ already meant to claim. The hazard is that "it was wrong" is the easiest
 thing for an agent to believe about a file it wants to edit, so until this
 is ruled, stage it and say why you think it is an error.
 
+## Where the staging document goes
+
+**Each directory's README declares its staging location.** Take the nearest
+one that does: the README of the directory you are working in, then upward,
+then the repository root. If none declares one, the default is:
+
+```
+tmp/STAGED-<date>-<topic>.md
+```
+
+**Check that the location is gitignored before you write to it.** This is the
+one part worth doing every time. A staging document at a tracked path is one
+`git add -A` away from being committed into an unrelated change — and a
+document whose whole premise is *"uncommitted by design"* is then committed,
+silently, saying otherwise. If the location is not ignored, ignoring it is the
+first edit to make, not an afterthought.
+
+A repository that declares a location should say it in one place. Two
+declarations drift, and this skill exists because that already happened to the
+rule itself.
+
 ## What a staging document records
 
 Four parts:

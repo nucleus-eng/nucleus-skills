@@ -13,10 +13,7 @@ disagree.
 
 Local specifics only:
 
-- **Working documents live at the repo root**, named `<TOPIC>-STAGING.md`, and
-  are gitignored. This differs from `tmp/STAGED-<date>-<topic>.md` used in
-  `nucleus-docs` and `category`. **Unreconciled** — see
-  `STAGING-SKILL-PLAN.md` step C.
+- **Staging location is declared in `README.md`.** Not repeated here.
 - **Scope is the work, not the repository.** A session working here and in
   `nucleus-docs` stages in both.
 - **Reviewer:** Jon.

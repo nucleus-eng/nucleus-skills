@@ -276,6 +276,20 @@ came from; `recipe` is the composition its specimen columns are *derived*
 from. The checker recomputes both when the path still resolves, and reports a
 mismatch — a pin nobody verifies is a comment.
 
+**The pin is one-way, and that is a consequence rather than a convention.** A
+platemap points at its recipe; the recipe never lists the platemaps run
+against it. One recipe serves many layouts — four conditions at three
+replicates on one day and six on another, a plate reader then a microscope —
+so a recipe that accumulated references would change every time it was used,
+and its digest would move for a reason having nothing to do with its content.
+A thing whose identity shifts whenever it is used cannot be the stable end of
+a pin.
+
+A run record is the opposite case and may point back: it is written after the
+fact and never re-run, so references cost it nothing. That is not this
+skill's artifact, and the key it uses is not settled — do not emit one here
+until it is.
+
 **`platemap_kind: retrospective` with `Well: assumed` is a blocking finding.**
 That pair is the fabrication case, and it is the only thing here a checker
 can decide on its own — everything else it reports for a human.

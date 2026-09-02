@@ -65,6 +65,50 @@ class Report:
         return sum(1 for lv, _ in self.items if lv == level)
 
 
+def read_provenance(path: Path) -> dict:
+    """Read a provenance sidecar.
+
+    JSON, or the small subset of YAML these files need, so the checker keeps
+    its standard-library-only promise. PyYAML is used when available.
+    """
+    text = path.read_text(encoding="utf-8")
+    if path.suffix.lower() == ".json" or text.lstrip().startswith("{"):
+        import json
+        return json.loads(text)
+    try:
+        import yaml
+        return yaml.safe_load(text) or {}
+    except ImportError:
+        pass
+    # Minimal YAML: `key: value` at top level, and one nested `columns:` block
+    # whose entries are `"name": {state: x, note: y}` or `"name": x`.
+    out, columns, in_columns = {}, {}, False
+    for line in text.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if not line.startswith(" "):
+            in_columns = line.strip().rstrip(":") == "columns"
+            if not in_columns and ":" in line:
+                key, _, value = line.partition(":")
+                out[key.strip()] = value.strip().strip("\"'")
+            continue
+        if not in_columns:
+            continue
+        key, _, value = line.strip().partition(":")
+        key, value = key.strip().strip("\"'"), value.strip()
+        if value.startswith("{"):
+            fields = {}
+            for part in value.strip("{}").split(","):
+                if ":" in part:
+                    k, _, v = part.partition(":")
+                    fields[k.strip()] = v.strip().strip("\"'")
+            columns[key] = fields
+        else:
+            columns[key] = {"state": value.strip("\"'")}
+    out["columns"] = columns
+    return out
+
+
 def read_grid(path: Path) -> list[list[str]]:
     delimiter = "\t" if path.suffix.lower() in {".tsv", ".tab"} else ","
     with path.open(newline="", encoding="utf-8-sig") as handle:
@@ -300,6 +344,88 @@ def check_missing_information(rows, volumes, concentrations, ids, report):
                 )
 
 
+def check_provenance(rows, fieldnames, provenance, report):
+    """Check a platemap against a sidecar recording where each value came from.
+
+    Four states. `source` is verbatim, `derived` is computed from the input,
+    `imputed` is inferred from context, `assumed` is chosen and needs review.
+
+    The rule that matters is the one joining provenance to the kind of
+    platemap: a **retrospective** platemap records a run that already
+    happened, so its wells are facts. Generating them is fabrication, and a
+    fabricated well either mislabels a real row or drops it. That combination
+    -- retrospective, and `Well` assumed -- is the only blocking finding here.
+    """
+    kind = str(provenance.get("platemap_kind", "")).strip().lower()
+    columns = provenance.get("columns") or {}
+    if kind not in {"prospective", "retrospective"}:
+        report.add(
+            "warn",
+            "provenance does not say whether this platemap is prospective (a plan, where "
+            "generating wells is the deliverable) or retrospective (a record, where wells "
+            "are facts) -- without that, an invented well cannot be told from a real one",
+        )
+
+    states = {}
+    for column in fieldnames:
+        entry = columns.get(column)
+        state = str((entry or {}).get("state", "")).strip().lower() if isinstance(entry, dict) else str(entry or "").strip().lower()
+        states[column] = state
+        if not state:
+            report.add("warn", f"{column!r} has no provenance entry -- nothing records where its values came from")
+        elif state not in {"source", "derived", "imputed", "assumed"}:
+            report.add("warn", f"{column!r} has provenance state {state!r}, which is not one of source/derived/imputed/assumed")
+
+    if kind == "retrospective" and states.get("Well") == "assumed":
+        note = (columns.get("Well") or {}).get("note", "")
+        report.add(
+            "blocking",
+            f"this platemap is retrospective and its wells are marked 'assumed' -- the wells "
+            f"of a completed run are facts to be recovered, not generated. A generated well "
+            f"merges against whatever real data sits at that position, or drops silently"
+            + (f" ({note})" if note else ""),
+        )
+
+    assumed = sorted(c for c, st in states.items() if st == "assumed")
+    if assumed:
+        report.add(
+            "info",
+            f"{len(assumed)} column(s) are marked 'assumed' and need review before this is "
+            f"trusted: {', '.join(assumed)}",
+        )
+
+
+def check_pipettable(rows, volumes, minimum, report):
+    """Flag volumes too small to pipette.
+
+    A recipe rescaled to a different basis keeps its concentrations, so every
+    arithmetic check still passes -- but the volumes stop being things anyone
+    can measure. A 0.1 uL draw is the visible symptom of a transformation
+    nobody declared.
+
+    Reported at info, not warn, and that is deliberate. A column may hold a
+    volume nobody ever pipetted -- the components of an expanded sub-mix are
+    drawn once as the mix, not individually -- and nothing in the platemap
+    distinguishes those from a direct draw. Only provenance knows. So this
+    raises a question rather than making a claim.
+    """
+    offenders = defaultdict(list)
+    for row in rows:
+        for column in volumes:
+            value = as_number(row.get(column))
+            if value is not None and 0 < value < minimum:
+                offenders[column].append((str(row.get("Well", "?")) or "?", value))
+    for column, hits in sorted(offenders.items()):
+        smallest = min(v for _, v in hits)
+        report.add(
+            "info",
+            f"{column!r} is below {minimum:g} uL on {len(hits)} row(s), smallest {smallest:g}. "
+            f"If that is a direct draw it is hard to pipette accurately, and a recipe rescaled "
+            f"from a larger basis is the usual cause -- concentrations survive a rescaling, "
+            f"volumes do not. If it is a component of an expanded sub-mix, ignore this",
+        )
+
+
 def check_substituted_zeros(rows, volumes, concentrations, report):
     """Find zeros that may be false claims of absence.
 
@@ -476,6 +602,18 @@ def main() -> int:
         help="microscope makes the edge-margin rule blocking rather than a warning",
     )
     parser.add_argument("--edge-margin", type=int, default=1, help="rows/columns to keep clear of the edge")
+    parser.add_argument(
+        "--provenance",
+        type=Path,
+        help="sidecar recording where each column's values came from, and whether this "
+             "platemap is prospective or retrospective",
+    )
+    parser.add_argument(
+        "--min-volume",
+        type=float,
+        default=0.2,
+        help="smallest reliably pipettable volume in uL (default 0.2)",
+    )
     args = parser.parse_args()
 
     if not args.platemap.is_file():
@@ -604,7 +742,19 @@ def main() -> int:
     if "Date" in fieldnames:
         check_date_format(rows, report)
 
+    if args.provenance:
+        if not args.provenance.is_file():
+            print(f"error: no such provenance file: {args.provenance}", file=sys.stderr)
+            return 2
+        try:
+            provenance = read_provenance(args.provenance)
+        except ValueError as exc:
+            print(f"error: could not read {args.provenance}: {exc}", file=sys.stderr)
+            return 2
+        check_provenance(rows, fieldnames, provenance, report)
+
     volumes, concentrations, ids = column_roles(fieldnames)
+    check_pipettable(rows, volumes, args.min_volume, report)
     if not concentrations and not volumes:
         report.add("info", "no composition columns -- the tutorial recommends recording what is in each well")
     check_missing_information(rows, volumes, concentrations, ids, report)

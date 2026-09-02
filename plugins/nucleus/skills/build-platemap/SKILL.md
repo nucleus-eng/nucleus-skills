@@ -62,6 +62,21 @@ named sub-mix. Two skill-local reference files hold the rest:
 Ask for what is missing; do not invent it. Read a named protocol or DevNote
 instead of asking when one is supplied.
 
+- **Is this platemap a plan or a record?** Ask this first, and ask it while
+  *reading the source*, not when you get to laying out wells — by then the
+  decision to generate them has already been made.
+
+  | | Wells are | Generating them is |
+  | --- | --- | --- |
+  | **Prospective** — a run not yet done | the deliverable | correct; the point of step 2 |
+  | **Retrospective** — a run already done | facts to recover | **fabrication** |
+
+  A generated well in a retrospective platemap merges against whatever real
+  data sits at that position, or drops the row. Both run to completion and
+  report success. If the source records a completed run and contains no
+  wells, **stop and say so** — the layout is not recoverable and no amount of
+  care in generating it helps.
+
 - **Instrument** — plate reader or microscope. This changes the edge rule in
   step 2, so it is not optional.
 - **Plate format** — **384 unless there is evidence otherwise.** That is the
@@ -202,6 +217,7 @@ object the CDK hands back — see `references/assembly-blocks.md`.
 
 ```bash
 python3 scripts/check-platemap.py <file> --instrument platereader --plate 384
+python3 scripts/check-platemap.py <file> --provenance <file>.provenance.yaml
 ```
 
 The checker finds the header row by content rather than by position, so a
@@ -211,6 +227,31 @@ skipped.
 Three levels. **Blocking** means the CDK will silently produce wrong or
 missing data. **Warn** means the analysis runs but the record is incomplete.
 **Info** is cosmetic.
+
+### Write a provenance sidecar
+
+Ship `<platemap>.provenance.yaml` beside the file. It records where each
+column's values came from, and — the field that matters — whether the
+platemap is a plan or a record.
+
+```yaml
+platemap_kind: prospective      # or retrospective
+source: "20260603-clpxp.csv"
+columns:
+  Date: {state: imputed, note: "from the filename"}
+  Experiment: {state: source}
+  Well: {state: assumed, note: "generated; the source had no Well column"}
+  Name: {state: source}
+  Type: {state: source}
+  "[Mg-Acetate] (mM)": {state: derived, note: "stock 200 mM x volume / 35 uL"}
+```
+
+Four states: `source` verbatim, `derived` computed, `imputed` inferred from
+context, `assumed` chosen and needing review.
+
+**`platemap_kind: retrospective` with `Well: assumed` is a blocking finding.**
+That pair is the fabrication case, and it is the only thing here a checker
+can decide on its own — everything else it reports for a human.
 
 Then report to the reviewer, in this order:
 

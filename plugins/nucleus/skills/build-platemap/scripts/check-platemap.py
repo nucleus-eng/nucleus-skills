@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import subprocess
 import re
 import sys
 from collections import Counter, defaultdict
@@ -80,32 +81,34 @@ def read_provenance(path: Path) -> dict:
         return yaml.safe_load(text) or {}
     except ImportError:
         pass
-    # Minimal YAML: `key: value` at top level, and one nested `columns:` block
-    # whose entries are `"name": {state: x, note: y}` or `"name": x`.
-    out, columns, in_columns = {}, {}, False
+    # Minimal YAML: top-level `key: value`, and two-level blocks whose entries
+    # are `name: {a: x, b: y}` or `name: value`. Enough for this sidecar.
+    def fields(value):
+        out = {}
+        for part in value.strip("{}").split(","):
+            if ":" in part:
+                k, _, v = part.partition(":")
+                out[k.strip()] = v.strip().strip("\"'")
+        return out
+
+    out, block, name = {}, None, None
     for line in text.splitlines():
         if not line.strip() or line.lstrip().startswith("#"):
             continue
-        if not line.startswith(" "):
-            in_columns = line.strip().rstrip(":") == "columns"
-            if not in_columns and ":" in line:
-                key, _, value = line.partition(":")
-                out[key.strip()] = value.strip().strip("\"'")
+        if not line.startswith((" ", "\t")):
+            key, _, value = line.partition(":")
+            key, value = key.strip(), value.strip()
+            if value:
+                out[key] = value.strip("\"'")
+                block = None
+            else:
+                block = out.setdefault(key, {})
             continue
-        if not in_columns:
+        if block is None:
             continue
         key, _, value = line.strip().partition(":")
         key, value = key.strip().strip("\"'"), value.strip()
-        if value.startswith("{"):
-            fields = {}
-            for part in value.strip("{}").split(","):
-                if ":" in part:
-                    k, _, v = part.partition(":")
-                    fields[k.strip()] = v.strip().strip("\"'")
-            columns[key] = fields
-        else:
-            columns[key] = {"state": value.strip("\"'")}
-    out["columns"] = columns
+        block[key] = fields(value) if value.startswith("{") else (value.strip("\"'") if value else {})
     return out
 
 
@@ -344,6 +347,54 @@ def check_missing_information(rows, volumes, concentrations, ids, report):
                 )
 
 
+def check_pin(label, pin, report):
+    """Check a `{path, blob}` pin.
+
+    `path` is where the file was; `blob` is what it was. Both are needed and
+    they answer different questions -- a path rots, and a digest alone cannot
+    be looked up. `blob` is git's own digest, from `git hash-object`, which
+    depends on content alone: it is the same before and after the file is
+    committed, in any repository, at any path, and works in a directory with
+    no git history at all.
+
+    When the path still resolves here, the digest is recomputed. A mismatch
+    means the file moved on after the pin was taken, which is the whole reason
+    to record one.
+    """
+    if isinstance(pin, str):
+        report.add("warn", f"provenance {label!r} is a bare path, not a pin -- add a `blob:` "
+                           f"from `git hash-object`, or nothing records which version this was")
+        return
+    if not isinstance(pin, dict):
+        return
+    path, blob = str(pin.get("path", "")).strip(), str(pin.get("blob", "")).strip()
+    if not blob:
+        report.add("warn", f"provenance {label!r} names a path but no `blob:` -- a path says "
+                           f"where, not which version")
+        return
+    if not path:
+        report.add("info", f"provenance {label!r} has a blob but no path -- the identity is "
+                           f"recorded, but nothing says where to look")
+        return
+    target = Path(path)
+    if not target.is_file():
+        report.add("info", f"provenance {label!r} points at {path!r}, which is not here -- the "
+                           f"blob still identifies it, so this is not an error")
+        return
+    try:
+        actual = subprocess.run(["git", "hash-object", str(target)],
+                                capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return          # git absent, or it declined; the pin is simply unverified
+    if actual != blob:
+        report.add(
+            "warn",
+            f"provenance {label!r} pins {blob[:12]} but {path!r} is now {actual[:12]} -- the "
+            f"file changed after the pin was taken, so what this platemap was derived from is "
+            f"not what is there now",
+        )
+
+
 def check_provenance(rows, fieldnames, provenance, report):
     """Check a platemap against a sidecar recording where each value came from.
 
@@ -358,6 +409,12 @@ def check_provenance(rows, fieldnames, provenance, report):
     """
     kind = str(provenance.get("platemap_kind", "")).strip().lower()
     columns = provenance.get("columns") or {}
+
+    # `source` is where this platemap came from. `recipe` is the composition
+    # its specimen columns derive from. Different claims, both worth pinning.
+    for label in ("source", "recipe"):
+        if label in provenance:
+            check_pin(label, provenance[label], report)
     if kind not in {"prospective", "retrospective"}:
         report.add(
             "warn",

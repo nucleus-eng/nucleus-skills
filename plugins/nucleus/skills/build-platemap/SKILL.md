@@ -16,7 +16,9 @@ layout, so plate format, replicate count and well IDs must be asked for, not
 inferred from the page.
 
 The column requirements are owned by the original DevNote,
-`2026-CERN-OHL-P/devnotes/2026-bhasin-platemaps/main.md`. **Where the
+`nucleus-devnote-archive-1/devnotes/2026-bhasin-platemaps/main.md`
+(renamed from `2026-CERN-OHL-P`; the redirect works but will break if anything
+later takes the old name). **Where the
 published [platemap tutorial](https://docs.nucleus.engineering/guides/platemap-tutorial/)
 disagrees with it, the DevNote wins.** Restated here because every step below
 depends on it — **this is a port; keep it in sync with the DevNote**:
@@ -236,7 +238,12 @@ platemap is a plan or a record.
 
 ```yaml
 platemap_kind: prospective      # or retrospective
-source: "20260603-clpxp.csv"
+source:                         # where this platemap came from
+  path: 20260603-clpxp.csv
+  blob: 4c7c31c8707066d92291802a05fd85b7f03b9189
+recipe:                         # the composition its columns derive from
+  path: tmp/experiments/2026-09-05-dye-liposome-ulga.yml
+  blob: a85e860f1e5b19c400aef459408e62cad7e365b9
 columns:
   Date: {state: imputed, note: "from the filename"}
   Experiment: {state: source}
@@ -248,6 +255,26 @@ columns:
 
 Four states: `source` verbatim, `derived` computed, `imputed` inferred from
 context, `assumed` chosen and needing review.
+
+**A path is not a pin.** `path` says where a file was; `blob` says which
+version it was, and they answer different questions — a path rots, and a
+digest alone cannot be looked up. `blob` is git's own digest:
+
+```bash
+git hash-object <file>
+```
+
+It depends on content alone. The same value before and after the file is
+committed, in any repository, at any path, and it works in a directory with no
+git history at all — so a pin taken on a spreadsheet sitting on someone's
+desktop survives every move that file will make. Use git's digest rather than
+a bare `sha256`: neither this repo nor nucleus-docs had any hashing precedent,
+so the first choice sets it for both.
+
+`source` and `recipe` are different claims. `source` is where this platemap
+came from; `recipe` is the composition its specimen columns are *derived*
+from. The checker recomputes both when the path still resolves, and reports a
+mismatch — a pin nobody verifies is a comment.
 
 **`platemap_kind: retrospective` with `Well: assumed` is a blocking finding.**
 That pair is the fabrication case, and it is the only thing here a checker

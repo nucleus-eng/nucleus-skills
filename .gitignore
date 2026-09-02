@@ -2,11 +2,14 @@
 __pycache__/
 *.pyc
 
-# Working documents, deliberately untracked
-PLATEMAP-STAGING.md
+# Staging documents, deliberately untracked. Globs, not filenames: a
+# convention protected one name at a time will eventually miss one, and the
+# miss is silent -- an untracked staging file is one `git add -A` from being
+# committed, which is exactly what the convention exists to prevent.
+*-STAGING.md
 DRAFT-ISSUE-*.md
 
-# Working documents, deliberately untracked
-PLATEMAP-STAGING.md
+# Named, not globbed: `*-PLAN.md` would swallow REFACTOR-PLAN.md, which is
+# tracked. This file is a working document whose name follows REFACTOR-PLAN.md
+# rather than the -STAGING.md convention it documents.
 STAGING-SKILL-PLAN.md
-DRAFT-ISSUE-*.md

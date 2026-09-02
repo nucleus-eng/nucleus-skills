@@ -54,6 +54,15 @@ then the repository root. If none declares one, the default is:
 tmp/STAGED-<date>-<topic>.md
 ```
 
+**Ignore the pattern, not the filename.** A convention protected one name at a
+time will eventually miss one, and the miss is silent — the next staging
+document simply arrives tracked. Ignore `*-STAGING.md`, or whatever shape the
+declared location takes, rather than adding names as they appear.
+
+Watch what else the glob catches. `*-PLAN.md` looks like the obvious companion
+and would swallow a tracked `REFACTOR-PLAN.md`; name that kind of exception
+explicitly and say why.
+
 **Check that the location is gitignored before you write to it.** This is the
 one part worth doing every time. A staging document at a tracked path is one
 `git add -A` away from being committed into an unrelated change — and a

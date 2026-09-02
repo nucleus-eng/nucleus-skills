@@ -223,6 +223,14 @@ not exist. Should be `skills/migrate/SKILL.md`.
 
 Line numbers refer to `extraction-sources/nucleus-docs-CLAUDE.md`.
 
+> **These line numbers are stale. Re-snapshot before acting on them.** Measured
+> 2026-09-02: the snapshot is 466 lines, the live `nucleus-docs/CLAUDE.md` is 483. The
+> snapshot contains no `tmp/` and no `STAGED` occurrences; the live file has 3 and 1. A
+> `### Staged edits` section was added to the live file at line 67 **after** the snapshot
+> was taken, so it is absent from Phase 4's extraction table below and it sits inside the
+> 62-121 range Phase 5 deletes. Applied as written to the live file, those ranges cut the
+> wrong content.
+
 | New skill | Source | Notes |
 | --- | --- | --- |
 | `verify-dna-constructs` | lines 62-121 + 409-418 | Tiered cross-repo verification, GitHub API fallback, the attention-block template, and `check-dna-refs.py`. The script is documented in no skill today. |

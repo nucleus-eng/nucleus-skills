@@ -16,7 +16,9 @@ layout, so plate format, replicate count and well IDs must be asked for, not
 inferred from the page.
 
 The column requirements are owned by the original DevNote,
-`2026-CERN-OHL-P/devnotes/2026-bhasin-platemaps/main.md`. **Where the
+`nucleus-devnote-archive-1/devnotes/2026-bhasin-platemaps/main.md`
+(renamed from `2026-CERN-OHL-P`; the redirect works but will break if anything
+later takes the old name). **Where the
 published [platemap tutorial](https://docs.nucleus.engineering/guides/platemap-tutorial/)
 disagrees with it, the DevNote wins.** Restated here because every step below
 depends on it — **this is a port; keep it in sync with the DevNote**:
@@ -61,6 +63,21 @@ named sub-mix. Two skill-local reference files hold the rest:
 
 Ask for what is missing; do not invent it. Read a named protocol or DevNote
 instead of asking when one is supplied.
+
+- **Is this platemap a plan or a record?** Ask this first, and ask it while
+  *reading the source*, not when you get to laying out wells — by then the
+  decision to generate them has already been made.
+
+  | | Wells are | Generating them is |
+  | --- | --- | --- |
+  | **Prospective** — a run not yet done | the deliverable | correct; the point of step 2 |
+  | **Retrospective** — a run already done | facts to recover | **fabrication** |
+
+  A generated well in a retrospective platemap merges against whatever real
+  data sits at that position, or drops the row. Both run to completion and
+  report success. If the source records a completed run and contains no
+  wells, **stop and say so** — the layout is not recoverable and no amount of
+  care in generating it helps.
 
 - **Instrument** — plate reader or microscope. This changes the edge rule in
   step 2, so it is not optional.
@@ -202,6 +219,7 @@ object the CDK hands back — see `references/assembly-blocks.md`.
 
 ```bash
 python3 scripts/check-platemap.py <file> --instrument platereader --plate 384
+python3 scripts/check-platemap.py <file> --provenance <file>.provenance.yaml
 ```
 
 The checker finds the header row by content rather than by position, so a
@@ -211,6 +229,70 @@ skipped.
 Three levels. **Blocking** means the CDK will silently produce wrong or
 missing data. **Warn** means the analysis runs but the record is incomplete.
 **Info** is cosmetic.
+
+### Write a provenance sidecar
+
+Ship `<platemap>.provenance.yaml` beside the file. It records where each
+column's values came from, and — the field that matters — whether the
+platemap is a plan or a record.
+
+```yaml
+platemap_kind: prospective      # or retrospective
+source:                         # where this platemap came from
+  path: 20260603-clpxp.csv
+  blob: 4c7c31c8707066d92291802a05fd85b7f03b9189
+recipe:                         # the composition its columns derive from
+  path: tmp/experiments/2026-09-05-dye-liposome-ulga.yml
+  blob: a85e860f1e5b19c400aef459408e62cad7e365b9
+columns:
+  Date: {state: imputed, note: "from the filename"}
+  Experiment: {state: source}
+  Well: {state: assumed, note: "generated; the source had no Well column"}
+  Name: {state: source}
+  Type: {state: source}
+  "[Mg-Acetate] (mM)": {state: derived, note: "stock 200 mM x volume / 35 uL"}
+```
+
+Four states: `source` verbatim, `derived` computed, `imputed` inferred from
+context, `assumed` chosen and needing review.
+
+**A path is not a pin.** `path` says where a file was; `blob` says which
+version it was, and they answer different questions — a path rots, and a
+digest alone cannot be looked up. `blob` is git's own digest:
+
+```bash
+git hash-object <file>
+```
+
+It depends on content alone. The same value before and after the file is
+committed, in any repository, at any path, and it works in a directory with no
+git history at all — so a pin taken on a spreadsheet sitting on someone's
+desktop survives every move that file will make. Use git's digest rather than
+a bare `sha256`: neither this repo nor nucleus-docs had any hashing precedent,
+so the first choice sets it for both.
+
+`source` and `recipe` are different claims. `source` is where this platemap
+came from; `recipe` is the composition its specimen columns are *derived*
+from. The checker recomputes both when the path still resolves, and reports a
+mismatch — a pin nobody verifies is a comment.
+
+**The pin is one-way, and that is a consequence rather than a convention.** A
+platemap points at its recipe; the recipe never lists the platemaps run
+against it. One recipe serves many layouts — four conditions at three
+replicates on one day and six on another, a plate reader then a microscope —
+so a recipe that accumulated references would change every time it was used,
+and its digest would move for a reason having nothing to do with its content.
+A thing whose identity shifts whenever it is used cannot be the stable end of
+a pin.
+
+A run record is the opposite case and may point back: it is written after the
+fact and never re-run, so references cost it nothing. That is not this
+skill's artifact, and the key it uses is not settled — do not emit one here
+until it is.
+
+**`platemap_kind: retrospective` with `Well: assumed` is a blocking finding.**
+That pair is the fabrication case, and it is the only thing here a checker
+can decide on its own — everything else it reports for a human.
 
 Then report to the reviewer, in this order:
 

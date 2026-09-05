@@ -49,20 +49,32 @@ recent.
 ## Step 2 — Check what you actually have before reading
 
 Call `get_file_metadata` on the resolved `fileId` before deciding how to read it. Do not
-assume a file's type from its name or from what the Log template *should* contain — the
-DevStudio template seeds files that may or may not have been auto-converted to native
-Google types on upload, and this can vary by folder/experiment. The metadata's `mimeType`
-is the source of truth.
+assume a file's type — or even its role — from its name. **Do not hardcode expected
+filenames anywhere in this pipeline** (e.g. "look for `log.docx`"). Real experiment
+folders don't follow the template's example names literally: a log has turned up as a
+Google Doc titled `lab-log`, with no `.docx` in sight, and platemaps have turned up as
+plain `.tsv` files rather than `.xlsx`. Identify a file by its **role in the folder**
+(the one Doc-type file is the log/narrative; the one spreadsheet-or-delimited file next
+to it is probably the platemap) and its `mimeType`, never by matching a specific
+filename or extension.
+
+Also: `search_files` and `get_file_metadata` both return a `contentSnippet` field by
+default for text-bearing files. **Check it before paying for a full read or download.**
+It's often enough to answer "what does this say" or "is the platemap referenced in
+here" — reserve `read_file_content`/`download_file_content` for when the snippet is
+truncated, absent, or the caller genuinely needs the complete content (e.g. handing off
+to pandoc).
 
 Route on `mimeType`:
 
 | mimeType | What it is | How to read it |
 |---|---|---|
-| `application/vnd.google-apps.document` | Native Google Doc (log.docx-as-Doc, DevNote(G), Docs(G)) | `read_file_content` for narrative text; add `includeComments: true` if the caller needs to see review comments |
-| `application/vnd.google-apps.spreadsheet` | Native Google Sheet (experiment .xlsx-as-Sheet, platemap input) | `read_file_content` for a quick look; `download_file_content` with `exportMimeType: 'text/csv'` or the xlsx MIME type if a downstream tool needs an actual spreadsheet file |
-| `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | Un-converted `.docx` sitting as-is in Drive | `download_file_content` (no `exportMimeType` needed — it's already the target type) to get real bytes for pandoc |
-| `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | Un-converted `.xlsx` | `download_file_content` — same reasoning |
-| anything else (`.ipynb`, `.png`, `.gb`, `.csv`, etc.) | Uploaded raw file — Drive does not have a native type for these | `download_file_content` — this is the only path; `read_file_content` doesn't support these formats. The `.ipynb` comes back as its raw JSON text; treat it as a file to write to disk and parse, not as narrative content. |
+| `application/vnd.google-apps.document` | Native Google Doc (a log, a DevNote(G) draft, a Docs(G) draft) | `read_file_content` for narrative text; add `includeComments: true` if the caller needs to see review comments |
+| `application/vnd.google-apps.spreadsheet` | Native Google Sheet (a platemap or experiment-design input) | `read_file_content` for a quick look; `download_file_content` with `exportMimeType: 'text/csv'` or the xlsx MIME type if a downstream tool needs an actual spreadsheet file |
+| `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | Un-converted Word file sitting as-is in Drive | `download_file_content` (no `exportMimeType` needed — it's already the target type) to get real bytes for pandoc |
+| `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | Un-converted Excel file | `download_file_content` — same reasoning |
+| `application/octet-stream` with `fileExtension: ipynb`, `viewUrl` pointing at `colab.research.google.com` | A Colab-backed notebook, not a plain uploaded file | `download_file_content` — same as any other non-native type, but note: this returns the last state Colab synced back to Drive, which can lag an actively-open Colab session. If results look stale, that's why. |
+| anything else (`.tsv`, `.csv`, `.png`, `.gb`, plain-upload `.ipynb`, etc.) | Uploaded raw file — Drive has no native type for these | `download_file_content` — this is the only path; `read_file_content` doesn't support these formats. |
 | `application/vnd.google-apps.folder` | A folder, not a file | Don't try to read it — call `search_files` with `parentId = '<this id>'` to list its contents instead |
 
 ## Step 3 — Choose narrative vs. raw
@@ -85,8 +97,10 @@ usually enough to answer "what's in this file."
 
 ## Step 4 — Handing off to pandoc (Log(G)2DevNote(G) path)
 
-When a downstream step needs an actual `.docx` on disk (matching the established
-Log → Claude-reads-via-Drive → pandoc → markdown pipeline):
+When a downstream step needs an actual Word file on disk (matching the established
+Log → Claude-reads-via-Drive → pandoc → markdown pipeline), for whichever file in the
+experiment folder is identified as the log/narrative Doc by Step 2's role-based check —
+not by a filename match:
 
 1. `download_file_content(fileId, exportMimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document')`
 2. Decode the returned base64, write it to a scratch path (e.g. `/home/claude/`)
@@ -96,6 +110,14 @@ Don't try to reconstruct the `.docx` structure from `read_file_content`'s narrat
 output — it's lossy for this purpose (tables, figure placement, and structure don't
 survive it cleanly). Always go through `download_file_content` when the destination is a
 deterministic converter.
+
+## Validated against a real folder (2026-09-05)
+
+First test run against a live (if hastily-assembled) experiment folder surfaced two
+issues, both fixed above: filenames don't follow template examples literally (no
+`.docx`, no `.xlsx` — a Doc titled `lab-log` and a `.tsv` platemap), and the skill was
+missing the `contentSnippet` shortcut entirely. Folder-routing and mimeType-based
+dispatch otherwise held up as designed.
 
 ## Known gaps (as of this skill's first draft)
 

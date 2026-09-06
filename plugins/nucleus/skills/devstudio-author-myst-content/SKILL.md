@@ -121,10 +121,15 @@ survive the reflow untouched.
 
 ## Figures
 
-- **Static PNG with explicit `:name:` label, not a notebook-cell `glue` reference.** A
-  `glue`-based `#fig:` reference whose backing cell was never tagged renders blank with
-  no build error — confirmed as a real, currently-live issue affecting migrated DevNotes
-  (`04_ppk`, `nucleus-cytosol-v05`). Static PNGs don't have this failure mode.
+- **Either pattern (static PNG or notebook `glue`) is fine — what matters is asset-chain
+  completeness, not which pattern is used.** Revised from an earlier overcorrection in
+  this skill: a real, currently-functioning published DevNote
+  (`2026-garenne-pH-sensor`) uses `glue`-style figure references successfully. The
+  genuinely-broken cases seen elsewhere in the archive (`04_ppk`, `nucleus-cytosol-v05`)
+  are migrated content — the likely cause is that migration didn't preserve the full
+  research-asset chain (raw data, platemap, notebook) a `glue` reference depends on, not
+  that `glue` itself is unreliable. **Verify the full chain is present in the project**
+  before trusting a `glue` reference to resolve; if it is, `glue` works fine.
 - **Strip any leading figure number from captions.** MyST auto-generates the "Figure N:"
   prefix from the label — a caption starting with "Figure 2: ..." double-numbers.
 - **System-context figures** (a module in context of Base Cell/Developer Cell) belong in
@@ -171,11 +176,14 @@ Introduction that contextualizes the work, at least one composition table with e
 concentrations, at least one results figure, a Conclusions section with a forward-looking
 statement, and a working analysis notebook with all raw data committed alongside it.
 
-Stub signals: an Overview section present but empty: an `Untitled.ipynb` notebook name
-(experiment wasn't renamed after the fact); commented-out TOC entries or a commented-out
-`# doi:` in `curvenote.yml`; a template file (`template-blank.md`) still present in the
-repo root. None of these alone are blocking — they're signals a reviewer should notice,
-not an automated pass/fail.
+Stub signals: an Overview section present but empty; an `Untitled.ipynb` notebook name
+(experiment wasn't renamed after the fact); commented-out TOC entries in `curvenote.yml`;
+a template file (`template-blank.md`) still present in the repo root. **A missing/
+commented-out `doi:` is NOT a stub signal** — confirmed against a real, complete,
+published DevNote that still has `doi: TODO` (DOIs get assigned after publication, on a
+separate timeline from content completeness). Devstudio doesn't need to police DOI
+presence at all. None of the remaining signals are blocking — they're things a reviewer
+should notice, not an automated pass/fail.
 
 ---
 

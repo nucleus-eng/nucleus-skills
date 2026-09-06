@@ -129,6 +129,12 @@ For each construct actually named with a bp claim in a Composition/Designs table
   table row naming a construct, not as a corpus-wide sweep.
 - Does not decide whether a missing construct should be submitted to `nucleus-eng/DNA`
   — that's a human call; this skill's job stops at flagging the gap clearly.
+- **Not yet, but a noted future direction**: access to a canonical inventory list (SKU,
+  stock concentration, manufacturer, and other fields participants often omit), so
+  participant annotations can be expanded/enriched against complete data rather than
+  left as whatever partial detail the participant wrote. Same future direction applies
+  to `devstudio-check-platemaper` once built. Deferred until the prototype develops
+  further — not a gap to solve now.
 
 ## Validated (2026-09-05)
 

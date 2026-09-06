@@ -1,6 +1,6 @@
 ---
 name: devstudio-log-to-devnote-g
-description: Convert a completed DevStudio experiment folder (a Log Google Doc, a platemap, one or two analysis notebooks, raw instrument data) into a draft DevNote as a native, commentable Google Doc — following Nucleus DevNote structure, with fidelity to source content and REVIEW flags for anything uncertain. Use when a human points Claude at a specific experiment folder they've deemed ready to draft into a DevNote. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+description: Convert a human-selected set of one or more DevStudio Log folders (each holding a Log Google Doc, and where present a platemap, analysis notebooks, and raw instrument data) into a single draft DevNote as a native, commentable Google Doc — following Nucleus DevNote structure, synthesizing across the set when it spans a continuous narrative, with fidelity to source content and explicit flags for anything uncertain or missing. Use when a human selects the specific folder(s) they've deemed ready to draft into a DevNote. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
 ---
 
 # devstudio-log-to-devnote-g
@@ -26,38 +26,88 @@ reviewed draft into actual MyST syntax, applying `devstudio-author-myst-content`
 conventions, and assigning the final frontmatter/id.
 
 This skill is invocation-driven, like `devstudio-read-from-google-drive` and
-`devstudio-write-to-google-drive`: a human points it at one specific, already-complete
-experiment folder. It does not crawl the Log directory looking for finished experiments,
-and it does not decide when an experiment is "done" — that's the human's call, made
-before this skill is ever invoked.
+`devstudio-write-to-google-drive` — but **the invocation unit is a human-curated set of
+one or more Log folders, not a single fixed folder.** Confirmed against the actual
+DevStudio workflow: many logs accumulate during a session, and once something is ready
+to become a DevNote, a participant selects a specific set ("directory x, y, and z") to
+combine into one draft. No fixed granularity should be assumed — a selected folder might
+represent one day, several days, or something else entirely; **the human's selection is
+authoritative regardless of what it structurally represents.** This skill does not
+crawl the Log directory looking for finished work, and does not decide what counts as
+"done" or "one experiment" — both are human calls made before invocation.
+
+(A related, explicitly out-of-scope need: an actual interface for TAs/participants to
+make this selection and interact with Claude. Recognized as necessary, not designed
+here — a separate concern from this skill's own logic.)
 
 ## Step 1 — check for stub signals before drafting anything
 
-Before treating a folder as ready, check it against `devstudio-author-myst-content`'s
-complete-vs-stub signals: an empty analysis, a notebook that was never run, explicit
-TODO markers in the log. **A live example from this pipeline's own testing**: the
-folder used to validate `devstudio-read-from-google-drive` contained a log stating
-"Did not get to the analysis... TODO: actually run the analysis" — a genuine stub, not
-a candidate for drafting. If stub signals are present, say so and stop rather than
-producing a hollow draft — this is a warning to surface, not a hard block the human
-can't override, since they may have context this skill doesn't.
+Before treating the *selected set* as ready, check each folder against
+`devstudio-author-myst-content`'s complete-vs-stub signals: an empty analysis, a
+notebook that was never run, explicit TODO markers in the log. **A live example from
+this pipeline's own testing**: the folder used to validate `devstudio-read-from-google-
+drive` contained a log stating "Did not get to the analysis... TODO: actually run the
+analysis" — a genuine stub, not a candidate for drafting. If stub signals are present in
+any selected folder, say so and stop rather than producing a hollow draft — this is a
+warning to surface, not a hard block the human can't override, since they may have
+context this skill doesn't.
 
-## Step 2 — inventory the folder, identify roles not filenames
+**Critical: do not trust `contentSnippet` as a stub signal.** The Drive connector's
+`search_files` returns a `contentSnippet` for text-bearing files, but a blank snippet
+does not mean a blank file — this is a connector rendering artifact, confirmed against
+real DevStudio logs (`LOG-sy-20251107` returned a blank snippet but contained a full,
+well-structured experiment log). Always call `read_file_content` before concluding a
+log is empty or a stub.
 
-Use `devstudio-read-from-google-drive`'s folder-scoped `search_files` plus its
-role-based identification (Step 2 of that skill): don't look for `log.docx` by name —
-identify the one Doc-type file as the log/narrative, the platemap by its tabular
-content, the `.ipynb`s by extension/mimeType. Real experiment folders don't follow
-template example names literally (confirmed during that skill's own testing: a log
-turned up as a Doc named `lab-log`, a platemap as a `.tsv`).
+**Also check the set as a whole for asset-chain gaps, not just per-folder stub
+signals.** A live example from this pipeline's own testing: six real, non-stub log
+entries spanning six dated folders had **zero platemaps, notebooks, or raw instrument
+data anywhere in any of the six folders**. One entry even contained an unmistakable
+figure caption with no backing figure or data file anywhere in the project. This is not
+a stub signal (the narrative content is real and substantial) — it's a distinct, equally
+important gap: **flag missing supporting assets explicitly**, separately from
+stub-checking, per direct guidance that this must be surfaced rather than silently
+drafted around.
+
+## Step 2 — inventory each selected folder, then synthesize across the set
+
+For each folder in the human-selected set, use `devstudio-read-from-google-drive`'s
+folder-scoped `search_files` plus its role-based identification (Step 2 of that skill)
+— don't look for `log.docx` by name, identify the one Doc-type file as the log/
+narrative, the platemap by its tabular content, the `.ipynb`s by extension/mimeType.
+
+**Then synthesize, don't just concatenate.** When the set spans multiple dated logs
+telling one continuous story (confirmed as the real shape during this pipeline's own
+testing — six days of iterating on the same degradation-tag characterization,
+referencing prior days' results directly: "It seems like... too little," "Therefore, we
+try to..."), order chronologically and carry the narrative thread through — a later
+entry's course-correction only makes sense in light of an earlier entry's finding. Don't
+draft each folder's content as an isolated block.
+
+Real experiment folders don't follow template example names literally (confirmed
+during `devstudio-read-from-google-drive`'s own testing: a log turned up as a Doc named
+`lab-log`, a platemap as a `.tsv`) — role-based identification, not filename matching,
+applies to every folder in the set.
 
 ## Step 3 — extract and preprocess the log content
 
 Download the log Doc as real bytes and pandoc-convert, per
-`devstudio-read-from-google-drive`'s Step 4:
+`devstudio-read-from-google-drive`'s Step 4. **The `--extract-media` flag is required,
+not optional** — confirmed against real DevStudio logs (`LOG-sy-20251104`,
+`LOG-sy-20251107`): figures in these logs are embedded inline in the Google Doc, not
+referenced as separate files. They are invisible to `read_file_content` and only
+discoverable via pandoc extraction. `--extract-media` is the primary figure-discovery
+mechanism for this pipeline:
+
 ```bash
 pandoc input.docx -o content.md --extract-media=figures/
 ```
+
+After extraction, `content.md` will contain `![](figures/imageN.png)` at the exact
+position in the narrative where each figure appears — this is how you know both what
+figures exist and where they sit in the document structure (which experiment section
+they belong to).
+
 Then apply pandoc's notation fixups — verbatim from `ingest.md`:
 
 - **Subscript**: `~N~` → `` {sub}`N` `` — except `~` used as "approximately" in prose
@@ -73,68 +123,87 @@ Then apply pandoc's notation fixups — verbatim from `ingest.md`:
   into one. Read each `|`-delimited column position independently across all wrapped
   lines; never merge content across `|` boundaries.
 
-Note: since this stage's *output* is a plain Doc, not MyST, these fixups matter for
-getting the eventual MyST conversion right later, but for now they mainly matter for
-correctly parsing what the source table/prose actually said — apply them to your
-understanding of the content even before the G(2)M stage formalizes the syntax.
+## Step 4 — figure and asset inventory
 
-## Step 4 — determine what's actually referenced (don't glob-copy the folder)
+**The "explicitly referenced in prose" rule from `ingest.md` does not apply to
+DevStudio logs.** Confirmed against real logs from two different experimentalists:
+neither writes explicit figure citations ("see Figure 1", "as shown below") in their
+log narratives. Figures appear in two ways depending on log style:
 
-**Only artifacts explicitly referenced in the log carry forward.** Scan the converted
-content for figure references, explicit platemap mentions, and data-file citations.
-This is the same failure mode `migrate-devnote`'s `snags.md` warned about with resource
-globs: a naive "copy everything in the experiment folder" would silently drag in
-unreferenced material. Build an explicit referenced-files list from what the log
-actually cites — not a directory listing.
+- **Embedded inline in the Doc** (confirmed for `sy`-style logs): discovered via
+  pandoc `--extract-media` in Step 3. The figure's position in `content.md` (which
+  section heading it appears under) is its own reference — the figure *is* the
+  observation record for that section.
+- **In the asset subfolder** (confirmed for `yh`-style logs that lack inline figures):
+  inventory the asset subfolder — platemap `.csv`, raw instrument data, analysis
+  `.ipynb` — and treat all figures produced by the notebook as associated with this
+  experiment.
 
-## Step 5 — figure-provenance sidecar (corrected: asset completeness, not pattern choice)
+**For all figures, regardless of source:** treat them as carrying forward unless the
+human explicitly says otherwise. The question is not "is this figure cited in prose"
+but "does this figure have an intact asset chain." Do not glob-copy the entire folder
+indiscriminately — but do not require a prose citation that will never appear.
 
-**Revised understanding**: earlier guidance in this pipeline said to prefer static PNG
-figures over notebook `glue` references because `glue` was "broken." That's an
-overcorrection. A real, currently-functioning published DevNote
-(`2026-garenne-pH-sensor`) uses `glue`-style figure references successfully. The actual
-principle, per direct guidance: **a `glue`-style figure reference implies the full
-research-asset chain — raw data, platemap, the analysis notebook — must genuinely be
-present in the project.** It works when that chain is intact; it breaks when it isn't
-(the likely explanation for the genuinely-broken cases seen elsewhere in the archive,
-which were migrated content, not freshly-authored — migration may not have preserved
-the full asset chain a glue reference depends on). DevStudio produces fresh content with
-an intact chain by construction, so this specific risk is lower here than it looked.
+**The `<!-- missing notebook -->` convention**: if a figure exists (embedded or in the
+asset folder) but no analysis notebook can be found in the project, flag it inline in
+the draft as:
+```
+<!-- missing notebook -->
+```
+This is the convention used in the real published `module-Clpxp-Cytosol` DevNote by
+the author themselves when a figure's backing notebook was absent — use it rather than
+inventing a new flag.
 
-**What this skill should actually verify**, regardless of which figure pattern gets
-used downstream: for each figure carried forward, confirm its full backing chain is
-present — the source notebook, the platemap it consumed, and the raw instrument data —
-not just the image file. Record this in the manifest:
+## Step 5 — figure-provenance sidecar
+
+**Three confirmed figure patterns in real DevStudio DevNotes** — record which pattern
+each figure uses in the manifest, since `devstudio-devnote-g-to-devnote-m` needs this
+to construct the correct MyST reference:
+
+| Pattern | When to use | MyST reference | Asset chain requirement |
+|---|---|---|---|
+| **`#\| label:` Quarto cell tag** (preferred) | Notebook exists with a `#\| label:` tag on the plot cell | `:::{figure} #YYYYMMDD-slug` | Notebook + platemap + raw data all present |
+| **Static PNG path** | Pre-committed PNG, or notebook with saved output but no label tag | `:::{figure} ./figures/name.png` | PNG must exist; notebook optional but preferred |
+| **`#fig:` glue reference** | Older notebooks using the `glue` API | `:::{figure} #fig:name` | Notebook with matching `label` in cell metadata — **currently broken in several archive DevNotes** where the glue tag is missing; prefer `#\| label:` for new content |
+
+For figures extracted from the log Doc via pandoc (embedded inline), they arrive as
+static PNGs. Record the section heading they appeared under as their narrative context.
+
+Record each figure in the manifest alongside the draft:
 ```json
 {
   "figures": [
     {
-      "filename": "kinetics-normalized.png",
-      "source_notebook": "experiments/20260904-degfp-liposome/analysis.ipynb",
-      "source_cell_or_section": "Cell 12 — normalized kinetics plot",
-      "platemap": "platemap.tsv",
+      "filename": "figures/image1.png",
+      "pattern": "embedded-in-doc",
+      "section_context": "Experiment 1 — pOpen-deGFP expression in Nucleus Cytosol",
+      "source_notebook": "REVIEW: source notebook not identified — confirm with author",
+      "platemap": null,
+      "asset_chain_complete": false,
+      "extraction_method": "pandoc --extract-media"
+    },
+    {
+      "filename": "figures/kinetics.png",
+      "pattern": "quarto-label",
+      "cell_label": "20251212-kinetics",
+      "source_notebook": "20251212-ClpXP/20251212-analysis.ipynb",
+      "platemap": "20251212-ClpXP/20251212-ClpXP.csv",
       "asset_chain_complete": true,
-      "extraction_method": "pandoc --extract-media (embedded in log Doc)"
+      "extraction_method": "notebook cell output"
     }
   ]
 }
 ```
-- If a figure was extracted directly from the log Doc via pandoc with no clear notebook
-  link, set `asset_chain_complete: false` and flag `source_notebook` as
-  `REVIEW: source notebook not identified — confirm with author`. Don't guess.
-- If the notebook exists but its input platemap or raw data can't be confirmed present
-  in the project, that's also `asset_chain_complete: false` — flag it, since this is
-  precisely the gap that causes a figure to break regardless of which reference pattern
-  gets used later.
 
-**Purpose and lifespan, both narrow and specific**: this manifest exists solely so
-`devstudio-devnote-g-to-devnote-m` can construct the actual MyST connections it needs to
-make — figure labels, `{ref}`/`{numref}` cross-references, and a Resources-section entry
-linking a results figure back to the platemap that produced it. Once that stage has used
-it to build those connections into the MyST output, **the manifest itself is no longer
-needed** — it does not travel further into `curvenote.yml` or beyond, and it is not part
-of the DevNote content a TA reviews. It's a one-hop handoff artifact, not a persistent
-provenance record.
+Set `asset_chain_complete: false` when: (a) no notebook found for an embedded figure —
+also flag inline in the draft with `<!-- missing notebook -->`, following the convention
+used in `module-Clpxp-Cytosol/main.md` by the author themselves; (b) notebook exists
+but platemap or raw data can't be confirmed present; (c) a `#fig:` glue reference has
+no matching `label` in notebook cell metadata.
+
+**Purpose and lifespan**: this manifest exists solely so `devstudio-devnote-g-to-devnote-m`
+can construct the correct MyST figure references. Once consumed by that stage, it is
+discarded — it is not DevNote content and does not travel further.
 
 ## Step 6 — fidelity rules (absolute, verbatim from `ingest.md`)
 
@@ -218,7 +287,8 @@ in the DevNote directory, alongside the figure-provenance manifest.
 - Does not generate `curvenote.yml`/`base.yml` or run venue submission checks — a
   separate downstream skill (`submit.md` uploaded as reference).
 - Does not decide an experiment is "done" — that's a human call made before invocation.
-- Not yet validated against a real, actually-complete experiment folder — the one real
-  folder tested so far (during `devstudio-read-from-google-drive`'s validation) turned
-  out to be a stub, which is a real negative-test case (Step 1 should catch it) but not
-  a positive one. Needs a real complete experiment to validate Steps 3–8.
+- Steps 3–8 not yet validated end-to-end against a real complete experiment. Validated
+  against real Drive folders to confirm the design decisions above (two experimentalist
+  styles, figure patterns, asset-chain gaps, contentSnippet false negatives), but an
+  actual draft has not yet been produced and checked against the target DevNote. That
+  validation step is the next priority.

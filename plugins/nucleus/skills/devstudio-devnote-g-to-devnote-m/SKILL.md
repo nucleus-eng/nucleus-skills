@@ -124,18 +124,18 @@ Never silently drop columns that are present; never silently add data to fill mi
 columns.
 
 For the DNA/construct table, check each construct name against `nucleus-eng/DNA` via
-`devstudio-verify-dna-constructs` before naming it in the table. If the construct
-links to a `.gb` file in the repo, also emit a `{seqviz}` directive proximal to
-the table:
+`devstudio-verify-dna-constructs` before naming it in the table. If the construct links to a `.gb` file in the repo, also emit a `{seqviz}` directive
+proximal to the table:
 ```
-:::{seqviz} https://github.com/nucleus-eng/DNA/blob/main/reporters/pOpen-deGFP.gb
+:::{seqviz} ./plasmids/pOpen-deGFP.gb
 :height: 600px
-:viewer: both
 :::
 ```
-The `{seqviz}` directive accepts both local paths (`./plasmids/pOpen-deGFP.gb`) and
-GitHub "view file" URLs — use the GitHub URL if the construct is in `nucleus-eng/DNA`,
-local path only if a `.gb` file was explicitly included in the DevNote folder.
+Always use a **local path** — the seqviz plugin cannot fetch remote URLs and will
+error with `ENOENT` if given a GitHub URL. Copy the `.gb` file into the devnote's
+`plasmids/` directory first (from `nucleus-eng/DNA` if the construct lives there,
+or from the Drive folder if it was included there). Do not use `:viewer:` — it is
+not a recognized option and will emit a curvenote check warning.
 
 For protocol reaction tables, wrap in `:::{table}` with a descriptive label — no
 Vale suppression needed for these unless they contain catalog-number-like strings.
@@ -248,8 +248,9 @@ Produce a directory structure matching the DevNote(M) template:
 ```
 <devnote-slug>/
 ├── main.md
-├── curvenote.yml          # extends base.yml
-├── base.yml               # copied from nucleus-eng/devnote-template
+├── curvenote.yml          # standalone — do NOT use `extends: base.yml`
+├── lorem.mjs              # local copy (identical in every devnote; copy from another devnote)
+├── base.yml               # copied from nucleus-eng/devnote-template (kept verbatim for reference)
 ├── environment.yml        # copied from nucleus-eng/devnote-template
 ├── experiments/
 │   └── YYYYMMDD-slug/
@@ -261,10 +262,22 @@ Produce a directory structure matching the DevNote(M) template:
 └── general/               # schematics and other non-results figures
 ```
 
-`curvenote.yml` minimal required fields:
+**Plugin convention** (confirmed against real archive repo):
+
+- `lorem.mjs` must be a **local copy** alongside `main.md` — every existing devnote
+  carries an identical local copy. Copy it from another devnote directory.
+- `seqviz.mjs` is a **shared file two levels up**: `../../plugins/seqviz/seqviz.mjs`.
+- Both paths are specified directly in `curvenote.yml`'s `plugins:` list.
+- **Do NOT use `extends: base.yml`** — when `extends:` is active, `base.yml`'s bare
+  `seqviz.mjs` plugin entry wins over the `curvenote.yml` override, causing an ENOENT.
+  Instead, re-specify all base fields directly in `curvenote.yml` (matching the real
+  `devnotes/10-nucleus_cytosol_v05/curvenote.yml` convention). `base.yml` is kept in
+  the directory for reference and for the venue schema's `resources:` glob, but not
+  via `extends:`.
+
+`curvenote.yml` required fields — **re-specify all base fields directly**:
 ```yaml
 version: 1
-extends: base.yml
 project:
   id: <generated-uuid>
   title: '<title from Specification>'
@@ -276,13 +289,43 @@ project:
       affiliations:
         - name: <institution>
       corresponding: true      # first author by default
+  abbreviations:
+    MyST: Markedly Structured Text
+    CDK: cell development kit
+  references:
+    devnotes: https://devnotes.bnext.bio
+  github: https://github.com/bnext-bio/nucleus-developer-notes
+  license: CC-BY-4.0
+  open_access: true
+  venue: Nucleus
+  subject: Developer Note
+  plugins:
+    - lorem.mjs
+    - ../../plugins/seqviz/seqviz.mjs
+  jupyter: true
+  exports:
+    - format: meca
+    - format: typst
+      template: https://github.com/curvenote-templates/bnext.git
+      article: main.md
+      output: devnote.pdf
+      id: article
+  requirements:
+    - environment.yml
   # keywords:                  # REVIEW: generate from content against controlled vocabulary
   toc:
     - file: main.md
     # - file: experiments/YYYYMMDD-slug/analysis.ipynb  # add if notebook present
+  resources:
+    - experiments/**/*
+    - plasmids/**/*
+    - figures/**/*
   downloads:
     - id: article
       title: Download Article PDF
+site:
+  template: article-theme
+  nav: []
 ```
 
 **`base.yml`**: copy verbatim from `nucleus-eng/devnote-template`. Note: `base.yml`

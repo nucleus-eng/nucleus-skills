@@ -140,6 +140,15 @@ not a recognized option and will emit a curvenote check warning.
 For protocol reaction tables, wrap in `:::{table}` with a descriptive label — no
 Vale suppression needed for these unless they contain catalog-number-like strings.
 
+**Multi-table handoff from devstudio-log-to-devnote-g**: when the DevNote(G) contains
+two or more composition tables (e.g. one for Nucleus Cytosol conditions and a separate
+one for PURExpress conditions — different component schemas, kept separate in the G
+stage), treat each as its own `:::{table}` block under a clearly labeled subsection
+(e.g. `## Nucleus Cytosol reactions` / `## PURExpress reactions`). Do not force-merge
+tables with different row schemas into one — the G stage kept them separate for good
+reason. Tab-sets may be appropriate if the tables represent parallel experimental arms
+of the same question.
+
 ## Step 4 — figure conversion
 
 For each figure in the Results section, read the provenance fields from the figure

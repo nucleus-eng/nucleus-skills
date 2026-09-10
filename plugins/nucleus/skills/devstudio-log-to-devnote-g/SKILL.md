@@ -122,9 +122,16 @@ the source Log doc has no equivalent tables (which is the common case for raw lo
 
 | Field | Value |
 |---|---|
-| Title | [value from source, or `[PLEASE FILL IN]`] |
+| Title | [value from source Specification table only, or `[PLEASE FILL IN]`] |
 | Date | [value from source, or `[PLEASE FILL IN]`] |
 | License | CERN-OHL-P-2.0; CC-BY-4.0 |
+
+**Do not infer the title from document headings, folder names, or experiment labels.**
+The title must come from the Specification table's Title row. If it is blank or absent,
+use `[PLEASE FILL IN]`. You may add a comment noting candidate text found in the doc
+(e.g. `<!-- Candidate title from first heading: "pOpen-deGFP expression in Nucleus
+Cytosol and PURExpress" — QC to confirm -->`), but never adopt it silently as the title.
+A wrong title in a DevNote is a serious error; the conservative default is always blank.
 
 **Authors table** — write one blank row when no authors are found in the source:
 
@@ -212,15 +219,30 @@ inventing a new flag.
 
 ## Step 5 — figure-provenance sidecar
 
-**Three confirmed figure patterns in real DevStudio DevNotes** — record which pattern
-each figure uses in the manifest, since `devstudio-devnote-g-to-devnote-m` needs this
-to construct the correct MyST reference:
+**Figure pattern priority — always try quarto-label first.**
 
-| Pattern | When to use | MyST reference | Asset chain requirement |
+For every figure, inspect the associated notebook for `#| label:` tags before
+classifying it as static-png. Notebook inspection is mandatory, not optional. The
+pattern classification must reflect what's actually in the notebook, not a conservative
+default:
+
+| Priority | Pattern | When | MyST reference |
 |---|---|---|---|
-| **`#\| label:` Quarto cell tag** (preferred) | Notebook exists with a `#\| label:` tag on the plot cell | `:::{figure} #<cell_label>` | Notebook + platemap + raw data all present |
-| **Static PNG path** | Pre-committed PNG, or notebook with saved output but no label tag | `:::{figure} ./figures/name.png` | PNG must exist; notebook optional but preferred |
-| **`#fig:` glue reference** | Older notebooks using the `glue` API | `:::{figure} #fig:name` | Notebook with matching `label` in cell metadata — **currently broken in several archive DevNotes** where the glue tag is missing; prefer `#\| label:` for new content |
+| 1 (default) | **`#\| label:` Quarto cell tag** | Notebook exists AND has a `#\| label:` tag on the output cell | `:::{figure} #<cell_label>` |
+| 2 (fallback) | **Static PNG path** | Notebook exists but no `#\| label:` tag found — flag: `REVIEW: add #\| label: to cell [N] to enable quarto-label pattern` | `:::{figure} ./figures/name.png` |
+| 3 (legacy) | **`#fig:` glue reference** | Older notebooks using the `glue` API | `:::{figure} #fig:name` |
+| — | **No notebook** | No notebook found at all | static-png + `<!-- missing notebook -->` |
+
+**How to inspect**: download the notebook via `devstudio-read-from-google-drive` and
+scan each code cell's source for lines beginning with `#| label:`. The label value
+is everything after `#| label: ` on that line. Map each labeled cell to its
+corresponding figure by position (a plot cell's output is the figure produced by that
+cell) or by filename match between `savefig(...)` calls and asset-folder PNG names.
+
+When a notebook has `#| label:` tags, record `pattern: "quarto-label"` and the
+`cell_label` value in the manifest. When it doesn't, record `pattern: "static-png"`
+and raise the REVIEW flag asking the author to add them — quarto-label is strongly
+preferred for all new DevNote content.
 
 **`cell_label` is whatever string the notebook author put after `#\| label:` — not a
 required format.** `20251212-kinetics` is a good label because it's descriptive and
@@ -359,6 +381,22 @@ These override all other instructions:
 If the draft names a specific DNA construct in a composition-table row, invoke
 `devstudio-verify-dna-constructs` before finalizing — don't let an unverified
 construct↔file identity claim land in a draft, even a draft still pending human review.
+
+## Step 7.5 — link display convention
+
+Wherever a Drive file is referenced in the draft Google Doc, embed it as a hyperlink
+with the **filename as display text** — never show the raw Drive URL or file ID in the
+visible document body. File IDs are for machine use only; they belong in the manifest
+JSON, not in the human-facing draft.
+
+Example (correct): `Analysis.ipynb` (hyperlinked to the Drive file URL)
+Example (wrong): `https://drive.google.com/file/d/1JpkXis.../view`
+
+For GitHub links (e.g. construct files in `nucleus-eng/DNA`), use the construct name
+as display text: `pOpen-deGFP.gbk` hyperlinked to the GitHub blob URL.
+
+This applies to: constructs table Name column, reagent Link column, data/platemap
+references in figure captions, and any asset cross-references in the narrative.
 
 ## Step 8 — write the draft
 

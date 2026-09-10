@@ -84,10 +84,45 @@ try to..."), order chronologically and carry the narrative thread through — a 
 entry's course-correction only makes sense in light of an earlier entry's finding. Don't
 draft each folder's content as an isolated block.
 
+**Date label cross-check**: when a file in the asset subfolder carries a date prefix
+(e.g. `20251107-NucleusPURE-deGFP-platemap.csv`) that differs from the experiment
+folder's date (e.g. `EXP-sy-20251104`), flag it:
+`REVIEW: asset filename date [20251107] differs from experiment folder date [20251104] — confirm which is correct`
+Do not silently assume one or the other; this is a common source of confusion when
+data from a later session is filed under an earlier experiment folder.
+
 Real experiment folders don't follow template example names literally (confirmed
 during `devstudio-read-from-google-drive`'s own testing: a log turned up as a Doc named
 `lab-log`, a platemap as a `.tsv`) — role-based identification, not filename matching,
 applies to every folder in the set.
+
+## Step 2.5 — extract Specification table and Authors
+
+Before processing the narrative, look for a **Specification table** at the top of each
+Log doc (a two-column table with rows: Title, Date, License) and a separate **Authors
+table** (columns: Name, ORCID, Email, Institution). These may or may not be present —
+Log docs don't always carry them; DevNote(G) docs always need them.
+
+For each field, either extract the value or raise a REVIEW flag:
+
+| Field | Source | If blank or absent |
+|---|---|---|
+| Title | Specification table row "Title" | `REVIEW: Title not present in source — add before publishing` |
+| Date | Specification table row "Date" | `REVIEW: Date not present in source — use experiment date(s) as placeholder` |
+| License | Specification table row "License" | Default to `CERN-OHL-P-2.0; CC-BY-4.0` — the template default |
+| Author names | Authors table "Name" column | `REVIEW: No authors found — add before publishing` |
+| ORCID | Authors table "ORCID" column | Flag per-author if blank |
+| Email | Authors table "Email" column | Flag per-author if blank |
+| Institution | Authors table "Institution" column | Flag per-author if blank |
+
+Place these at the top of the draft Google Doc as two tables (matching the DevNote(G)
+template structure) with all REVIEW flags inline. Do not author or fabricate any field
+that is absent from the source — a REVIEW flag is always correct when the value is
+unknown.
+
+**If there is no Specification table at all** (confirmed as common for raw Log docs that
+were never run through the template): flag all fields as REVIEW and note:
+`REVIEW: No Specification table found in source — TA must fill in all fields above.`
 
 ## Step 3 — extract and preprocess the log content
 
@@ -236,9 +271,35 @@ These override all other instructions:
   temperature, wavelength, or duration. Missing/ambiguous → `—` plus a REVIEW flag.
   Exception: adding a clearly-implied, unambiguous unit (a time column header `T = 3`
   where all values are hours) is a permitted editorial improvement, not a violation.
-- **Table structure**: may restructure to the six-column schema and separate conditions
-  into tab-sets (conceptually now, literal tab-sets once G2M happens) — but never drop a
+- **Table structure**: restructure to the canonical schemas below — but never drop a
   column or row. A column that doesn't map to the standard schema is retained as-is.
+
+  **Reagents/materials table** (7-column schema, from the DevNote(G) template):
+  ```
+  | Reagent | Product Name | Manufacturer | Catalog No. | Price | Storage Conditions | Link |
+  ```
+  If the source is missing columns (confirmed: source logs often omit Catalog No. and
+  Price), add the empty columns and flag each:
+  `REVIEW: [column] not present in source — add for reproducibility`
+
+  **Constructs/nucleic acids table** (separate from reagents — template shows this as a
+  distinct table under Materials):
+  ```
+  | Name | Sequence | Purpose |
+  ```
+  Link to the `.gb` file or GitHub URL in the Name column where available.
+
+  **Reaction composition tables** (multi-condition merger rule): when the source
+  contains N separate reaction-setup tables sharing the same component rows
+  (identical left column) but each representing a different experimental condition,
+  **merge into a single table** with conditions as column headers:
+  ```
+  | Component | Stock Concentration | Final Concentration | Condition 1 [µL] | Condition 2 [µL] | ... |
+  ```
+  This matches the template's "Example cytosol reaction set up table" pattern. Never
+  produce N separate tables for N conditions — one merged table is the correct output.
+  If conditions have different component lists (non-identical left columns), keep them
+  separate and note why they weren't merged.
 - **Sequences**: reproduce DNA/RNA sequences in full, inline. Never substitute with a
   pointer to Benchling or any external resource — the DevNote must be self-contained.
 - **Missing sections**: if the source lacks a required section, insert

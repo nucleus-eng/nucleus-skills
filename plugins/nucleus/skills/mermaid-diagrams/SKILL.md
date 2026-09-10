@@ -143,6 +143,54 @@ Do not use diamonds for processes — a diamond reads as a decision point and wi
 mislead. Reserve diamonds for genuine branch points, such as an undecided design
 choice.
 
+**Put the operator on the process node**, in parentheses: `Assemble Cytosol
+(mixing)`, `Encapsulation: Phase Transfer (packing)`. The operator is a property
+of the process, not of any one edge — a step with four inputs is a hyperedge and
+cannot carry the operator on an arrow.
+
+**A step may run a chain of processes.** Draw each as its own stadium with an
+arrow between them, and no Module node in between:
+
+```mermaid
+flowchart LR
+    CYTOSOL["aTc Sensor Cytosol"]
+    EPT(["Encapsulation: Phase Transfer (packing)"])
+    DEGRADE(["Degrade Exterior LacZ"])
+    CELL["aTc Sensing Cell"]
+
+    CYTOSOL --> EPT
+    EPT --> DEGRADE
+    DEGRADE --> CELL
+```
+
+Do not merge them into one node. A node takes one click target, so merging
+silently drops the link to the second page. The operator goes on whichever link
+performs the composition; a link that composes nothing — a purification, say —
+carries none, which is the honest reading rather than a borrowed one.
+
+**A process with no page is marked in words**, `— no page` appended to the
+label. Do not use a dashed border: dashed means *proposed* (see Status
+conventions), and "nobody wrote the page" is not a claim about whether the step
+works.
+
+### Recursive depth — default 1
+
+A composition graph can always be expanded further down. **Module pages render at
+depth 1**; deeper renders are for review material, not for the site.
+
+**Depth 1: anything you can obtain is a leaf.** Only what this module builds on
+the way to its own result is expanded. Base Cytosol is a leaf, and so is S30
+Lysate — each is a thing you can have, and its own page says how it is made.
+
+**Having a page is not the test.** `aTc Sensor Cytosol` has a page and is still
+expanded on the cascade that builds it, because that cascade builds it. The test
+is *obtained* versus *built here*, and it needs a judgement per module. Get it
+wrong and a cascade page either swallows its constituents' pages or says nothing.
+
+**Depth 2 and deeper** follow each leaf's own composition source where one
+exists, splicing it in at the node the parent already names. Use it for readiness
+reviews and slides. A depth-3 cascade diagram is unreadable on a docs page.
+
 ## Status conventions
 
 Three edge styles, three genuinely different claims. Do not collapse them.
@@ -179,8 +227,14 @@ visually implies grouping that is not there.
 A hand-drawn dependency diagram drifts from the pages within weeks. If the
 composition is already written in the docs, generate the diagram from it.
 
-Most Nucleus module pages carry a `# Constituent Modules` section. That is a
-machine-readable dependency graph:
+**Prefer a `composition.yml` beside the spec where one exists.** The bullet list
+below carries no order, no operator, no process and no compartment, so a diagram
+derived from it can only show *what* composes and never *how* (issue #248). A
+module with a composition source should be rendered from it — in `nucleus-docs`,
+by `scripts/render-composition.py`. Harmonising the two generators is issue #250.
+
+Where there is no source yet, most Nucleus module pages carry a
+`# Constituent Modules` section, which is a machine-readable dependency graph:
 
 ```python
 m = re.search(r"^#+\s*Constituent Modules\s*$(.*?)(?=^#|\Z)", text, re.M | re.S)
@@ -261,6 +315,10 @@ relative ones — relative click targets break on the deployed site.
 - [ ] Edge styles match the actual evidence; no `--x` on a verbal report
 - [ ] Dashed borders propagated to downstream nodes
 - [ ] `click` targets are absolute paths
+- [ ] Rendered at depth 1 if it is going on a module page
+- [ ] Operator in parentheses on each process node that composes something
+- [ ] Chained processes are separate stadiums, not one merged node
+- [ ] Pageless processes say `— no page`, not a dashed border
 - [ ] Tab-set fence depths are 5 / 4 / 3
 - [ ] Caption says what the diagram does **not** claim
 - [ ] If generated: wrapped in markers, and re-running produces no diff

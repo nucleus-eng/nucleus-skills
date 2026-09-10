@@ -111,6 +111,14 @@ actually in a well.
 | `<artifact> Vol (uL)` | Volume of a component in the well |
 | `[<artifact>] (<units>)` | Concentration **in the well**, not of the stock |
 | `<artifact> ID` | Cross-reference to a specific stock in inventory |
+| `IS <artifact> ...` / `OS <artifact> ...` | Same patterns above, prefixed to a compartment either side of a membrane |
+| `MB <artifact> (mol%)` | Composition of the membrane itself — see `references/assay-and-specimen.md` |
+
+A plate with no `MB`- or `OS`-prefixed column anywhere is cytosol-only —
+one compartment, one build-conditions table downstream. A plate with them
+is running an encapsulated (in-cells) system and needs three: cytosol
+(`IS`), membrane (`MB`), outer solution (`OS`). Step 7 covers grouping for
+that handoff.
 
 If the source is a stacked sheet with assembly recipes below the platemap,
 flatten it — `references/assembly-blocks.md` covers the parse, the join, and
@@ -219,3 +227,29 @@ Then report to the reviewer, in this order:
 3. The checker's findings.
 4. **Every value that was assumed rather than supplied**, listed separately
    and last, so it cannot be skimmed past.
+
+## 7. Group by compartment, for the DevNote handoff
+
+A checked platemap is not yet a DevNote's build-conditions table. `Log(G) →
+DevNote(G)` needs one table for a cytosol-only plate, three for an in-cells
+one — cytosol, membrane, outer solution — because a column from one
+compartment read against a column from another describes nothing (the same
+rule as summing volumes across compartments, one level up: table shape
+instead of arithmetic).
+
+```bash
+python3 scripts/group-by-compartment.py <checked-file> --manifest
+```
+
+Reads the `IS`/`MB`/`OS` prefixes from
+[`references/assay-and-specimen.md`](../../references/assay-and-specimen.md)
+to bucket columns, and writes one table if none of those prefixes appear, or
+three if any do. It also cross-checks the structural signal (a prefixed
+column exists) against the semantic one (the `Name`/`Experiment` text
+mentions a liposome, GUV, vesicle, or proteinosome) and reports a finding —
+not a silent override in either direction — when they disagree. A
+mismatch here usually means an unrecorded membrane composition, not a
+wrongly-classified plate.
+
+This step reads a platemap that Steps 1–6 already produced; it does not
+flatten, lay out, or check one on its own.

@@ -20,6 +20,7 @@ DevNote, the DevNote wins. It differs in two places:
 from __future__ import annotations
 
 import csv
+import re
 from pathlib import Path
 
 RXN_VOLUME = "Rxn Volume (uL)"
@@ -33,6 +34,14 @@ PLATEMAP_COLUMNS = REQUIRED + RECOMMENDED
 
 TYPES = {"Sample", "Standard", "Blank",
          "Control", "Positive Control", "Negative Control"}
+
+# Compartment column prefixes -- see references/assay-and-specimen.md.
+# One owner for the pattern, same reason as everything else in this file:
+# check-platemap.py and group-by-compartment.py both need to recognise them.
+COMPARTMENT_PREFIXES = ("IS", "MB", "OS")
+COMPARTMENT_COL = re.compile(
+    r"^(?:\[)?(?P<compartment>IS|MB|OS)[\s\-](?P<rest>.+)$"
+)
 # DEFAULT_ANALYSIS_COLUMNS in the CDK's platereader.py -- kinetics runs on these only.
 ANALYSED = {"Sample", "Control", "Positive Control"}
 

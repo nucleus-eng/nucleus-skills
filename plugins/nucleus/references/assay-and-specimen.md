@@ -58,6 +58,16 @@ Prefix compartment-specific columns so the coordinate is in the name:
 column with no compartment, on a plate that has more than one, cannot be
 checked against anything.
 
+**A third coordinate, `MB`, names the membrane itself** — the compartment
+boundary, not what it holds. Lipid identity and mol % belong here:
+`MB POPC (mol%)`, `MB Cholesterol (mol%)`. This is not a fourth thing to
+learn; it is the same rule applied to the wall instead of the contents on
+either side of it. A well with no `MB`-prefixed column has no membrane —
+it is a bulk (cytosol-only) reaction, not a three-compartment one, and
+`N/A` in what would otherwise be an `MB` or `OS` column is that same
+absence made explicit (see `assembly-blocks.md`'s three-state rule) rather
+than an unrecorded finding.
+
 ## A named sub-mix expands
 
 A recipe may name another mix as one of its components — a master mix

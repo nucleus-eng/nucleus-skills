@@ -81,7 +81,7 @@ git commit -m "Add DevNote: <title> (<devnote-slug>)
 
 Produced by devstudio-devnote-g-to-devnote-m from DevNote(G) draft.
 REVIEW items remaining: <count> (see main.md for details).
-TA: <ta-name>"
+TA: <qc-name>"
 ```
 
 List the REVIEW item count in the commit message so the reviewing TA knows

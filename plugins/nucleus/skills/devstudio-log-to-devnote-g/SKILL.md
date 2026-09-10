@@ -162,9 +162,26 @@ to construct the correct MyST reference:
 
 | Pattern | When to use | MyST reference | Asset chain requirement |
 |---|---|---|---|
-| **`#\| label:` Quarto cell tag** (preferred) | Notebook exists with a `#\| label:` tag on the plot cell | `:::{figure} #YYYYMMDD-slug` | Notebook + platemap + raw data all present |
+| **`#\| label:` Quarto cell tag** (preferred) | Notebook exists with a `#\| label:` tag on the plot cell | `:::{figure} #<cell_label>` | Notebook + platemap + raw data all present |
 | **Static PNG path** | Pre-committed PNG, or notebook with saved output but no label tag | `:::{figure} ./figures/name.png` | PNG must exist; notebook optional but preferred |
 | **`#fig:` glue reference** | Older notebooks using the `glue` API | `:::{figure} #fig:name` | Notebook with matching `label` in cell metadata — **currently broken in several archive DevNotes** where the glue tag is missing; prefer `#\| label:` for new content |
+
+**`cell_label` is whatever string the notebook author put after `#\| label:` — not a
+required format.** `20251212-kinetics` is a good label because it's descriptive and
+sorts chronologically, not because a date-prefixed slug is enforced here. People are
+inconsistent about naming conventions even when told to follow one, and a rejected or
+silently-reformatted label is friction with no real payoff — MyST only needs the anchor
+to resolve, which any string satisfies.
+
+The actual risk flexibility trades for is **collision, not format** — two figures in
+the same notebook sharing a `cell_label` produce an ambiguous MyST anchor. Check for
+duplicate `cell_label` values within a `source_notebook` and record a finding (not a
+block) when found:
+```
+"findings": ["cell_label 'fig1' is used by two figures in this notebook — MyST anchors must be unique per notebook, disambiguate before DevNote(M)"]
+```
+A generic label like `fig1` is still valid; flag it only if it collides, not because
+it's uninformative.
 
 For figures extracted from the log Doc via pandoc (embedded inline), they arrive as
 static PNGs. Record the section heading they appeared under as their narrative context.

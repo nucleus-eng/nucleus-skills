@@ -158,13 +158,19 @@ Then route to the correct MyST pattern:
 **Pattern 1 — notebook cell with `#| label:` tag (preferred)**:
 The skill opens the referenced notebook and confirms the label tag exists. If found:
 ```
-:::{figure} #YYYYMMDD-slug
-:name: fig-slug
+:::{figure} #<cell_label>
+:name: fig-<cell_label>
 :align: center
 :width: 75%
 Caption text.
 :::
 ```
+`<cell_label>` is copied verbatim from the manifest's `cell_label` field — no reformatting,
+no enforced date-slug pattern. `devstudio-log-to-devnote-g` already checked it for
+collisions within its source notebook; this skill trusts that check rather than
+re-deriving or renaming the label itself. `:name:` prefixes it with `fig-` only to
+namespace it away from the notebook's own anchor, not to impose a naming scheme.
+
 Also add the notebook to `curvenote.yml`'s `toc:` list if not already present.
 
 **Pattern 2 — static PNG**:

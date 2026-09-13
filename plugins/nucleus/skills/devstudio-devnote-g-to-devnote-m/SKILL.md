@@ -60,6 +60,27 @@ Map fields to `curvenote.yml` and `main.md` frontmatter:
 | Author Email | `curvenote.yml` `authors[].email` | Required for venue submission checks |
 | Author Institution | `curvenote.yml` `authors[].affiliations[].name` | |
 
+**Abstract**: the bnext-devnotes venue schema requires a `parts: abstract` block.
+Always add the following to `main.md` immediately after the H1 title:
+
+```markdown
++++ { "part": "abstract" }
+<!-- REVIEW: Abstract not present in source DevNote(G) — add before publishing. -->
++++
+```
+
+And in `curvenote.yml`:
+```yaml
+  parts:
+    abstract:
+      file: main.md
+      # REVIEW: abstract not present in source — add before publishing
+```
+
+If the G doc's Overview section contains a concise summary (2–4 sentences), it may
+be used as the abstract draft with a REVIEW flag asking the author to confirm. Do not
+fabricate an abstract if no candidate text exists.
+
 **Keywords**: do NOT copy from the G doc — generate from article content against the
 controlled vocabulary at `nucleus-skills/plugins/nucleus/resources/devnote-keywords.md`
 (flagged for future build — leave `keywords:` commented out in `curvenote.yml` with a
@@ -322,6 +343,10 @@ project:
   requirements:
     - environment.yml
   # keywords:                  # REVIEW: generate from content against controlled vocabulary
+  parts:
+    abstract:
+      file: main.md
+      # REVIEW: abstract not present in source — add before publishing
   toc:
     - file: main.md
     # - file: experiments/YYYYMMDD-slug/analysis.ipynb  # add if notebook present

@@ -140,13 +140,11 @@ A wrong title in a DevNote is a serious error; the conservative default is alway
 | [extracted, or `[PLEASE FILL IN]`] | `[PLEASE FILL IN]` | `[PLEASE FILL IN]` | `[PLEASE FILL IN]` |
 
 Use `[PLEASE FILL IN]` (all-caps, in brackets) as the placeholder text in every blank
-cell — it is visually loud in the Doc and easy to grep. Note at the top of the draft:
-`Note: cells marked [PLEASE FILL IN] require TA input — consider highlighting them red
-in the Doc before sharing with the contributor.`
-
-The MCP connector does not support setting text color programmatically — the TA must
-apply red formatting manually. The `[PLEASE FILL IN]` marker is the machine-readable
-signal; the red highlight is a human-applied visual aid.
+cell. Per Step 7.5, the draft is written as HTML — render these in red bold so they
+appear red in the converted Google Doc automatically:
+```html
+<span style="color:#cc0000;font-weight:bold">[PLEASE FILL IN]</span>
+```
 
 Do not author or fabricate any field — a blank placeholder is always correct when the
 value is unknown. License defaults to `CERN-OHL-P-2.0; CC-BY-4.0` (the template
@@ -317,9 +315,13 @@ These override all other instructions:
 - **Table structure**: restructure to the canonical schemas below — but never drop a
   column or row. A column that doesn't map to the standard schema is retained as-is.
 
-  **Reagents/materials table** (7-column schema, always enforce all 7 columns):
+  **Reagents/materials table** (7-column schema, always produce — even if the source
+  has no reagents section): always include this table under `# Materials and equipment`.
+  If the source has reagent data, populate it. If the source has no reagents section,
+  produce a blank row:
   ```
   | Reagent | Product Name | Manufacturer | Catalog No. | Price | Storage Conditions | Link |
+  | [PLEASE FILL IN] | [PLEASE FILL IN] | [PLEASE FILL IN] | N/A | N/A | N/A | |
   ```
   For any column not present in the source: use `N/A` as the default value (do not
   flag missing values as REVIEW — `N/A` is an acceptable published state). The one
@@ -355,9 +357,18 @@ These override all other instructions:
   within a single experiment's conditions.
 - **Sequences**: reproduce DNA/RNA sequences in full, inline. Never substitute with a
   pointer to Benchling or any external resource — the DevNote must be self-contained.
-- **Missing sections**: if the source lacks a required section, insert
-  `REVIEW: [section] not present in source — add before publishing` — do not author
-  one. Section reordering is permitted, flagged: `<!-- REORDERED: moved from "[original
+- **Required sections always present**: the following sections must always appear in
+  the draft, sourced from the template, regardless of whether the source log contains
+  them:
+  - `# Overview` — blank with `[PLEASE FILL IN]` if absent in source
+  - `# Materials and equipment` — always present (reagents table always generated, see above)
+  - `# Protocol` — blank with `[PLEASE FILL IN]` if absent in source
+  - `# Results and Observations` — blank with `[PLEASE FILL IN]` if absent in source
+  - `# Notes` — always include, even if blank: `[PLEASE FILL IN]`
+  - `# What's next` — always include, even if blank: `[PLEASE FILL IN]`
+
+  If the source lacks a section, do not author one — insert `[PLEASE FILL IN]` as the
+  body. Section reordering is permitted, flagged: `<!-- REORDERED: moved from "[original
   position]" -->`.
 - **Section naming — target common archive practice, not the blank Template's own
   labels.** Confirmed against a real published DevNote (`2026-garenne-pH-sensor`): the
@@ -382,18 +393,32 @@ If the draft names a specific DNA construct in a composition-table row, invoke
 `devstudio-verify-dna-constructs` before finalizing — don't let an unverified
 construct↔file identity claim land in a draft, even a draft still pending human review.
 
-## Step 7.5 — link display convention
+## Step 7.5 — draft formatting: links, red text, and HTML content
 
-Wherever a Drive file is referenced in the draft Google Doc, embed it as a hyperlink
-with the **filename as display text** — never show the raw Drive URL or file ID in the
-visible document body. File IDs are for machine use only; they belong in the manifest
-JSON, not in the human-facing draft.
+**Write the draft as HTML** (pass `contentMimeType: text/html` to `create_file`).
+Drive auto-converts HTML to a native Google Doc, preserving inline styles including
+text color. This is the mechanism for red author reminders — not a manual step.
 
-Example (correct): `Analysis.ipynb` (hyperlinked to the Drive file URL)
-Example (wrong): `https://drive.google.com/file/d/1JpkXis.../view`
+**Red text rule**: every `[PLEASE FILL IN]` placeholder and every author-action
+reminder must be wrapped in a red bold span:
+```html
+<span style="color:#cc0000;font-weight:bold">[PLEASE FILL IN]</span>
+```
+This applies to: Specification table blank cells, Authors table blank cells, blank
+section bodies, and any inline REVIEW prompt addressed to the author. REVIEW flags
+that are informational (e.g. flagging a data gap for QC awareness, not requiring
+author action) may remain in black.
 
-For GitHub links (e.g. construct files in `nucleus-eng/DNA`), use the construct name
-as display text: `pOpen-deGFP.gbk` hyperlinked to the GitHub blob URL.
+**Link display**: wherever a Drive file is referenced, use an HTML anchor with the
+filename as display text — never show the raw Drive URL or file ID in the visible body:
+```html
+<a href="https://drive.google.com/file/d/FILE_ID/view">Analysis.ipynb</a>
+```
+For GitHub links, use the construct name as display text:
+```html
+<a href="https://github.com/nucleus-eng/DNA/blob/main/reporters/pOpen-deGFP.gbk">pOpen-deGFP.gbk</a>
+```
+File IDs belong in the manifest JSON only, not in the human-facing document.
 
 This applies to: constructs table Name column, reagent Link column, data/platemap
 references in figure captions, and any asset cross-references in the narrative.

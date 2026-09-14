@@ -123,8 +123,8 @@ always match published DevNote conventions — transform as follows:
 | `# Overview` | `# Overview` | Direct, verbatim |
 | `# Materials and equipment` | `# Methods` / `## Reagents` | Rename; wrap table in `:::{table}` directive |
 | `# Design` | `# Design` | Include even if thin; flag if empty |
-| `# Protocol` | `## [subsections]` under `# Methods` | Verbatim content; restructure headings |
-| `# Results and Observations` | `# Results` | Rename; convert figures and tables to directives |
+| `# Protocol` | `## [subsections]` under `# Methods` | Verbatim content; restructure headings; Methods subsections use descriptive title only (no `Experiment N —` prefix, no date) |
+| `# Results and Observations` | `# Results` | Rename; convert figures and tables to directives; subsections keep `Experiment N —` prefix |
 | `## Notes` or `## Failure modes` | `## Notes` or fold into `# Conclusions` | Preserve participant's heading if it communicates well; flag style inconsistency but don't force rename |
 | `# What's next` | `# Conclusions and next steps` | Rename |
 | *(not in G template)* | `# Acknowledgements` | Always add before Conclusions — see standard text below |
@@ -144,10 +144,9 @@ the Schmidt Sciences DevCell project description at syncellwiki.org):
 ```markdown
 # Acknowledgements
 
-This work was carried out as part of the Schmidt Sciences Developer Cell (DevCell)
-project, which aims to develop a cell development kit (CDK) for the design and
-construction of synthetic cells. We gratefully acknowledge the support of the Schmidt
-Sciences Foundation.
+This work is part of the project titled "Developer Cells as a Scalable Platform for
+Predictable Engineering of (Non-Living) Biological Machines," and is funded by the
+Schmidt Sciences Foundation.
 ```
 
 If the DevNote(G) contains its own acknowledgements text, append it after the standard
@@ -250,25 +249,22 @@ This avoids duplicating table content across sections while keeping Results read
 If the DevNote(G) places a composition table in the Results section, move it to Methods
 and replace the original position with a `{ref}` cross-link.
 
-**Per-experiment asset header line**: immediately before the composition tab-set in each
-experiment's Methods subsection, emit a single line linking the supporting assets. Use
-only local relative paths — never Drive URLs:
+**Drive URLs must never appear as hyperlink hrefs in `main.md`** — curvenote's link
+checker flags them as 401 Unauthorized and they are inaccessible to readers without
+Drive permissions.
+
+**Per-experiment asset verification comment**: immediately before the figures tab-set
+in each experiment's Results subsection, emit a REVIEW comment linking the supporting
+assets. This is a drafting artifact — it lets the TA verify file connections during
+review, and is removed before submission (once the bundle builds cleanly and figures
+render, the links have served their purpose):
 
 ```markdown
-Platemap: [filename.csv](experiments/YYYYMMDD-slug/filename.csv) | Raw data: [filename.txt](experiments/YYYYMMDD-slug/filename.txt) | Analysis: [Analysis.ipynb](experiments/YYYYMMDD-slug/Analysis.ipynb)
+<!-- REVIEW: assets — [platemap](experiments/YYYYMMDD-slug/filename.csv) | [raw data](experiments/YYYYMMDD-slug/filename.txt) | [notebook](experiments/YYYYMMDD-slug/Analysis.ipynb) — remove before submission -->
 ```
 
-If a platemap or raw data file has not yet been downloaded (i.e. only a Drive URL is
-known), write the local path as the href and add a REVIEW comment on the same line:
-
-```markdown
-Platemap: [filename.csv](experiments/YYYYMMDD-slug/filename.csv) <!-- REVIEW: download from Drive before submit --> | Raw data: [filename.txt](experiments/YYYYMMDD-slug/filename.txt) <!-- REVIEW: download from Drive before submit --> | Analysis: [Analysis.ipynb](experiments/YYYYMMDD-slug/Analysis.ipynb) <!-- REVIEW: download notebook before submit -->
-```
-
-`devstudio-assemble-devnote-assets` resolves these REVIEW items by downloading each
-file and the REVIEW comment is removed once the local file exists. **Drive URLs must
-never appear as hyperlink hrefs in `main.md`** — curvenote's link checker flags them
-as 401 Unauthorized and they are inaccessible to readers without Drive permissions.
+Place one comment per experiment's figure group, not one per figure. Use only local
+relative paths. Remove the comment (not just the REVIEW flag) when submitting.
 
 ## Step 4 — figure conversion
 

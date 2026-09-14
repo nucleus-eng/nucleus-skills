@@ -502,11 +502,7 @@ currently references `devnotes.bnext.bio` and `github.com/bnext-bio/nucleus-deve
 migration is confirmed complete.
 
 **`environment.yml`**: copy verbatim from `nucleus-eng/devnote-template`. This file
-declares the conda-forge dependencies for the Binder environment. Do **not** add
-`nucleus-cdk` to it — CDK is installed at runtime by the notebook's `!pip install`
-cell, not at image build time. Do not add `pyarrow` to the conda section either —
-it compiles from source on the Binder image and will hang the build. If a notebook
-requires parquet support, it should install it at runtime alongside CDK.
+declares the conda-forge dependencies for the Binder environment.
 
 ## Step 6 — hand off to devstudio-submit-to-github
 

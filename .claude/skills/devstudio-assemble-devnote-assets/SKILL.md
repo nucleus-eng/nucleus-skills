@@ -7,97 +7,123 @@ Staging skill in the `devstudio` namespace. Fills the gap between
 `devstudio-submit-to-github` skill (which opens the archive PR). This skill downloads
 the supporting files that make the devnote buildable locally and on curvenote.
 
+## Ground truth and source hierarchy
+
+The **DevNote(G) Google Doc** is the single source of truth for what assets belong to
+each experiment. Its structured figure-provenance lines (written by
+`devstudio-log-to-devnote-g`) name the notebook, platemap, and raw data file for every
+figure:
+
+```
+[`fig:kinetics-exp2`, notebook:Analysis.ipynb, platemap:20251107-NucleusPURE-deGFP-MgSweep-platemap.csv, data source:20251107-cytation3-pure-timecourse-gfp-MgSweep-biotek-cdk.txt, caption: (...)]
+```
+
+The **manifest.json** (written alongside the G doc by `devstudio-log-to-devnote-g`) is
+the structured, machine-readable cache of those same lines. Use it when present — it is
+faster than re-parsing the G doc. If the G doc was edited after the manifest was
+generated (filenames corrected, a figure added), re-read the G doc and treat it as
+authoritative over the manifest.
+
+**`main.md` is not a source for asset discovery.** The `<!-- REVIEW: assets — ... -->`
+comment blocks in main.md contain local file paths (not Drive URLs) and serve as a
+human audit trail that is stripped before submission. Never parse main.md to find Drive
+URLs or determine which files to download.
+
 ## Invocation model
 
-Run after G→M has produced a complete `main.md` and `curvenote.yml`. Point it at the
-target devnote directory. It reads those files to discover what needs to be fetched,
-downloads what it can, updates `curvenote.yml`, and reports everything it could not
-resolve.
+Run after G→M has produced a complete `main.md` and `curvenote.yml`. Provide:
+- The target devnote directory
+- The DevNote(G) Google Doc URL (used if manifest.json is absent or outdated)
+- The sf-node experiment Drive folder (scoped to `san-francisco-node/` only — never
+  access other Drive locations)
 
 ```
 devstudio-assemble-devnote-assets
 Target: /path/to/devnotes/devnote-sy-20251104-20251107/
+DevNote(G): https://docs.google.com/document/d/<ID>/edit
+SF-Node folder ID: 1d2QuOtPDdSxuF1z7NlRt-MtJdNKgNI7s
 ```
 
 ## What this skill downloads
 
-### Required — notebooks (blocks curvenote build without these)
+### Notebooks — required (blocks curvenote build)
 
-Notebooks must be present at the paths declared in `curvenote.yml`'s `toc:` list
-before `curvenote check` or `curvenote submit` can resolve quarto-label figure
-references. The toc entries are commented out by G→M with inline Colab/Drive URLs;
-this skill downloads each one and uncomments its entry.
+Notebooks must be present at the paths declared in `curvenote.yml`'s `toc:` list.
+The toc entries are commented out by G→M with inline Colab/Drive URLs; this skill
+downloads each one and uncomments its entry.
 
 **How to find them**: read `curvenote.yml` and extract every commented-out toc line
-that contains a URL in the format:
+containing a URL:
 ```yaml
 # - file: experiments/YYYYMMDD-slug/Analysis.ipynb  # https://colab.research.google.com/drive/<ID>
 # - file: experiments/YYYYMMDD-slug/notebook.ipynb  # https://drive.google.com/file/d/<ID>/view
 ```
 
 Parse the Drive ID:
-- Colab URL `https://colab.research.google.com/drive/<ID>` → ID is the path segment after `/drive/`
-- Drive file URL `https://drive.google.com/file/d/<ID>/view` → ID is between `/d/` and `/view`
+- Colab URL `https://colab.research.google.com/drive/<ID>` → segment after `/drive/`
+- Drive file URL `https://drive.google.com/file/d/<ID>/view` → segment between `/d/` and `/view`
 
 Download each notebook with `download_file_content` using `exportMimeType: application/json`
-(Colab notebooks are Google-native files; `application/json` exports the raw `.ipynb`
-JSON). Decode the base64 result and write to the `file:` path. Create the subdirectory
-if it does not already exist.
+(Colab notebooks are Google-native; `application/json` exports the raw `.ipynb` JSON).
+Decode base64, create the subdirectory if needed, write to the `file:` path.
 
-After a successful download, uncomment the toc line in `curvenote.yml`:
-```yaml
-# Before:
-# - file: experiments/20251104-NucleusPURE_deGFP/Analysis.ipynb  # https://colab.research.google.com/drive/1JpkX...
+After a successful download, uncomment the toc entry in `curvenote.yml`.
 
-# After:
-- file: experiments/20251104-NucleusPURE_deGFP/Analysis.ipynb  # https://colab.research.google.com/drive/1JpkX...
+### Platemaps and raw instrument data — required for self-contained devnote
+
+Even when a notebook has saved cell outputs (meaning curvenote can render without
+re-executing), the devnote must be self-contained. A reader who downloads it and runs
+the notebook locally will get file-not-found errors if data files are absent.
+
+**How to find filenames**: read `manifest.json` in the target devnote directory. Each
+figure entry has `platemap` and `data_source` fields naming the files:
+
+```json
+{
+  "filename": "figures/kinetics.png",
+  "platemap": "20251107-NucleusPURE-deGFP-MgSweep-platemap.csv",
+  "data_source": "20251107-cytation3-pure-timecourse-gfp-MgSweep-biotek-cdk.txt",
+  "source_notebook": "Analysis.ipynb",
+  "section_context": "Experiment 2 — Mg²⁺ sweep"
+}
 ```
 
-### Optional — platemaps (needed only if notebook must re-execute)
-
-If a notebook's cell outputs are already saved (the common case for Colab notebooks),
-curvenote renders figures from those saved outputs without re-executing. In that case,
-platemaps and raw data files are not needed locally.
-
-Download platemaps only when the TA explicitly requests it or when a notebook download
-succeeds but its outputs are empty (indicating re-execution will be needed). Platemap
-Drive URLs appear in main.md as:
+If `manifest.json` is absent, read the DevNote(G) Google Doc and parse figure-provenance
+lines directly:
 ```
-Platemap: [filename.csv](https://drive.google.com/file/d/<ID>/view)
+[`fig:label`, notebook:Analysis.ipynb, platemap:filename.csv, data source:filename.txt, caption: (...)]
 ```
 
-Download with `download_file_content` (no exportMimeType — CSV is not a Google-native
-file), decode base64, write to the same `experiments/YYYYMMDD-slug/` directory as the
-notebook.
+**How to get Drive IDs**: once you have the filename, search the sf-node Drive folder
+for it by name using `search_files`. Scope the search to the experiment subfolder that
+matches the slug (e.g., `20251107-NucleusPURE_deGFP_MgSweep`). Extract the Drive file
+ID from the result.
 
-### Required — raw instrument data files (blocks notebook re-execution without these)
+**How to download**: call `download_file_content` with no `exportMimeType` (CSV and
+instrument data files are non-Google-native; the connector exports them as-is). Decode
+base64 and write to `experiments/<slug>/<filename>`. The filename must match what the
+notebook uses to load the file — confirm by scanning the notebook for `read_csv`,
+`load_platereader_data`, `open()`, or equivalent calls.
 
-Raw data files (`.txt`, `.parquet`, etc.) must be present alongside the notebook so
-that the notebook can be re-executed. Even when a notebook has saved outputs (meaning
-curvenote can build the site without running cells), the devnote must be self-contained:
-a reader who downloads it and runs the notebook locally will get file-not-found errors
-if data files are absent.
-
-Find raw data Drive URLs in `main.md` — they appear on the same `Platemap: ... | Raw
-data: ... | Analysis: ...` line as the platemap, either as hyperlinks or in comments.
-Download each with `download_file_content` (no `exportMimeType` — these are non-Google-
-native files; the connector exports them as-is). Write to the same `experiments/<slug>/`
-directory as the notebook, keeping the filename the notebook uses to load the file (scan
-the notebook for `load_platereader_data`, `read_csv`, `open()`, or equivalent calls to
-confirm the expected filename).
-
-If a raw data file cannot be found on Drive or its Drive URL is not recorded in
-`main.md`, flag it:
+**If a file cannot be found on Drive**:
 ```
 ⚠️ Raw data file not found — notebook at experiments/<slug>/Analysis.ipynb references
-<filename> but no Drive URL is available. Obtain from the author and place at
+<filename> but it could not be located in Drive. Obtain from the author and place at
 experiments/<slug>/<filename>.
 ```
 
+**Skip if already present locally** — if the file already exists at the target path,
+do not re-download. Report it as already present.
+
 ### Not needed — seqviz GitHub references
 
-`:::{seqviz} https://github.com/nucleus-eng/DNA/blob/main/...` directives resolve
-at build time. No local copy required.
+`:::{seqviz} https://github.com/nucleus-eng/DNA/blob/main/...` directives resolve at
+build time. No local copy required.
+
+### Not needed — zarr microscopy data
+
+`:::{anywidget}` Vizarr blocks reference zarr URLs from `data.nucleus.engineering` that
+stream tiles client-side at render time. No local copy needed.
 
 ## Prerequisite — seqparse
 
@@ -115,30 +141,30 @@ only needs to be installed once per clone, not once per devnote.
 
 ## Step-by-step
 
-1. **Read `curvenote.yml`** — collect all commented-out toc entries with URLs.
-2. **Read `main.md`** — collect platemap and raw data Drive URLs from experiment header lines.
-3. **For each notebook URL**:
-   - Extract Drive ID.
+1. **Read `curvenote.yml`** — collect all commented-out toc entries with Drive/Colab URLs
+   (notebooks only).
+2. **Read `manifest.json`** in the target devnote directory — collect platemap and raw
+   data filenames per figure. If absent, read the DevNote(G) Google Doc and parse
+   figure-provenance lines directly.
+3. **For each notebook**:
+   - Extract Drive ID from the toc comment URL.
    - Call `download_file_content` with `exportMimeType: application/json`.
-   - Decode base64 content.
-   - Create `experiments/<slug>/` directory if needed.
-   - Write decoded content to the `file:` path.
-   - Verify the written file is valid JSON (`.ipynb` is JSON).
+   - Decode base64, create `experiments/<slug>/` if needed, write to the `file:` path.
+   - Verify the file is valid JSON.
    - Check whether cell outputs are present — if all code cells have empty `outputs`,
-     flag: `⚠️ notebook has no saved outputs — re-execution will be needed; consider
-     downloading platemap and data files`.
+     flag: `⚠️ notebook has no saved outputs — re-execution will be needed`.
    - Uncomment the toc entry in `curvenote.yml`.
-4. **For each raw data file URL**:
-   - Extract Drive ID.
+4. **For each platemap and raw data file** (from manifest or G doc):
+   - Skip if already present locally.
+   - Search Drive experiment folder for the filename using `search_files`.
+   - Extract Drive ID from the result.
    - Call `download_file_content` (no `exportMimeType`).
-   - Decode base64 content.
-   - Write to `experiments/<slug>/<filename>` — filename must match what the notebook loads.
-5. **For each platemap URL** (if not already local):
-   - Same as raw data — download and write to `experiments/<slug>/` directory.
-6. **Report**:
-   - ✅ Downloaded: list each file path and source URL.
+   - Decode base64, write to `experiments/<slug>/<filename>`.
+5. **Report**:
+   - ✅ Downloaded: list each file and source Drive ID.
+   - ✅ Already present: list files skipped because they existed locally.
    - ⚠️ Empty outputs: list notebooks with no saved cell outputs.
-   - ❌ Failed: list any file that could not be fetched, with the error.
+   - ❌ Failed: list files that could not be fetched, with the error.
    - Reminder: run `curvenote check` after assembly to confirm references resolve.
 
 ## DNA construct files
@@ -153,17 +179,20 @@ and noted for future inclusion in `nucleus-eng/DNA`.
 
 ## Error handling
 
-- **401/403 on Drive download**: the file may not be shared. Surface the URL, ask
-  the TA to check sharing permissions on the Drive file.
-- **File not valid JSON after decode**: notebook may have exported in wrong format.
-  Try `download_file_content` without `exportMimeType` as a fallback (some Drive
-  files export as plain text correctly without an explicit type).
+- **401/403 on Drive download**: file may not be shared. Surface the URL, ask the TA
+  to check permissions.
+- **File not found by name search**: filename in manifest may not match Drive filename
+  exactly — try a fuzzy search (strip date prefix, tolerate underscores vs hyphens).
+  If still not found, flag for manual retrieval.
+- **File not valid JSON after decode**: notebook exported in wrong format — retry
+  `download_file_content` without `exportMimeType` as a fallback.
 - **Experiments directory doesn't match slug**: create it; log the creation so the TA
-  can verify the directory name is correct.
+  can verify the directory name.
 
 ## What this skill does not do
 
 - Does not commit to GitHub — TA-mediated handoff only.
 - Does not run `devstudio-verify-dna-constructs` — flag it as a REVIEW item.
-- Does not decide which notebooks are needed — it downloads everything declared in
-  the `curvenote.yml` toc comments.
+- Does not parse `main.md` to discover asset Drive URLs — main.md is derivative.
+- Does not decide which notebooks are needed — downloads everything in `curvenote.yml`
+  toc comments.

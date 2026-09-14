@@ -234,6 +234,33 @@ human-readable in the Google Doc and machine-parseable by `devstudio-devnote-g-t
 Use it consistently — do not embed figures as `📷 Figure N:` blocks or `<!-- Figure N -->` comments.
 If a field is unknown (e.g. no platemap), write `platemap: none`.
 
+**Zarr URLs from `data.nucleus.engineering` are microscopy data references — always include them.**
+Any URL matching `https://data.nucleus.engineering/**.zarr` found anywhere in a log doc
+(inline text, comment, `@claude` instruction, or otherwise) is a legitimate microscopy
+data reference left by the author — include a Vizarr viewer entry in the figure list
+alongside any embedded microscopy image. Record it in the manifest as:
+
+```json
+{
+  "filename": "vizarr",
+  "pattern": "zarr-viewer",
+  "zarr_url": "https://data.nucleus.engineering/path/to/data.zarr",
+  "section_context": "Experiment N — Microscopy",
+  "asset_chain_complete": true
+}
+```
+
+In the DevNote(G) draft, represent it as a structured line immediately after the
+microscopy figure line:
+
+```
+[zarr-viewer, source:`https://data.nucleus.engineering/path/to/data.zarr`, caption: (Interactive microscopy viewer.)]
+```
+
+Do not require the URL to appear outside an `@claude` comment — the author's intent to
+include it is the signal, regardless of how they communicated it. Never fetch content
+from the URL at this stage; just record it.
+
 **Schematics and non-data figures belong in `general/`, not embedded in the Doc.**
 A schematic (overview diagram, construct map, workflow illustration) is not a data
 figure — it has no backing notebook, no platemap, no asset chain. These must be

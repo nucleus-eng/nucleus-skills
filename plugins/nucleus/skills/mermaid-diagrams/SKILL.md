@@ -1,9 +1,9 @@
 ---
 name: mermaid-diagrams
-description: Write Mermaid diagram source for Nucleus documentation — module dependency graphs, process dependency graphs, and combined implementation views. Use when asked to draw, add, regenerate, or fix a diagram, flowchart, schematic, or dependency graph on a docs page; when a page needs a composition or integration diagram; or when a diagram's status markings need updating. Covers fence form, node-id safety, status conventions, greyscale-by-default styling, and deriving a diagram from a page's own Composition sections. Source only — this skill does not render to PNG or SVG.
+description: Write Mermaid diagram source for any Nucleus MyST repo — docs or DevNotes — module dependency graphs, process dependency graphs, and combined implementation views. Use when asked to draw, add, regenerate, or fix a diagram, flowchart, schematic, or dependency graph on a docs page; when a page needs a composition or integration diagram; or when a diagram's status markings need updating. Covers fence form, node-id safety, status conventions, greyscale-by-default styling, and deriving a diagram from a page's own Composition sections. Source only — this skill does not render to PNG or SVG.
 ---
 
-# Mermaid diagrams for Nucleus docs
+# Mermaid diagrams for Nucleus MyST repos
 
 Write the source. Do not render it.
 
@@ -25,11 +25,15 @@ the plain fence** — one form that works everywhere — unless the repo you are
 editing has already standardised on the directive form, in which case match it
 and say so.
 
+**This holds in any repo**, because it is a property of the two renderers rather
+than of any one corpus. A DevNote repo read in Obsidian hits it the same way.
+
 Check before writing:
 
 ```bash
-grep -rc '^```mermaid$'    docs/ --include='*.md' | awk -F: '{s+=$2} END {print "plain:     "s}'
-grep -rc '^```{mermaid}'   docs/ --include='*.md' | awk -F: '{s+=$2} END {print "directive: "s}'
+# Point these at wherever the repo keeps its pages — docs/, devnotes/, or the repo root.
+grep -rc '^```mermaid$'    . --include='*.md' | awk -F: '{s+=$2} END {print "plain:     "s}'
+grep -rc '^```{mermaid}'   . --include='*.md' | awk -F: '{s+=$2} END {print "directive: "s}'
 ```
 
 If a repo is split across both forms, raise it — mixed fences mean some diagrams
@@ -78,6 +82,9 @@ built out of other things.
 
 **When the user does ask for colour**, use a colourblind-safe palette and use it
 to encode one real distinction. See `references/palettes.md`.
+
+**This is a design rule, not a repo rule** — it applies to a DevNote diagram as
+much as a docs one.
 
 ## Three diagram types, and keep them separate
 
@@ -249,7 +256,7 @@ Five colons for `{tab-set}`, four for each `{tab-item}`, three for anything
 nested inside. Mismatched counts are the most common cause of a tab-set failing
 to render.
 
-`click` directives use **absolute** paths (`/docs/modules/<name>/spec`), not
+`click` directives use **absolute** site paths (in nucleus-docs, `/docs/modules/<name>/spec`; in another repo, whatever that site serves), not
 relative ones — relative click targets break on the deployed site.
 
 ## Checklist before you finish

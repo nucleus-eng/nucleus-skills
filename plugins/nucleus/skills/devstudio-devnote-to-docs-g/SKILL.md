@@ -64,6 +64,64 @@ If the Category does not map cleanly, flag it and ask the invoker to clarify.
   tables, figure captions, author names, DOI citations, acknowledgements
 - `curvenote.yml` — Author name, ORCID, email, date, funding statement
 
+## nucleus:docs tagging
+
+The `<!-- nucleus:docs -->` comment tag (also accepted with a space: `<!-- nucleus: docs -->`)
+placed immediately before a MyST directive selects that element for inclusion in
+the Docs(G) and the final MyST commit. Two element types are supported:
+
+### Figures
+
+Tag placed immediately before a `:::{figure}` directive:
+
+```myst
+<!-- nucleus:docs -->
+:::{figure} fig-kinetics-exp1.png
+Caption text.
+:::
+```
+
+**Untagged figures are silently omitted.** Multiple tagged figures are allowed per
+section — they appear in the order encountered. If no figures in a Results section
+are tagged, omit that section's figure placeholders entirely and add a note:
+
+```
+[Note: no figures tagged nucleus:docs in this section — add tags to main.md and regenerate if figures are needed.]
+```
+
+### Composition tables
+
+Tag placed immediately before a `:::{table}` directive or a `:::::{tab-set}` block
+containing composition tables:
+
+```myst
+<!-- nucleus:docs -->
+:::{table} Nucleus Cytosol reaction composition, Experiment 2.
+...
+:::
+```
+
+The tagged experiment's composition becomes the **canonical reference composition**
+for the docs page. Only one experiment should be tagged; if multiple are tagged,
+use the first and add a `[PLEASE FILL IN — multiple compositions tagged; confirm
+which is canonical]` flag. If no composition table is tagged, include all experiments
+from Methods and add the same flag.
+
+The tagged table is reformatted when writing the Docs(G) (and later the MyST):
+collapse to three columns with value and unit merged into a single string:
+
+| Component | Stock Concentration | Final Concentration in Reaction |
+|---|---|---|
+| PMix | 15 mg/mL | 1.8 mg/mL |
+| Magnesium acetate | 200 mM | 8 mM |
+
+Where a stock or final concentration differs across conditions within the tagged
+experiment, write `varies` in italics. Where only one value exists across all
+conditions, write that value. Drop all volume columns — volumes are DevNote detail,
+not docs content.
+
+Caption: `` This composition was evaluated in this [DevNote title](<url>). `` — substitute the DevNote DOI or GitHub PR URL.
+
 ## Output
 
 A new Google Doc in `sf-node/docs-drafts/` with the title
@@ -120,14 +178,19 @@ Status:   draft
 
 ### Overview
 
-From the `# Overview` section of `main.md`, first paragraph only. The Overview in a
-functional module spec states what the module is, what it does, and what it adds to or
-modifies in Base Cytosol — lead with the module name and its function. Strip `{ref}`
-cross-references and MyST directives; keep plain prose. Do not use the abstract.
+The Overview in a functional module spec is short — typically 1–3 sentences stating
+what the module is, what it does, and what it adds to Base Cytosol. Look at the
+published examples for the register:
 
-**Scope check:** If the DevNote Overview is written from the perspective of the host
-system (e.g. describes the cytosol rather than the module being added to it), flag the
-entire paragraph:
+> "The deGFP Reporter Module produces deGFP, a green fluorescent protein."
+> "The TetR inducible expression module is a set of two genetic constructs that encode
+> tetracycline-inducible gene expression…"
+
+Attempt to derive this from the `# Overview` section of `main.md`. Strip `{ref}`
+cross-references and MyST directives; keep plain prose. Do not copy the abstract.
+
+**Scope check:** If the DevNote Overview describes the host system (e.g. cytosol)
+rather than the module being added to it, do not attempt a rewrite — flag it:
 
 ```
 [PLEASE FILL IN — DevNote Overview is cytosol-centric. Rewrite to describe the
@@ -177,9 +240,13 @@ reagent (→ Materials) or has an expression construct (→ its own DNA row).
 
 **Tab: Cytosol**
 
-From the reaction composition table(s) in `## Methods`. Copy verbatim — plain table
-rows, no MyST directives. If multiple experiments used different compositions, include
-all tables and label each by experiment. Use the column headers as-is from the DevNote.
+From the composition table tagged `<!-- nucleus:docs -->` in `## Methods` — see
+nucleus:docs tagging above. Reformat to three columns (Component | Stock Concentration |
+Final Concentration in Reaction); merge value+unit; write `varies` for values that
+differ across conditions; drop volume columns. Caption links to the DevNote.
+
+If no table is tagged, include all experiment compositions verbatim and add a
+`[PLEASE FILL IN — confirm canonical composition]` flag.
 
 ### Expected Behavior
 
@@ -189,7 +256,8 @@ From `# Results` in `main.md`:
 
 - Write the narrative summary for each experiment (one paragraph each), stripping
   `{ref}` cross-references.
-- For each figure referenced in Results, write a placeholder:
+- For each figure in Results that is tagged `<!-- nucleus:docs -->`, write a
+  placeholder (untagged figures are omitted — see Figure tagging above):
 
   ```
   [PLEASE FILL IN — export figure from notebook]
@@ -197,17 +265,18 @@ From `# Results` in `main.md`:
   Source: <relative path to notebook>
   ```
 
-- Add a source DevNote reference at the end of this subsection:
+- Add a source DevNote reference at the end of this subsection. Use the DOI if
+  published; otherwise use the GitHub PR URL:
 
   ```
-  Source DevNote: <DevNote title> — [PLEASE FILL IN DOI once published]
+  Source DevNote: <DevNote title> — <DOI or GitHub PR URL>
   ```
 
 **## Cells**
 
 Omit unless `main.md` contains liposome or encapsulation data in Results (look for
 "encapsulation", "liposome", or "cell" terminology). If present, map the same way as
-## Cytosols — narrative, figure placeholders, source DevNote reference.
+## Cytosols — narrative, tagged figure placeholders, source DevNote reference.
 
 ### Requirements
 
@@ -331,5 +400,8 @@ Construct length fetch above.
 - Does not look up module properties from databases or literature
 - Does not generate plasmid map images
 - Does not resolve Implementations from the nucleus-docs corpus
-- Does not export figures from notebooks
+- Does not export figures from notebooks — figures are committed as local PNGs to
+  nucleus-docs; the PR description names the source notebooks
 - Does not assign a DOI to the DevNote (must be published first)
+- Does not use MyST cross-references for figure embedding — xrefs are for provenance
+  links only (e.g. `Data from [DevNote](<url>)`), not for embedding images across repos

@@ -65,6 +65,9 @@ Apply these rules when converting Docs(G) HTML to MyST. Do not hard-wrap prose �
 all paragraph text as a single unbroken line regardless of length (nucleus-docs
 `check-formatting.py` enforces this).
 
+**Tag cleanup:** Strip all `<!-- nucleus:docs -->` comment lines from the MyST output.
+These tags are DevNote authoring markers and must not appear in the committed spec.
+
 ### Frontmatter
 
 ```yaml
@@ -163,12 +166,15 @@ three-colon for directives inside:
 
 **Cytosol tab rules:**
 - Table label must be `comp-<directory>-cytosol` (required by `check-bom-labels.py`)
-- Copy column structure from the Docs(G) verbatim; strip MyST directives that were
-  flattened for the Google Doc
-- If the DevNote has been published with a DOI, replace the inline table with:
-  `![](xref:<devnote-key>#rc)` — where `<devnote-key>` is the key declared in
-  `myst.yml`'s `references:` map. Add the key to `myst.yml` references if not present.
-  Leave the inline table if no DOI exists yet.
+- Always write an **inline table** — do not use MyST xref transclusion (`xref:`) even
+  when a DevNote DOI exists. xref for composition tables is not the established pattern
+  (10 of 12 nucleus-docs specs use inline tables); leave that decision to a human reviewer.
+- Column format: **Component | Stock Concentration | Final Concentration in Reaction**
+  (3 columns, value and unit merged into a single string, no volume columns)
+- Values that differ across conditions in the canonical experiment → *varies* (italic)
+- Table caption: `This composition was evaluated in this [DevNote title](url).`
+- If the Docs(G) carries a `[PLEASE FILL IN — confirm canonical composition]` flag,
+  propagate it as a MyST comment above the table
 
 ### Expected Behavior
 
@@ -211,8 +217,15 @@ three-colon for directives inside:
 ```
 
 **Figure rules:**
+- Only figures that appeared in the Docs(G) are included — the Docs(G) already
+  contains the curated set (tagged `<!-- nucleus:docs -->` in the source DevNote(M)).
+  Do not re-add figures that were omitted from the Docs(G).
 - Filename is a placeholder — write the actual source notebook in the PR description
-  (see PR description below), not in the spec.
+  (see PR description below), not in the spec. Figures are committed as local PNGs
+  alongside `spec.md`; they are never referenced via MyST cross-references.
+- Caption must include a provenance link to the source DevNote: append
+  `Data from [DevNote title](url).` using the DOI if published, otherwise the
+  GitHub PR URL from the Docs(G) Source DevNote line.
 - If the Docs(G) only has one figure for a context (not kinetics + endpoint), use a
   single figure directive instead of a tab-set.
 - Omit the `## Cells` subsection entirely if the Docs(G) has no Cells section.
@@ -348,7 +361,10 @@ Use `gh pr create --draft` so reviewers know it is not merge-ready.
 
 ## What this skill does not do
 
-- Does not export figures from notebooks — name the source notebooks in the PR description
+- Does not export figures from notebooks — name the source notebooks in the PR description;
+  figures are committed as local PNGs to the module directory in a follow-up commit
+- Does not use MyST cross-references for figure embedding — xrefs are for provenance
+  links only; images must be local PNGs to be self-contained at build time
 - Does not generate protocol PDFs or BOMs — that is `build-boms`
 - Does not run `myst build --html` — CI runs this at deploy time
 - Does not merge the PR — the reviewer confirms content before merge

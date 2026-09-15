@@ -234,7 +234,7 @@ visually implies grouping that is not there.
 A hand-drawn dependency diagram drifts from the pages within weeks. If the
 composition is already written in the docs, generate the diagram from it.
 
-**Prefer a `composition.yml` beside the spec where one exists.** The bullet list
+**Prefer a `spec.yml` beside the page where one exists.** The bullet list
 below carries no order, no operator, no process and no compartment, so a diagram
 derived from it can only show *what* composes and never *how* (issue #248). A
 module with a composition source should be rendered from it — in `nucleus-docs`,

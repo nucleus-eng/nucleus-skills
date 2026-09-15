@@ -1,6 +1,10 @@
 ---
 name: devstudio-devnote-g-to-devnote-m
 description: Transform a reviewed DevNote(G) Google Doc into a MyST-formatted DevNote(M) — producing main.md, curvenote.yml, and the correct directory structure for submission to the Nucleus DevNotes venue. Invoked when a TA signals a DevNote(G) is ready; consumes the figure-provenance manifest produced by devstudio-log-to-devnote-g. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+invokes:
+  - devstudio-verify-dna-constructs   # step 3: verify constructs before naming in table
+  - devstudio-author-myst-content     # step 2+: MyST fence depth, table schema, Vale notation, tab-sets
+  - devstudio-submit-to-github        # step 6: handoff after MyST output is produced
 ---
 
 # devstudio-devnote-g-to-devnote-m
@@ -17,6 +21,16 @@ namespace.
 **Not yet validated end-to-end** — scoped from real artifacts but not yet run against
 a complete G→M transformation. First real test will be the cleaned-up pH sensor
 DevNote(G) against `2026-garenne-pH-sensor/main.md` as the known target.
+
+## Breaking changes
+
+**Figure-provenance line format** (from `devstudio-log-to-devnote-g`): the format changed
+from a multi-line block to the single-line structured format this skill parses in Step 4.
+This skill handles both; new G→M transformations always use the single-line format.
+
+**`curvenote.yml` plugin convention**: switched from `extends: base.yml` with a minimal
+overlay to re-specifying all base fields directly. Any `curvenote.yml` using `extends:`
+will have an ENOENT at build time — see Step 5.
 
 ## Invocation model
 
@@ -115,6 +129,8 @@ Never reuse an existing id from a prior draft or another DevNote.
 
 ## Step 2 — section mapping
 
+> **INVOKE** `devstudio-author-myst-content` — apply MyST fence depth, table schema, Vale notation, and tab-set conventions throughout Steps 2–4
+
 Map DevNote(G) sections to DevNote(M) sections. The G template's section names don't
 always match published DevNote conventions — transform as follows:
 
@@ -194,6 +210,8 @@ add the empty columns and flag:
 ```
 Never silently drop columns that are present; never silently add data to fill missing
 columns.
+
+> **INVOKE** `devstudio-verify-dna-constructs` — verify each construct name against `nucleus-eng/DNA` before naming it in the table
 
 For the DNA/construct table, check each construct name against `nucleus-eng/DNA` via
 `devstudio-verify-dna-constructs` before naming it in the table. If the construct links to a `.gb` file in the repo, also emit a `{seqviz}` directive
@@ -505,6 +523,8 @@ migration is confirmed complete.
 declares the conda-forge dependencies for the Binder environment.
 
 ## Step 6 — hand off to devstudio-submit-to-github
+
+> **INVOKE** `devstudio-submit-to-github` — opens a branch + draft PR against `nucleus-devnote-archive-1`; TA reviews and merges
 
 This skill does **not** write directly to `nucleus-eng/nucleus-devnote-archive-1`, and
 does not stage to Drive. Once the MyST directory structure is produced, it is handed

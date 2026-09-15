@@ -1,11 +1,11 @@
 ---
 name: author-myst-content
-description: Author or review a nucleus-docs page in MyST — fence and tab-set nesting depth, figure placement, composition-table depth, page-status frontmatter and banners, and the empty-dropdown policy. Use when writing a new process page, module spec, or implementation page, when editing an existing one, or when a page renders wrong and the cause looks like fence depth.
+description: Author or review a MyST page in any Nucleus repo — docs or DevNotes — fence and tab-set nesting depth, figure placement, composition-table depth, page-status frontmatter and banners, and the empty-dropdown policy. Use when writing a new process page, module spec, or implementation page, when editing an existing one, or when a page renders wrong and the cause looks like fence depth.
 ---
 
 # Author MyST content
 
-Conventions for pages under `docs/` in nucleus-docs. For the tools that check a page after you write it, see `lint-docs`. For BOM tables and download cards, see `build-boms`.
+Conventions for MyST pages in any Nucleus repo — `nucleus-docs`, a DevNote repo, or anything else built with MyST. Rules that hold because of how MyST resolves and renders are marked as such; where a rule is specific to one repo's layout, it says so. For the tools that check a page after you write it, see `lint-docs`. For BOM tables and download cards, see `build-boms`.
 
 ## Page structure
 
@@ -27,6 +27,31 @@ Protocol steps use `- [ ]` checkboxes and `:::{hint}` dropdowns for extended not
 **Secondary figures.** Within a section that has a primary figure (e.g. a performance plot), de-emphasize supplementary or supporting figures by wrapping them in a `::::{hint} <descriptive title>` block with `:class: dropdown`. The dropdown title should describe the finding, not just label the figure (e.g. `::::{hint} The Emitter Cell causes E. coli to express GFP in response to IV-HSL`). This keeps the primary figure prominent while keeping supporting context one click away. When there are multiple parallel secondary figures (e.g. the same experiment across several conditions), use a hybrid: a single dropdown wrapping a tab-set, so readers open one drawer and switch between conditions with tabs. The outer hint uses 7 colons, the `{tab-set}` inside uses 6, each `{tab-item}` uses 5, and figures inside use 3 — consistent with the tab-set nesting rules above.
 
 **System-context figure placement (module specs).** A figure showing the module in the context of the Base Cell or Developer Cell belongs in the `## Cells` section, not `# Overview`. The Overview section should carry mechanism and schematic figures only.
+
+## Cross-references
+
+**Never link to a bare section slug.** MyST resolves `#anchor` by global identifier and ignores the file path. Any heading name shared across pages — `Overview`, `Requirements`, `Expected Behavior` — collides, and the link binds to whichever page won. The reader lands somewhere else entirely, and nothing reports it.
+
+This is not theoretical. In nucleus-docs, `../reporter-xyle/spec.md#expected-behavior` sent readers to the POPC/Chol membrane spec, and a page's own `[Overview](#overview)` left the docs for a getting-started page. Twenty-five links broke this way before anyone noticed.
+
+**A link checker cannot catch it.** The named file exists and does own that heading, so the link passes every check; MyST simply never reads the path.
+
+Two forms are safe:
+
+- **No fragment** — `[LacZ Reporter Module](../reporter-lacz/spec.md)`. Builds as a plain link and resolves by path. Use it when the whole page is the destination, which is most of the time.
+- **A unique label** — put `(reporter-lacz-requirements)=` on the line above the target heading, then link to `../reporter-lacz/spec.md#reporter-lacz-requirements`. Name labels `<page-directory>-<section-slug>`: unique by construction, and readable at the link site.
+
+Same-page links follow the same rule. `[Overview](#overview)` is broken; `[Overview](#ph-cascade-overview)` is not.
+
+**Renaming or removing a heading is a link change**, because inbound anchors do not follow it. Deleting a section is the common case. Re-run the link check after any such edit.
+
+**Audit against the built AST, never the source.** In `_build/site/content/*.json`, a correct same-page anchor is a `crossReference` with `resolved: true` and **no** `url`; a colliding one carries a `url` pointing at another page. Do not filter such a scan on `urlSource` — same-page links do not have one, so a scan keyed on it reports a confident zero.
+
+## Figures
+
+**Parallel figures go in a tab-set** — never a dropdown, never stacked. Tab names describe the data, not the format: `Microscopy Images` not `Montage`; `Fluorescence Intensity` not `Endpoint`.
+
+**Secondary or supporting figures go in a `::::{hint}` dropdown whose title states the finding**, not the figure's label. See *Secondary figures* under Syntax rules for the nesting.
 
 ## Composition tables
 

@@ -1,6 +1,8 @@
 ---
 name: devstudio-verify-dna-constructs
 description: Verify that a DNA construct named in a DevStudio composition table actually corresponds to the sequence file it's claimed to match — by length against the GenBank LOCUS line, not by filename resemblance. Use whenever devstudio-log-to-devnote-g or devstudio-devnote-m-to-docs-g drafts or edits a Composition/Designs table row that names a specific construct, or whenever a human asks "does this construct check out." This is a staging-namespace (devstudio-) skill, narrowly scoped from nucleus-docs' broader construct-verification conventions — see "Provenance" below before treating it as canonical.
+invokes:
+  - devstudio-read-from-google-drive   # step 2: current-folder check via folder-scoped search_files
 ---
 
 # devstudio-verify-dna-constructs
@@ -69,8 +71,11 @@ currently pointed at, scoped to that folder only**:
 
 - **Canonical repo check** (Step 1's method): does `<construct-name>.gb` exist in
   `nucleus-eng/DNA`?
-- **Current-folder check**: using `devstudio-read-from-google-drive`'s folder-scoped
-  `search_files(parentId='<this experiment/DevNote folder's id>')` — not a broader
+- **Current-folder check**:
+
+  > **INVOKE** `devstudio-read-from-google-drive` — folder-scoped `search_files(parentId=...)` for this experiment/DevNote folder only
+
+  Using that skill's folder-scoped `search_files(parentId='<this experiment/DevNote folder's id>')` — not a broader
   search, not a search across other experiments or the wider Shared Drive — does a
   `.gb` file or an explicit construct reference for this name already exist in this
   specific folder? This is deliberately narrow: it answers "is this construct already

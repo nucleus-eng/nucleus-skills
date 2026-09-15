@@ -69,6 +69,7 @@ read when the skill is actually invoked.
 | `terminology-sweep` | Corpus sweep for terminology drift, stale renames, and project-defined words |
 | `extract-conditions` | ELN page, protocol or prose → condition table (no wells) |
 | `build-platemap` | Condition table or description → CDK-compatible platemap CSV/TSV |
+| `staging` | Propose edits to tracked files as a document, not a direct edit |
 
 ## Use it from another repo
 
@@ -146,8 +147,24 @@ disagree with itself.
 | Terminology drift sweep | `terminology-sweep` |
 | Reaction composition read out of unstructured sources | `extract-conditions` |
 | Platemap layout, columns, and CDK compatibility | `build-platemap` |
+| What a staged proposal is, and when to stage | `staging` |
 | Prose style, notation, units | `references/devnote-style-guide.md` (a reference, not a skill) |
 | Assay frame vs specimen, compartments, sub-mix expansion | `references/assay-and-specimen.md` (a reference, not a skill) |
+
+## Staging
+
+Edits that change what a tracked file claims are proposed in a staging
+document first, not applied directly. The rule is the `staging` skill.
+
+**Staging location for this repo:** `<TOPIC>-STAGING.md` at the repo root,
+gitignored. Declared here because the skill takes the location from the
+nearest README that names one, and defaults to `tmp/STAGED-<date>-<topic>.md`
+otherwise.
+
+This repo differs from `nucleus-docs` and `category`, which use the default.
+The difference is deliberate — there is no `tmp/` here and the working
+documents are few enough to sit at the root — and it is why the location is
+declared rather than assumed.
 
 ## Checks
 

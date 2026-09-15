@@ -13,6 +13,9 @@ Three levels, and the split between the first two is the point:
 Standard library only, so it runs in any checkout. Export .xlsx to CSV or TSV
 first -- that is what you should be committing next to the data anyway.
 
+Test fixtures and a manifest of expected findings:
+https://github.com/nucleus-eng/nucleus-platemap-corpus
+
 Exit codes: 0 clean, 1 findings, 2 the check could not run.
 """
 

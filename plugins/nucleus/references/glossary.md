@@ -119,9 +119,10 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 | instance | Implementation | Prefer | no | 3 | *"in this instance"* |
 | constraint | Requirement | Prefer | no | 17 | Common English |
 | ingredient | Component | Prefer | no | 0 | Safe today, but the same shape as the rows above |
+| liposome | synthetic cell | Prefer | no | many | **Contextual, so never a rule** — only where the liposome can reasonably be called a synthetic cell. Reads oddly beside row 1 and is not a contradiction: *vesicle* is always wrong, *liposome* is right until the thing is a cell |
 
 **A refusal is only a rule when it cannot collide with a heading, a filename or ordinary
-English.** Ten of the twenty-four qualify. The rest are prose preferences, checked by reading —
+English.** Ten of the twenty-five qualify. The rest are prose preferences, checked by reading —
 which is the `style-guide` skill's job, not Vale's.
 
 **This was measured, not assumed, and the measurement changed the answer twice.** `demo` reads
@@ -143,6 +144,14 @@ mermaid `classDef constituent` are matched by tooling and must not be reworded. 
 constituent of anything."* The source conflated the two, and a substitution rule would flag all
 seven.
 
+## Program names
+
+**Not terms of the model, so they take no `T` row** — they are proper nouns, and the table above is
+for things the corpus composes.
+
+- **DevCells** is the programme. Not an event, and not a repo.
+- **DevStudio** is the three-week hackathon: one particular run of the programme.
+
 ## Phrasings
 
 Not term rules, and not automatable — checked by the `style-guide` skill instead.
@@ -151,7 +160,7 @@ Not term rules, and not automatable — checked by the `style-guide` skill inste
 - **Name the exact chemical species.** Write `rNTPs` or `dNTPs`, never the ambiguous `NTP`. Some Modules specify both on one page, so this is not a substitution you can automate.
 - **Be precise about what a number means.** *"Raises Mg²⁺ from 8 to 18 mM"* and *"raises optimal Mg²⁺ from 8 to 18 mM"* are different claims.
 - **Name the specific thing built,** using real Module names. If no Module name exists for something you keep describing, one probably should.
-- **One item, one name.** American English.
+- **One item, one name** (STE 1.11). American English.
 
 ## Renaming
 

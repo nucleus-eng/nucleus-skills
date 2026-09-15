@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate the skills in this repo.
 
-Five checks, all of which catch failures that are otherwise silent:
+Seven checks, all of which catch failures that are otherwise silent:
 
 1. Every skill directory holds a SKILL.md whose `name:` matches the
    directory name. A skill that fails this does not load, and nothing
@@ -20,6 +20,13 @@ Five checks, all of which catch failures that are otherwise silent:
    reporting an error — the same silent omission this whole repo exists to
    stop. This is an assertion that the old location is gone, not a check of
    its contents, so it costs nothing once true and retires itself.
+6. Every name in a skill's `invokes:` frontmatter field resolves to a known
+   skill. An invoked skill that was renamed or deleted would silently break
+   without this.
+7. `invokes:` frontmatter and in-body `> **INVOKE** name` markers stay in
+   sync bidirectionally: every declared invocation has a call-site marker,
+   and every call-site marker has a declaration. Either direction of drift
+   produces a false sense of completeness in the other.
 
 Exit codes: 0 clean, 1 findings, 2 the check could not run.
 """
@@ -37,6 +44,9 @@ MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 FIELD = re.compile(r"^(name|description):\s*(.+?)\s*$", re.MULTILINE)
+INVOKES_BLOCK = re.compile(r"^invokes:\s*\n((?:[ \t]+-[ \t]+\S+[^\n]*\n?)+)", re.MULTILINE)
+INVOKES_ITEM = re.compile(r"^[ \t]+-[ \t]+([A-Za-z0-9_-]+)", re.MULTILINE)
+INVOKE_MARKER = re.compile(r"^[ \t]*> \*\*INVOKE\*\* `([A-Za-z0-9_-]+)`", re.MULTILINE)
 MD_LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
 # Inline-code paths naming a directory this plugin owns. Narrow on purpose: a
 # bare `main.md` usually points at a consumer repo, and so does `scripts/` —
@@ -91,6 +101,55 @@ def check_skill(directory: Path, findings: list[str], seen: dict[str, Path]) -> 
 
     if not fields.get("description"):
         findings.append(f"{rel}: frontmatter has no `description:` — the model cannot decide to load it")
+
+
+def parse_invokes(frontmatter_text: str) -> list[str]:
+    """Extract skill names from an invokes: list in frontmatter text."""
+    m = INVOKES_BLOCK.search(frontmatter_text)
+    if m is None:
+        return []
+    return INVOKES_ITEM.findall(m.group(0))
+
+
+def check_invokes(directory: Path, seen: dict[str, Path], findings: list[str]) -> None:
+    """Verify every name in invokes: resolves to a known skill, and that
+    invokes: declarations and in-body INVOKE markers stay in sync."""
+    skill_file = directory / "SKILL.md"
+    if not skill_file.is_file():
+        return  # already flagged by check_skill
+    raw = skill_file.read_text(encoding="utf-8")
+    fm = FRONTMATTER.match(raw)
+    if fm is None:
+        return
+    rel = skill_file.relative_to(ROOT)
+
+    declared = parse_invokes(fm.group(1))
+
+    # Check 6: every declared name resolves to a real skill.
+    for name in declared:
+        if name not in seen:
+            findings.append(
+                f"{rel}: `invokes: {name}` — no skill with this name exists"
+            )
+
+    # Check 7: bidirectional sync between invokes: and INVOKE markers.
+    # Strip fenced blocks only (not inline code spans): fenced blocks may
+    # contain example INVOKE markers that are documentation, not call sites.
+    # Inline code spans must NOT be stripped — they contain the skill name
+    # that the regex needs to capture (e.g. `devstudio-read-from-google-drive`).
+    body = FENCE.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), raw[fm.end():])
+    marked = set(INVOKE_MARKER.findall(body))
+    declared_set = set(declared)
+
+    for name in sorted(declared_set - marked):
+        findings.append(
+            f"{rel}: `invokes: {name}` declared but no `> **INVOKE** \\`{name}\\`` marker in body"
+        )
+    for name in sorted(marked - declared_set):
+        if name in seen:  # only flag markers that point at real skills
+            findings.append(
+                f"{rel}: INVOKE marker for `{name}` in body but not declared in `invokes:`"
+            )
 
 
 def check_links(path: Path, findings: list[str]) -> None:
@@ -182,6 +241,10 @@ def main() -> int:
 
     for directory in directories:
         check_skill(directory, findings, seen)
+
+    # Second pass: invokes: validation needs seen to be fully populated first.
+    for directory in directories:
+        check_invokes(directory, seen, findings)
 
     for markdown in sorted((ROOT / "plugins").rglob("*.md")):
         check_links(markdown, findings)

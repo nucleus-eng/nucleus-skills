@@ -1,7 +1,7 @@
 """Shared definitions for the platemap scripts.
 
 The column and type definitions are owned by the original DevNote,
-`2026-CERN-OHL-P/devnotes/2026-bhasin-platemaps/main.md`. This is a port --
+`nucleus-devnote-archive-1/devnotes/2026-bhasin-platemaps/main.md`. This is a port --
 keep it in sync with that page. It lives here, once, because three scripts
 need it, and three copies of a definition is how two copies come to disagree.
 

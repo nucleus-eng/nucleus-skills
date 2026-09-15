@@ -1,3 +1,8 @@
+---
+name: devstudio-assemble-devnote-assets
+description: Download the supporting files a DevNote(M) needs in order to build — notebooks, platemaps, raw instrument data, and DNA construct files — from the DevStudio Shared Drive into the devnote directory, resolving what belongs to each figure from the DevNote(G) Google Doc's figure-provenance lines (or the manifest.json cache written beside it). Invoked after devstudio-devnote-g-to-devnote-m has produced main.md and curvenote.yml, and before devstudio-submit-to-github opens the archive PR. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+---
+
 # devstudio-assemble-devnote-assets
 
 ## Provenance

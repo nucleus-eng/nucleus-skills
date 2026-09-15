@@ -131,6 +131,34 @@ confidently at the wrong place. When a document cites a range, record what it
 was measured against and when. When acting on one somebody else wrote,
 re-measure first.
 
+**A cross-repo pin names three things: repo, branch and hash.** The repo is
+the one the quoted text *lives in*, not the one you are standing in — a pin
+records the source, never your location. The branch says which tree a reader
+must stand in to see it. The hash makes it checkable after either moves.
+
+Each part answers a failure that has happened. Two sessions read an earlier
+one-sentence version as *"where I was when I took this"* and pinned the wrong
+repo. A branch name and a date were given where a hash was required; a branch
+moves and a date is not checkable by anything. And a hash alone is precise but
+unanchored: it does not say which tree to stand in.
+
+**A pin that names the wrong object is worse than no pin, because it looks
+checkable and so nobody checks it.** A bare quote invites checking. A
+malformed one ends the question.
+
+**Edit sites partition by repo; quotations cross.** A review pass touching two
+repos produces one staging document per repo, each naming the other. But a
+document that overturns a claim must quote it, so a quotation reaches across
+where an edit site does not — which is exactly why the quotation needs the pin
+and the edit site does not.
+
+Verify a cross-repo hash before writing it. A dead hash has shipped three
+times, and the third was inside the staging document proposing this rule:
+
+```bash
+gh api repos/<owner>/<repo>/commits/<sha> --jq .sha
+```
+
 ## What this skill does not hold
 
 **Repo-specific evidence, paths and file lists.** Those are arguments *from* a

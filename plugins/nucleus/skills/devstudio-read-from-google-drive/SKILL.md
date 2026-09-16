@@ -48,9 +48,14 @@ recent.
 
 ## Step 2 — Check what you actually have before reading
 
-Call `get_file_metadata` on the resolved `fileId` before deciding how to read it. Do not
-assume a file's type — or even its role — from its name. **Do not hardcode expected
-filenames anywhere in this pipeline** (e.g. "look for `log.docx`"). Real experiment
+Call `get_file_metadata` on the resolved `fileId` before deciding how to read it —
+**unless the file came from a folder-scoped `search_files` listing, which already
+returned its `mimeType`.** In that case the type is already known and a second call adds
+nothing; a caller listing several folders would otherwise pay one of these per file. Do
+not assume a file's type — or even its role — from its name. The rule is that type comes
+from `mimeType` and never from the filename, not that it must come from a second call.
+**Do not hardcode expected filenames anywhere in this pipeline** (e.g. "look for
+`log.docx`"). Real experiment
 folders don't follow the template's example names literally: a log has turned up as a
 Google Doc titled `lab-log`, with no `.docx` in sight, and platemaps have turned up as
 plain `.tsv` files rather than `.xlsx`. Identify a file by its **role in the folder**

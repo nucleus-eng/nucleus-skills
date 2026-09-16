@@ -1,6 +1,11 @@
 ---
 name: devstudio-log-to-devnote-g
 description: Convert a human-selected set of one or more DevStudio Log folders (each holding a Log Google Doc, and where present a platemap, analysis notebooks, and raw instrument data) into a single draft DevNote as a native, commentable Google Doc — following Nucleus DevNote structure, synthesizing across the set when it spans a continuous narrative, with fidelity to source content and explicit flags for anything uncertain or missing. Use when a human selects the specific folder(s) they've deemed ready to draft into a DevNote. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+invokes:
+  - devstudio-read-from-google-drive   # steps 2, 3, 5: folder search, pandoc download, notebook inspection
+  - devstudio-write-to-google-drive    # step 8: write the draft Doc and manifest
+  - devstudio-verify-dna-constructs    # step 7: construct identity check before naming in draft
+  - devstudio-author-myst-content      # step 1: complete-vs-stub signals
 ---
 
 # devstudio-log-to-devnote-g
@@ -40,7 +45,18 @@ crawl the Log directory looking for finished work, and does not decide what coun
 make this selection and interact with Claude. Recognized as necessary, not designed
 here — a separate concern from this skill's own logic.)
 
+## Breaking changes
+
+**Figure-provenance line format** (affects `devstudio-devnote-g-to-devnote-m`): the
+format changed from a multi-line block to a single-line structured format (see Step 4).
+The G→M skill handles both; new DevNote(G) docs always use the single-line format.
+
+**`manifest.json` schema additions**: `asset_chain_complete` and `findings` fields were
+added; older manifests without them are treated as `asset_chain_complete: false`.
+
 ## Step 1 — check for stub signals before drafting anything
+
+> **INVOKE** `devstudio-author-myst-content` — read complete-vs-stub signals before treating the selected set as ready
 
 Before treating the *selected set* as ready, check each folder against
 `devstudio-author-myst-content`'s complete-vs-stub signals: an empty analysis, a
@@ -70,6 +86,8 @@ stub-checking, per direct guidance that this must be surfaced rather than silent
 drafted around.
 
 ## Step 2 — inventory each selected folder, then synthesize across the set
+
+> **INVOKE** `devstudio-read-from-google-drive` — folder-scoped `search_files` plus role-based file identification for each folder in the set
 
 For each folder in the human-selected set, use `devstudio-read-from-google-drive`'s
 folder-scoped `search_files` plus its role-based identification (Step 2 of that skill)
@@ -151,6 +169,8 @@ value is unknown. License defaults to `CERN-OHL-P-2.0; CC-BY-4.0` (the template
 default) without flagging, since this is a safe, policy-driven default.
 
 ## Step 3 — extract and preprocess the log content
+
+> **INVOKE** `devstudio-read-from-google-drive` — Step 4: download the log Doc as `.docx` bytes for pandoc (`--extract-media` required)
 
 Download the log Doc as real bytes and pandoc-convert, per
 `devstudio-read-from-google-drive`'s Step 4. **The `--extract-media` flag is required,
@@ -329,7 +349,11 @@ default:
 | 3 (legacy) | **`#fig:` glue reference** | Older notebooks using the `glue` API | `:::{figure} #fig:name` |
 | — | **No notebook** | No notebook found at all | static-png + `<!-- missing notebook -->` |
 
-**How to inspect**: download the notebook via `devstudio-read-from-google-drive` and
+**How to inspect**:
+
+> **INVOKE** `devstudio-read-from-google-drive` — download the notebook to scan for `#| label:` tags
+
+Download via `devstudio-read-from-google-drive` and
 scan each code cell's source for lines beginning with `#| label:`. The label value
 is everything after `#| label: ` on that line. Map each labeled cell to its
 corresponding figure by position (a plot cell's output is the figure produced by that
@@ -502,9 +526,11 @@ These override all other instructions:
 
 ## Step 7 — construct verification
 
-If the draft names a specific DNA construct in a composition-table row, invoke
-`devstudio-verify-dna-constructs` before finalizing — don't let an unverified
-construct↔file identity claim land in a draft, even a draft still pending human review.
+> **INVOKE** `devstudio-verify-dna-constructs` — verify construct↔file identity before any construct name lands in a composition table row
+
+If the draft names a specific DNA construct in a composition-table row, run this check
+before finalizing — don't let an unverified construct↔file identity claim land in a
+draft, even a draft still pending human review.
 
 ## Step 7.5 — draft formatting: links, red text, and HTML content
 
@@ -537,6 +563,8 @@ This applies to: constructs table Name column, reagent Link column, data/platema
 references in figure captions, and any asset cross-references in the narrative.
 
 ## Step 8 — write the draft
+
+> **INVOKE** `devstudio-write-to-google-drive` — native-Doc path: creates a commentable Google Doc in the DevNote directory and writes the figure-provenance manifest alongside it
 
 Use `devstudio-write-to-google-drive`'s native path (this is exactly the "human will
 comment on it" case that skill defaults to native for) to land the draft as a Google Doc

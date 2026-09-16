@@ -2,27 +2,8 @@
 
 The shared vocabulary for Nucleus docs and DevNotes. One word, one meaning.
 
-**Derived, not copied.** The source is `nucleus-eng/compositional-biology-theory`, branch `main`,
-[`89a5a58`](https://github.com/nucleus-eng/compositional-biology-theory/commit/89a5a58),
-`glossary.md` — 38 rows. That repo keeps its own version and maintains it separately, by ruling:
-*"create a new glossary, based on the work from category. let them maintain their own version."*
-The two serve different readers and will drift on purpose.
-
-**What was dropped, and why.** 14 of the 38 rows are the formal layer — operators, functors,
-fibers, equalities. They have no surface form in either corpus, so nobody can write them wrongly,
-and inventing plain-language names for them here would import the formal layer through the back
-door. *"I want us to speak in simple language."*
-
-**A fifteenth was dropped for the opposite reason.** `Formulation` is the source's base object and
-this corpus does not say it — seven files in `nucleus-docs/docs/`, once each. *"Drop. we don't use
-this language."* **Component takes its place as the base term**, which is how the corpus already
-talks: a Module is a Component the corpus names.
-
-Three rows were added that the source refuses rather than defines: **a term with a definition
-beats a term with a prohibition.**
-
-**IDs name a concept, not a spelling.** `T09` stays `T09` if `Assay` is renamed. IDs match the
-source so a row can be traced back. Rows added here are numbered `N01` and up.
+**IDs name a concept, not a spelling.** A row keeps its ID when its term is renamed. Numbered in
+reading order; a row added later takes the next free number rather than forcing a renumber.
 
 ## How this binds
 
@@ -46,21 +27,20 @@ defined here without being enforceable, and a rule cannot exist without a row ex
 **Ordered so a term is defined before it is used.** That is possible for the first nine and not
 for the rest: sixteen of the twenty-five are mutually recursive, and two pairs define each other
 outright — Module and Requirement, Observation and Data. Module is taken as primitive and
-Composition defined from it (Jon, Q4).
+Composition defined from it.
 
 ### The primitives
 
-| ID | Term | Definition | Where it appears |
-| --- | --- | --- | --- |
-| `T29` | **Role** | An identity level: what a group of components does. *Elongation Factors.* | BOM and composition tables |
-| `T30` | **Species** | An identity level: molecular identity. *EF-G, cholesterol.* Molar mass and sensitivity are usually **stated** at this level. | BOM and composition tables |
-| `T31` | **Item** | An identity level: a specific product from a specific supplier, named by catalog number. | BOM `Part #` |
-| `T02` | **Component** | A material with a stated identity that can be combined with other Components. Identity is given at one of three levels — Role, Species or Item. | rows of `# Reference Composition`; `manifest.tsv` |
-| `T03` | **Module** | A Component the corpus names and specifies: a stated Composition, a stated Function, and a defined Context. May carry Requirements for particular subcomponents or further Functions, and may dispatch Requirements to other Modules where those supply them. **Composing Modules yields a Module**, which is what makes the term recursive rather than a size. | `docs/modules/<name>/spec.md` |
-| `T06` | **Process** | A transformation of Components into a Component. **A Protocol and a Function are both Processes**, differing by agency rather than by structure. | `docs/processes/<name>/main.md` |
-| `N01` | **Protocol** | A Process you choose to apply. | `# Protocol` on a process page |
-| `T07` | **Function** | A Process a Module implements — entailed by what it is, rather than chosen and applied. | `# Expected Behavior` — 36 of 36 pages carry the heading, none states a domain or codomain |
-| `T35` | **Context** | The operating conditions a Function claim holds in. A claim with no Context is not yet a claim about anything. | `## Cells`, `## Gels`, `## Cytosols` |
+| ID    | Term          | Definition                                                                                                                                                                                                                                                                                                                                                  | Where it appears                                                                           |
+| ----- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `T01` | **Species**   | An identity level: molecular identity. *EF-G, cholesterol.* Molar mass and sensitivity are usually **stated** at this level.                                                                                                                                                                                                                                | BOM and composition tables                                                                 |
+| `T02` | **Item**      | An identity level: a specific product from a specific supplier, named by catalog number.                                                                                                                                                                                                                                                                    | BOM `Part #`                                                                               |
+| `T03` | **Component** | A material with a stated identity that can be combined with other Components. Identity is given at one of two levels — Species or Item.                                                                                                                                                                                                             | rows of `# Reference Composition`; `manifest.tsv`                                          |
+| `T04` | **Module**    | A Component with a stated Composition, Function, and Context in which it functions. May carry Requirements for particular subcomponents or further Functions in order to operate, and may dispatch Requirements to other Modules where those supply them. **Composing Modules yields a Module**, which is what makes the term recursive rather than a size. | `docs/modules/<name>/spec.md`                                                              |
+| `T05` | **Process**   | A transformation of Components into a Component. **A Protocol and a Function are both Processes**, differing by agency rather than by structure.                                                                                                                                                                                                            | `docs/processes/<name>/main.md`                                                            |
+| `T06` | **Protocol**  | A Process you choose to apply.                                                                                                                                                                                                                                                                                                                              | `docs/processes/<name>/main.md`                                                            |
+| `T07` | **Function**  | A Process a Module implements — entailed by the Composition of the Module itself, rather than chosen by the engineer and applied.                                                                                                                                                                                                                           | `# Expected Behavior` — 36 of 36 pages carry the heading, none states a domain or codomain |
+| `T08` | **Context**   | The operating conditions a Function claim holds in. A claim with no Context is not yet a claim about anything.                                                                                                                                                                                                                                              | `## Cells`, `## Gels`, `## Cytosols`                                                       |
 
 **Agency is what splits a Process, not structure.** A Protocol is one you choose to apply; a
 Function is one a Module implements. Both are Processes, so `processes/colorimetric-readout/`
@@ -70,36 +50,32 @@ holding one of each is the layout being right rather than an exception.
 
 | ID | Term | Definition | Where it appears |
 | --- | --- | --- | --- |
-| `T33` | **Composition** | The explicit set of components constituting a Module, in addition to their concentration and physical state. Additionally, the act of combining two Modules or two Processes as well as the resulting object from said Composition | `# Reference Composition`, `spec.yml` |
-| `T34` | **Constituent** | A Component contained in another Component. **Constituent Module** is the canonical case — a Module inside another Module's Composition — and `# Constituent Modules` is a protected string naming it. | `# Constituent Modules` |
-| `T04` | **Implementation** | A Module together with a physical operating context — a named date, batch, run and place. A Module *claims* a Function; an Implementation *exhibits* one, and exhibiting needs a particular. | `docs/implementations/<name>/main.md` |
+| `T09` | **Composition** | The explicit set of components constituting a Module, in addition to their concentration and physical state. Additionally, the act of combining two Modules or two Processes as well as the resulting object from said Composition | `# Reference Composition`, `spec.yml` |
+| `T10` | **Constituent** | A Component contained in another Component. **Constituent Module** is the canonical case — a Module inside another Module's Composition — and `# Constituent Modules` is a protected string naming it. | `# Constituent Modules` |
+| `T11` | **Implementation** | A Module together with a physical operating context — a named date, batch, run and place. A Module *claims* a Function; an Implementation *exhibits* one, and exhibiting needs a particular. | `docs/implementations/<name>/main.md` |
 
 ### Requirements and evidence
 
-| ID | Term | Definition | Where it appears |
-| --- | --- | --- | --- |
-| `T20` | **Requirement** | A condition that must hold for a Module to exhibit its Function. Three kinds: a condition on the Composition, a condition on another Function, and a budget. | `# Requirements`, 29 of 36 pages |
-| `T21` | **Sensitivity** | A property of a Component: the class of conditions that change the Function it would otherwise exhibit. Names no Process. | scattered prose |
-| `T22` | **Imposition** | A property of a Process: the class of conditions it inflicts on whatever it acts on. | scattered prose |
-| `T23` | **Conflict** | The relation holding when a Process's Imposition meets a Component's Sensitivity. **Computed from the two, never asserted on its own.** | asserted directly on nine pages, which is the thing to stop |
-| `T24` | **Specification** | The set of claims that fix what a Module is: its Composition, its Requirements and its Function. A Module satisfies a Specification or it does not — which holds whether or not a page has written it down. | the spec page |
-| `T25` | **Entailment** | A relation between two Specifications: B entails A when everything A requires, B also provides, so B may stand in for A. | prose in `# Requirements` and `# Expected Behavior` |
-| `T28` | **Co-satisfying** | A relation between two Components with respect to one Specification: both satisfy it, whatever else differs between them. | — |
+| ID    | Term              | Definition                                                                                                                                                                                                                   | Where it appears                                            |
+| ----- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `T12` | **Requirement**   | A condition that must hold for a Module to exhibit its Function. Three kinds: a condition on the Composition, a condition on another Function, and a budget.                                                                 | `# Requirements`, 29 of 36 pages                            |
+| `T13` | **Sensitivity**   | A property of a Component: the class of conditions that change the Function it would otherwise exhibit. Names no Process.                                                                                                    | scattered prose                                             |
+| `T14` | **Imposition**    | A property of a Process: the class of conditions it inflicts on whatever it acts on.                                                                                                                                         | scattered prose                                             |
+| `T15` | **Conflict**      | The relation holding when a Process's Imposition meets a Component's Sensitivity. **Computed from the two, never asserted on its own.**                                                                                      | asserted directly on nine pages, which is the thing to stop |
+| `T16` | **Specification** | The set of claims that fix what a Module is: its Composition, its Requirements and its Function. That a collection of Components implements a Module means exactly that those Components meet the Specification describing it.  | the spec page                                               |
+| `T17` | **Entailment**    | A relation between two Specifications: B entails A when everything A requires, B also provides, so B may stand in for A.                                                                                                     | prose in `# Requirements` and `# Expected Behavior`         |
+| `T18` | **Co-satisfying** | A relation between two Components with respect to one Specification: both satisfy it, whatever else differs between them.                                                                                                    | —                                                           |
 
 ### Measurement and its record
 
 | ID | Term | Definition | Where it appears |
 | --- | --- | --- | --- |
-| `T09` | **Assay** | A Protocol whose product includes an Observation. | inside a Process page |
-| `T08` | **Measurement** | A particular run of an Assay. | inside a Process page |
-| `N03` | **Sample** | A portion of a Component taken at a stated time, on which a Measurement is performed. | protocol steps |
-| `T05` | **Observation** | The value a Measurement produces about a Sample. Also written *result*. | figures and tables |
-| `N02` | **Data** | The written record of an Observation. | figures, tables, `generated/` artifacts |
-| `T36` | **Readout** | An accepted synonym for Measurement, normalized to it where the text makes a claim. **Settled only in that sense** — it also names the instrument (*"a weak readout"*) and sometimes the value, and those stay loose. | 162 uses in nucleus-docs |
-
-**Three rows are additions**, not carried terms. `N01 Protocol`, `N02 Data` and `N03 Sample` name
-things the source refuses rather than defines: **a term with a definition beats a term with a
-prohibition.**
+| `T19` | **Assay** | A Protocol whose product includes an Observation. | inside a Process page |
+| `T20` | **Measurement** | A particular run of an Assay. | inside a Process page |
+| `T21` | **Sample** | A portion of a Component taken at a stated time, on which a Measurement is performed. | protocol steps |
+| `T22` | **Observation** | The value a Measurement produces about a Sample. Also written *result*. | figures and tables |
+| `T23` | **Data** | The written record of an Observation. | figures, tables, `generated/` artifacts |
+| `T24` | **Readout** | An accepted synonym for Measurement, normalized to it where the text makes a claim. **Settled only in that sense** — it also names the instrument (*"a weak readout"*) and sometimes the value, and those stay loose. | 162 uses in nucleus-docs |
 
 ## Refused spellings
 

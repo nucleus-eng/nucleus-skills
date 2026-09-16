@@ -1,6 +1,6 @@
 ---
 name: devstudio-build-to-composition
-description: Read a build file (xlsx, one sheet per condition) and produce a merged composition table — conditions as volume columns, shared Stock and Final Conc. columns — as an HTML table for Google Doc embedding and a JSON sidecar for devstudio-log-to-devnote-g. No user interaction required. Run before devstudio-log-to-devnote-g.
+description: Read a build file (xlsx, one sheet per condition) and produce a merged composition table as build-composition.csv — the composition schema with one volume column per condition. Use before devstudio-log-to-devnote-g, which reads the sidecar instead of reconstructing composition from log prose. Takes no user input.
 ---
 
 # devstudio-build-to-composition
@@ -9,33 +9,33 @@ One job: read a build file and produce a merged composition table.
 
 ## Output format
 
-The target is a table with this column structure:
+The composition-table schema — the six columns, `—` for missing values, and the rule
+that a column is never dropped to make a source table fit — is owned by
+`devstudio-author-myst-content`. This skill produces that schema with the per-condition
+volume columns appended:
 
 ```
-Component | Stock Conc. | Unit | Final Conc. | Unit | [Condition A] [µL] | [Condition B] [µL] | ...
+<six-column schema> | [Condition A] [µL] | [Condition B] [µL] | ...
 ```
 
-Each condition (sheet) in the build file becomes one volume column. The condition
-name is the column header; `[µL]` is appended. Components with no Stock or Final
-concentration (e.g. Water) receive `—` in those cells. The Totals row is the last
-row, bold.
+Each condition (sheet) in the build file becomes one volume column, headed by the
+sheet name with ` [µL]` appended.
 
-This matches the DevNote(M) six-column merged schema documented in
-`devstudio-author-myst-content` and visible in the cytosol documentation tab-set.
+**One deliberate divergence, and what it tracks:** the totals row is rendered bold
+at the G stage, where `devstudio-author-myst-content` specifies plain text. That rule
+governs the MyST table in DevNote(M); the G stage is a Google Doc table, where bold is
+how a totals row reads as a totals row. `devstudio-devnote-g-to-devnote-m` drops the
+bold on conversion. If it stops doing so, this divergence is the thing to remove —
+not to copy forward.
 
 ## Step 1 — read the build file
 
-Download the `.xlsx` from Drive using `devstudio-read-from-google-drive`. Parse with
-`openpyxl` (data_only=True).
+The build file format and the parse are owned by
+[`references/build-file-format.md`](../../references/build-file-format.md).
+Follow it — including how it says to flag a deviation rather than repair one.
 
-For each sheet, skip sheets named `platemap` or that are empty. Find the header row
-(first cell containing `Component`, case-insensitive). Extract component rows until
-the `Total` row. Record:
-- Component name (col 1)
-- Stock concentration and unit (cols 2–3)
-- Final concentration and unit (cols 4–5)
-- Volume per reaction in µL (last non-null numeric column)
-- Total reaction volume (from the Total row, last non-null numeric column)
+This skill needs, per condition: the condition name, each component's stock and final
+concentration with units, its per-reaction volume, and the total reaction volume.
 
 ## Step 2 — merge conditions
 
@@ -46,11 +46,11 @@ where it is absent — do not silently drop the row.
 Where Stock Conc. or Final Conc. differs across conditions for the same component
 (e.g. DNA prep at 231 / 155 / 115 ng/µL across three conditions), write the values
 slash-separated in the shared column: `231 / 155 / 115`. Use the same slash-separated
-form for Final Conc. where it varies. Flag this in the sidecar `warnings` array —
-slash-separated values signal a variable component.
+form for Final Conc. where it varies. A slash-separated value is how a variable
+component announces itself; report each one to the user when the sidecar is written.
 
-Where Stock Conc. and Final Conc. are both absent for a component (e.g. Water),
-write `—` in both the Stock Conc. and Final Conc. cells, and both unit cells.
+Where a component has no concentration at all (e.g. Water), all four concentration
+cells take the missing-value marker from the schema owner.
 
 ## Step 3 — write CSV sidecar
 

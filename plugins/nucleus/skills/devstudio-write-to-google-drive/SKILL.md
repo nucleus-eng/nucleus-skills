@@ -1,6 +1,8 @@
 ---
 name: devstudio-write-to-google-drive
 description: Create, move, rename, duplicate, or share a Google Drive file for the DevStudio Log/DevNote/Docs pipeline — a new native Doc or Sheet, a raw uploaded file, or a re-parented existing file. Use whenever a DevStudio pipeline skill (Log(G)2DevNote(G), DevNote(G)2DevNote(M), DevNote(M)2Docs(G), Docs(G)2Docs(M)) needs to produce or relocate Drive content. Pairs with devstudio-read-from-google-drive for round-trip verification. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+invokes:
+  - devstudio-read-from-google-drive   # resolving destination folder IDs (Step 1 of that skill)
 ---
 
 # devstudio-write-to-google-drive
@@ -13,9 +15,9 @@ namespace. Supersede this if/when a canonical version exists.
 
 ## Resolving destinations
 
-Use `devstudio-read-from-google-drive`'s Step 1 (resolve a name/URL/ID to a `fileId`) for
-finding the destination folder — that logic isn't repeated here. Never guess a
-`parentId`; resolve it first.
+> **INVOKE** `devstudio-read-from-google-drive` — Step 1: resolve any name/URL/ID to a `fileId` for the destination folder; that logic is not repeated here
+
+Never guess a `parentId`; resolve it first.
 
 ## Decision 1 — native or raw?
 

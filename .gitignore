@@ -13,3 +13,9 @@ DRAFT-ISSUE-*.md
 # tracked. This file is a working document whose name follows REFACTOR-PLAN.md
 # rather than the -STAGING.md convention it documents.
 STAGING-SKILL-PLAN.md
+
+# Staging archive. Spent staging files are moved here, never deleted — the
+# register in tmp/archive/<date>/README.md says what became of each. Ignored
+# because the staging convention above is "uncommitted by design", and an
+# archived file must not become committed by being archived.
+tmp/

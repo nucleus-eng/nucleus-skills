@@ -443,23 +443,30 @@ These override all other instructions:
   `devstudio-verify-dna-constructs`). If no constructs are present in the experiment,
   omit this table — do not produce an empty one.
 
-  **Reaction composition tables** — single-log vs. multi-log:
+  **Reaction composition tables** — sourced from the build file only:
 
-  *Single log folder*: when the source contains N reaction-setup tables sharing
-  identical component rows (same left column) but each representing a different
-  experimental condition, **merge into one table** with conditions as column headers:
-  ```
-  | Component | Stock Concentration | Final Concentration | Condition 1 [µL] | Condition 2 [µL] | ... |
-  ```
-  This matches the template's "Example cytosol reaction set up table". One log =
-  one experiment = one merged composition table. Never produce N separate tables
-  for N conditions from the same log.
+  For each log folder, check for `build-composition.json` (written by
+  `devstudio-build-to-composition`). Composition tables do not live in log
+  files — the build file is the only source.
 
-  *Multiple log folders* (multi-log DevNote): each log's conditions may have different
-  component schemas. In this case keep a separate composition table per log, clearly
-  labeled with the experiment date/name (e.g. `## Experiment 1 — 2025-11-04`). Do not
-  force-merge tables from different experiments — the merged-column format only applies
-  within a single experiment's conditions.
+  *Build sidecar found*: insert the HTML table from `build-composition.html`
+  into the `# Methods` section under the log's experiment heading. Emit a note:
+  ```
+  <!-- Composition table sourced from build file: [source_file from sidecar] -->
+  ```
+
+  *Build sidecar not found*: do not attempt to reconstruct from log prose.
+  Emit a blocking REVIEW flag:
+  ```
+  ⚠️ REVIEW (missing build file): No build-composition.json found for
+  [log folder name]. Composition table cannot be produced. Run
+  devstudio-build-to-composition on the build file for this experiment
+  before proceeding.
+  ```
+
+  In a multi-log DevNote, each log folder has its own sidecar. Each table
+  appears under its log's experiment heading. Do not merge tables from
+  different log folders.
 - **Sequences**: reproduce DNA/RNA sequences in full, inline. Never substitute with a
   pointer to Benchling or any external resource — the DevNote must be self-contained.
 - **Required sections always present**: the following sections must always appear in

@@ -449,9 +449,13 @@ These override all other instructions:
   `devstudio-build-to-composition`). Composition tables do not live in log
   files — the build file is the only source.
 
-  *Build sidecar found*: read the CSV row by row and render as an HTML
-  `<table>` (Totals row in `<strong>`, `—` cells as em-dash) for insertion
-  into the `# Methods` section under the log's experiment heading. Emit a note:
+  *Build sidecar found*: read the CSV row by row and render it as an HTML
+  `<table>` for insertion into the `# Methods` section under the log's
+  experiment heading. How that table presents — including the totals row,
+  where the G stage diverges deliberately from the MyST rule in
+  `devstudio-author-myst-content` — is stated once in
+  `devstudio-build-to-composition`. Follow it there; do not re-decide it here.
+  Emit a note:
   ```
   <!-- Composition table sourced from build file: [filename of .xlsx] -->
   ```

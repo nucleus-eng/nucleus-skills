@@ -287,31 +287,26 @@ relative paths. Remove the comment (not just the REVIEW flag) when submitting.
 ## Step 4 — figure conversion
 
 For each figure in the Results section, read the provenance fields from the structured
-figure line in the G doc. The canonical format emitted by `devstudio-log-to-devnote-g` is:
+figure line in the G doc. **The line format, its variants, and the legacy multi-line
+block are owned by
+[`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)**
+— parse what that reference specifies, including the legacy block, which still appears
+in DevNote(G) Docs authored before the single-line format was standardised.
 
-```
-[`fig:kinetics-exp1`, notebook:`Analysis.ipynb`, platemap:`20251104-NucleusPURE-deGFP-platemap.csv`, data source:`2025-11-04`, caption: (Translation kinetics of Cytosol and PURExpress reactions using two different pOpen-deGFP DNA preps.)]
-```
+Prefer `manifest.json` where it is present; fall back to the inline line when the
+manifest is absent or the Doc was edited after the manifest was generated. That
+fallback is why the second encoding exists — a TA adding a figure during review never
+sees the JSON.
 
-Named fields, backtick-quoted values, caption in parentheses. Parse as:
+How each field routes into MyST:
 
-| Field | Maps to |
+| Provenance field | Maps to |
 |---|---|
-| first field (the label) | `<cell_label>` in `:::{figure} #<cell_label>` |
-| `notebook:` | notebook filename for asset chain check and toc entry |
-| `platemap:` | platemap filename for asset chain check; `none` if absent |
-| `data source:` | date string for asset chain traceability |
-| `caption:` | caption text (strip outer parentheses) |
-
-If the DevNote(G) was authored by hand before this format was standardized, it may
-instead use an older multi-line block:
-```
-Figure N: [caption text]
-Analysis: [notebook filename]
-Data: [URL or filename]
-Platemap: [filename]
-```
-Parse both formats — the structured single-line format is preferred going forward.
+| figure label | `<cell_label>` in `:::{figure} #<cell_label>` |
+| notebook | notebook filename for asset chain check and toc entry |
+| platemap | platemap filename for asset chain check; `none` if absent |
+| raw data | asset chain traceability |
+| caption | caption text (strip outer parentheses) |
 
 Then route to the correct MyST pattern:
 

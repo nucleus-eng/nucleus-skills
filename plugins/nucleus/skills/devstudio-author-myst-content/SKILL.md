@@ -201,6 +201,14 @@ lists each direct constituent as a single line with its working concentration/fr
 that detail belongs on the constituent's own page. Citation-only rows with no numbers
 aren't sufficient — direct constituents' working concentrations must appear.
 
+**The flattening depth is the rule here; the column shape is not.** The nucleus-docs
+module template owns the Docs(M) composition table's columns, and its own comment
+states the same one-level rule, so the two agree on depth. Read the columns from
+`templates/module-template/spec-*.md` in `nucleus-eng/nucleus-docs` rather than
+inferring them from the DevNote schema above. Ruled 2026-09-16, after this corpus
+and the template were found to disagree about whether volume columns survive into
+Docs: they do.
+
 **Mass-to-molar conversions use the functionally active stoichiometry**, not whatever
 oligomeric state a reference database defaults to. When sources disagree, resolve using
 literature on the specific organism/context, preferring solution-phase or functional

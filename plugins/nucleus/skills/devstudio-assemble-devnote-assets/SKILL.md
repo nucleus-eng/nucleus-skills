@@ -17,14 +17,13 @@ the supporting files that make the devnote buildable locally and on curvenote.
 The **DevNote(G) Google Doc** is the single source of truth for what assets belong to
 each experiment. Its structured figure-provenance lines (written by
 `devstudio-log-to-devnote-g`) name the notebook, platemap, and raw data file for every
-figure:
-
-```
-[`fig:kinetics-exp2`, notebook:Analysis.ipynb, platemap:20251107-NucleusPURE-deGFP-MgSweep-platemap.csv, data source:20251107-cytation3-pure-timecourse-gfp-MgSweep-biotek-cdk.txt, caption: (...)]
-```
+figure. **The line format is owned by [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)** — note that values are backtick-quoted;
+an unquoted variant circulated in this file for a while and does not match what
+`devstudio-log-to-devnote-g` writes.
 
 The **manifest.json** (written alongside the G doc by `devstudio-log-to-devnote-g`) is
-the structured, machine-readable cache of those same lines. Use it when present — it is
+the machine-readable encoding of the same record, and is specified in that same
+reference. Use it when present — it is
 faster than re-parsing the G doc. If the G doc was edited after the manifest was
 generated (filenames corrected, a figure added), re-read the G doc and treat it as
 authoritative over the manifest.
@@ -58,15 +57,10 @@ The toc entries are commented out by G→M with inline Colab/Drive URLs; this sk
 downloads each one and uncomments its entry.
 
 **How to find them**: read `curvenote.yml` and extract every commented-out toc line
-containing a URL:
-```yaml
-# - file: experiments/YYYYMMDD-slug/Analysis.ipynb  # https://colab.research.google.com/drive/<ID>
-# - file: experiments/YYYYMMDD-slug/notebook.ipynb  # https://drive.google.com/file/d/<ID>/view
-```
+carrying a URL. **The comment format is owned by [`references/devstudio-curvenote-toc.md`](../../references/devstudio-curvenote-toc.md)**, including why an entry stays
+commented until its download succeeds.
 
-Parse the Drive ID:
-- Colab URL `https://colab.research.google.com/drive/<ID>` → segment after `/drive/`
-- Drive file URL `https://drive.google.com/file/d/<ID>/view` → segment between `/d/` and `/view`
+Parse the Drive ID out of the URL per the extraction table in that reference.
 
 Download each notebook with `download_file_content` using `exportMimeType: application/json`
 (Colab notebooks are Google-native; `application/json` exports the raw `.ipynb` JSON).
@@ -81,23 +75,11 @@ re-executing), the devnote must be self-contained. A reader who downloads it and
 the notebook locally will get file-not-found errors if data files are absent.
 
 **How to find filenames**: read `manifest.json` in the target devnote directory. Each
-figure entry has `platemap` and `data_source` fields naming the files:
+figure entry's `platemap` and `data_source` fields name the files; both are filenames,
+never Drive URLs, and either may be `null` when the asset was not found.
 
-```json
-{
-  "filename": "figures/kinetics.png",
-  "platemap": "20251107-NucleusPURE-deGFP-MgSweep-platemap.csv",
-  "data_source": "20251107-cytation3-pure-timecourse-gfp-MgSweep-biotek-cdk.txt",
-  "source_notebook": "Analysis.ipynb",
-  "section_context": "Experiment 2 — Mg²⁺ sweep"
-}
-```
-
-If `manifest.json` is absent, read the DevNote(G) Google Doc and parse figure-provenance
-lines directly:
-```
-[`fig:label`, notebook:Analysis.ipynb, platemap:filename.csv, data source:filename.txt, caption: (...)]
-```
+If `manifest.json` is absent, read the DevNote(G) Google Doc and parse the inline
+figure-provenance lines instead. Both encodings are specified in [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md).
 
 **How to get Drive IDs**: once you have the filename, search the sf-node Drive folder
 for it by name using `search_files`. Scope the search to the experiment subfolder that

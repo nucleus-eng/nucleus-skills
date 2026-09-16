@@ -90,7 +90,7 @@ A page may also carry an unrelated content caveat (e.g. aHly's "not actively sup
 
 The process template includes all possible dropdown sections as a starting point. **When authoring or reviewing a process page, only keep dropdowns that have real content.** Delete any dropdown whose only content is a placeholder (e.g. `- TODO`).
 
-The template uses `- TODO` as the scaffold placeholder — this is intentional so contributors know which sections need to be filled in. **`check-dropdowns.py` (and CI) will fail if any `- TODO`, `- None`, `- N/A`, or `- TBD` placeholder-only list survives outside `templates/`.** Before opening a PR, run:
+The template uses `- TODO` as the scaffold placeholder — this is intentional so contributors know which sections need to be filled in. **A placeholder-only list that survives into published content fails `check-dropdowns.py` and CI.** The script's docstring states the full placeholder vocabulary and the directories it exempts; read it there rather than trusting a list here. An earlier version of this line enumerated four of the tokens it rejects, which left readers believing an em-dash placeholder was safe — it is not. Before opening a PR, run:
 
 ```bash
 python3 scripts/check-dropdowns.py

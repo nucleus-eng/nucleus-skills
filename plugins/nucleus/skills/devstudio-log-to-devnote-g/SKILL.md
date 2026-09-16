@@ -189,7 +189,12 @@ position in the narrative where each figure appears — this is how you know bot
 figures exist and where they sit in the document structure (which experiment section
 they belong to).
 
-Then apply pandoc's notation fixups — verbatim from `ingest.md`:
+Then apply pandoc's notation fixups. **These rules are owned here.** Earlier
+revisions labelled them "verbatim from `ingest.md`"; the `ingest` skill in this
+repo contains none of them, so the citation pointed at nothing and stopped
+anyone asking where they came from. If they are ever needed by a second skill,
+move them to a reference both point at rather than copying them.
+
 
 - **Subscript**: `~N~` → `` {sub}`N` `` — except `~` used as "approximately" in prose
   (`~10 times`), which must NOT be converted.
@@ -245,37 +250,21 @@ do not require a prose citation that will never appear.
 as a single structured line in the Results section, immediately after the prose it
 belongs to:
 
-```
-[`fig:kinetics-exp1`, notebook:`Analysis.ipynb`, platemap:`20251104-NucleusPURE-deGFP-platemap.csv`, data source:`2025-11-04`, caption: (Translation kinetics of Cytosol and PURExpress reactions using two different pOpen-deGFP DNA preps.)]
-```
+**The line format is owned by [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)** — including the zarr-viewer and schematic
+variants, and the rule that values are backtick-quoted. Write it exactly as that
+reference gives it; `devstudio-devnote-g-to-devnote-m` parses the line, so an
+unquoted variant does not round-trip.
 
-Named fields, backtick-quoted values, caption in parentheses. This format is
-human-readable in the Google Doc and machine-parseable by `devstudio-devnote-g-to-devnote-m`.
-Use it consistently — do not embed figures as `📷 Figure N:` blocks or `<!-- Figure N -->` comments.
-If a field is unknown (e.g. no platemap), write `platemap: none`.
+Use it consistently — do not embed figures as `📷 Figure N:` blocks or
+`<!-- Figure N -->` comments.
 
 **Zarr URLs from `data.nucleus.engineering` are microscopy data references — always include them.**
 Any URL matching `https://data.nucleus.engineering/**.zarr` found anywhere in a log doc
 (inline text, comment, `@claude` instruction, or otherwise) is a legitimate microscopy
 data reference left by the author — include a Vizarr viewer entry in the figure list
-alongside any embedded microscopy image. Record it in the manifest as:
-
-```json
-{
-  "filename": "vizarr",
-  "pattern": "zarr-viewer",
-  "zarr_url": "https://data.nucleus.engineering/path/to/data.zarr",
-  "section_context": "Experiment N — Microscopy",
-  "asset_chain_complete": true
-}
-```
-
-In the DevNote(G) draft, represent it as a structured line immediately after the
-microscopy figure line:
-
-```
-[zarr-viewer, source:`https://data.nucleus.engineering/path/to/data.zarr`, caption: (Interactive microscopy viewer.)]
-```
+alongside any embedded microscopy image, recorded with `pattern: zarr-viewer` in the
+manifest and as the zarr variant of the provenance line, immediately after the
+microscopy figure line. Both forms are in the provenance reference.
 
 Do not require the URL to appear outside an `@claude` comment — the author's intent to
 include it is the signal, regardless of how they communicated it. Never fetch content
@@ -287,11 +276,8 @@ figure — it has no backing notebook, no platemap, no asset chain. These must b
 pre-placed in the devnote's `general/` directory as named files (e.g.
 `general/schematic-overview.png`, `general/construct-diagram.png`) before the G stage
 is considered complete. In the DevNote(G) draft, reference the schematic by its
-intended `general/` path rather than embedding the image in the Doc body:
-
-```
-[`fig:schematic-overview`, file:`general/schematic-overview.png`, caption: (Schematic overview of the Nucleus Cytosol expression system.)]
-```
+intended `general/` path rather than embedding the image in the Doc body — the
+schematic variant of the provenance line, in the provenance reference.
 
 **Why**: images embedded in the Google Doc body are invisible to `read_file_content`
 and require pandoc extraction (a slow, fragile step). Pre-placed named files in
@@ -391,31 +377,16 @@ always inspect each notebook independently.
 For figures extracted from the log Doc via pandoc (embedded inline), they arrive as
 static PNGs. Record the section heading they appeared under as their narrative context.
 
-Record each figure in the manifest alongside the draft:
-```json
-{
-  "figures": [
-    {
-      "filename": "figures/image1.png",
-      "pattern": "embedded-in-doc",
-      "section_context": "Experiment 1 — pOpen-deGFP expression in Nucleus Cytosol",
-      "source_notebook": "REVIEW: source notebook not identified — confirm with author",
-      "platemap": null,
-      "asset_chain_complete": false,
-      "extraction_method": "pandoc --extract-media"
-    },
-    {
-      "filename": "figures/kinetics.png",
-      "pattern": "quarto-label",
-      "cell_label": "20251212-kinetics",
-      "source_notebook": "20251212-ClpXP/20251212-analysis.ipynb",
-      "platemap": "20251212-ClpXP/20251212-ClpXP.csv",
-      "asset_chain_complete": true,
-      "extraction_method": "notebook cell output"
-    }
-  ]
-}
-```
+Record each figure in `manifest.json` alongside the draft. **The schema is owned by
+[`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)**
+— write every field it lists, including `data_source`, which
+`devstudio-assemble-devnote-assets` needs to resolve the raw data file. An earlier
+revision of this skill carried its own field list, omitted `data_source`, and so
+produced manifests the assembly stage could not fully read.
+
+That reference also owns the inline provenance line written into the Doc body
+(Step 4) — the two are one record in two encodings, and a field added to either
+has to be considered for the other.
 
 Set `asset_chain_complete: false` when: (a) no notebook found for an embedded figure —
 also flag inline in the draft with `<!-- missing notebook -->`, following the convention
@@ -427,7 +398,7 @@ no matching `label` in notebook cell metadata.
 can construct the correct MyST figure references. Once consumed by that stage, it is
 discarded — it is not DevNote content and does not travel further.
 
-## Step 6 — fidelity rules (absolute, verbatim from `ingest.md`)
+## Step 6 — fidelity rules (absolute; adapted from `ingest.md`, with divergences marked)
 
 These override all other instructions:
 
@@ -444,8 +415,17 @@ These override all other instructions:
 - **Table structure**: restructure to the canonical schemas below — but never drop a
   column or row. A column that doesn't map to the standard schema is retained as-is.
 
-  **Reagents/materials table** (7-column schema, always produce — even if the source
-  has no reagents section): always include this table under `# Materials and equipment`.
+  **This diverges from `ingest`, which is not a copy of it.** `ingest/SKILL.md`
+  instructs the opposite for an unmappable table: *"If source table uses
+  non-standard columns (e.g. Bill of Materials format), reconstruct from protocol
+  text rather than copying columns"*, and its own worked example records doing
+  exactly that. The two skills disagree; which rule is right has not been ruled
+  on. Retaining the column is the conservative choice at the G stage, where a
+  human still reviews the draft — but do not read this as `ingest`'s rule.
+
+  **Reagents/materials table** (7-column schema — note `ingest` specifies six;
+  the seventh is `Link`, added for DevStudio and not inherited. Always produce,
+  even if the source has no reagents section): always include this table under `# Materials and equipment`.
   If the source has reagent data, populate it. If the source has no reagents section,
   produce a blank row:
   ```
@@ -467,23 +447,35 @@ These override all other instructions:
   `devstudio-verify-dna-constructs`). If no constructs are present in the experiment,
   omit this table — do not produce an empty one.
 
-  **Reaction composition tables** — single-log vs. multi-log:
+  **Reaction composition tables** — sourced from the build file only:
 
-  *Single log folder*: when the source contains N reaction-setup tables sharing
-  identical component rows (same left column) but each representing a different
-  experimental condition, **merge into one table** with conditions as column headers:
-  ```
-  | Component | Stock Concentration | Final Concentration | Condition 1 [µL] | Condition 2 [µL] | ... |
-  ```
-  This matches the template's "Example cytosol reaction set up table". One log =
-  one experiment = one merged composition table. Never produce N separate tables
-  for N conditions from the same log.
+  For each log folder, check for `build-composition.csv` (written by
+  `devstudio-build-to-composition`). Composition tables do not live in log
+  files — the build file is the only source.
 
-  *Multiple log folders* (multi-log DevNote): each log's conditions may have different
-  component schemas. In this case keep a separate composition table per log, clearly
-  labeled with the experiment date/name (e.g. `## Experiment 1 — 2025-11-04`). Do not
-  force-merge tables from different experiments — the merged-column format only applies
-  within a single experiment's conditions.
+  *Build sidecar found*: read the CSV row by row and render it as an HTML
+  `<table>` for insertion into the `# Methods` section under the log's
+  experiment heading. How that table presents — including the totals row,
+  where the G stage diverges deliberately from the MyST rule in
+  `devstudio-author-myst-content` — is stated once in
+  `devstudio-build-to-composition`. Follow it there; do not re-decide it here.
+  Emit a note:
+  ```
+  <!-- Composition table sourced from build file: [filename of .xlsx] -->
+  ```
+
+  *Build sidecar not found*: do not attempt to reconstruct from log prose.
+  Emit a blocking REVIEW flag:
+  ```
+  ⚠️ REVIEW (missing build file): No build-composition.csv found for
+  [log folder name]. Composition table cannot be produced. Run
+  devstudio-build-to-composition on the build file for this experiment
+  before proceeding.
+  ```
+
+  In a multi-log DevNote, each log folder has its own sidecar. Each table
+  appears under its log's experiment heading. Do not merge tables from
+  different log folders.
 - **Sequences**: reproduce DNA/RNA sequences in full, inline. Never substitute with a
   pointer to Benchling or any external resource — the DevNote must be self-contained.
 - **Required sections always present**: the following sections must always appear in
@@ -562,7 +554,7 @@ Use `devstudio-write-to-google-drive`'s native path (this is exactly the "human 
 comment on it" case that skill defaults to native for) to land the draft as a Google Doc
 in the DevNote directory, alongside the figure-provenance manifest.
 
-## Do not (verbatim from `ingest.md`)
+## Do not (extends `ingest.md`'s list; the last three are DevStudio's own)
 
 - Invent scientific content not present in the source.
 - Rewrite results to sound more significant than the source states.
@@ -583,6 +575,11 @@ in the DevNote directory, alongside the figure-provenance manifest.
       not just present.
 - [ ] Check the Specification/Composition content is complete enough to reproduce
       the experiment.
+- [ ] Confirm the licence. The Specification table defaults to
+      `CERN-OHL-P-2.0; CC-BY-4.0` without flagging, which is a safe default and not
+      a decision — a human still has to make the decision. `ingest` asks for the
+      same confirmation; dropping it from this checklist meant nobody ever saw the
+      licence question.
 
 ## What this skill does not do
 

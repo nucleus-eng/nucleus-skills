@@ -24,6 +24,14 @@ Look for `STYLE-GUIDE.md` at the repo root, then a `style-guide/` directory besi
 
 **MyST mechanics are not a style question.** Fence depth, tab-set nesting, cross-reference anchors, `.md`-not-`.html` links, figure placement — use `author-myst-content`.
 
+**Terminology is not in the repo's guide either.** Terms are defined once for every repo, in `plugins/nucleus/references/glossary.md` beside this skill. It gives each term a definition, names the spellings it refuses, and says which of three kinds each refusal is — *collapses* (the refused word denotes something else), *protected* (a literal string tooling matches), *prefer* (house consistency). A repo's `conventions.md` may still carry terminology of its own; the glossary is what the repos share.
+
+**Its Vale rules are generated from it**, into `references/generated/vale/`, by `scripts/generate-vale-rules.py`. A term cannot be defined without becoming enforceable, and no rule exists without a row explaining it. Regenerate rather than editing a rule file by hand.
+
+**Severity is the repo's, and this skill has no view on it.** The generated rules leave `level` unset, so each repo's `.vale.ini` sets it — blocking where the corpus is a specification, advisory where new terms arrive from authors and blocking the source would stop the glossary growing. Read the `.vale.ini` in front of you.
+
+**Only some refusals can be rules.** A refused word that collides with a required heading, a filename or ordinary English is enforced by review, not by Vale — the glossary marks which. Renaming any shared term needs collaborator consent; see its § Renaming.
+
 ## Reviewing a page
 
 In this order. **The first step finds what is *missing*, which a read-through cannot see.** The rest find what is present and wrong.

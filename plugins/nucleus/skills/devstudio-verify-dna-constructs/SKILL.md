@@ -43,6 +43,11 @@ Note: "local" here means a git clone of the *canonical* `nucleus-eng/DNA` repo o
 whatever filesystem this skill is running from — a different thing from the
 current-Drive-folder check in Step 2. Don't conflate the two.
 
+**Step 1 runs once per session, not once per construct.** Locating the repo and checking
+its recency is a property of the run, not of the construct being verified — repeat it per
+construct and a table of eight constructs pays eight subprocess calls to learn the same
+thing.
+
 Check for a git clone of the canonical repo first:
 ```bash
 git -C ~/src/nucleus-eng/DNA log --oneline -5
@@ -71,7 +76,10 @@ currently pointed at, scoped to that folder only**:
 
 - **Canonical repo check** (Step 1's method): does `<construct-name>.gb` exist in
   `nucleus-eng/DNA`?
-- **Current-folder check**:
+- **Current-folder check** — **only when the canonical repo check missed.** A
+  canonical-repo hit takes priority for the identity check regardless of what the folder
+  holds (see the closing note of this step), so the folder search cannot change the
+  outcome and is skipped:
 
   > **INVOKE** `devstudio-read-from-google-drive` — folder-scoped `search_files(parentId=...)` for this experiment/DevNote folder only
 

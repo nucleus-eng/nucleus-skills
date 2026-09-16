@@ -94,6 +94,12 @@ folder-scoped `search_files` plus its role-based identification (Step 2 of that 
 — don't look for `log.docx` by name, identify the one Doc-type file as the log/
 narrative, the platemap by its tabular content, the `.ipynb`s by extension/mimeType.
 
+**Issue the listings for all selected folders together, not one folder at a time.** The
+listings do not depend on each other, and a six-folder set otherwise pays six round-trips
+in series before any drafting starts. One listing per folder also types every file in it
+— see that skill's Step 2 on why no follow-up metadata call is needed for a file that
+arrived this way.
+
 **Then synthesize, don't just concatenate.** When the set spans multiple dated logs
 telling one continuous story (confirmed as the real shape during this pipeline's own
 testing — six days of iterating on the same degradation-tag characterization,
@@ -225,6 +231,12 @@ log narratives. Figures appear in two ways depending on log style:
   `.ipynb` — and treat all figures produced by the notebook as associated with this
   experiment.
 
+**Inspect each notebook once, before presenting the figure list.** The prompt below
+reports each figure's label status, so inspection has to precede it. One download and one
+cell scan per notebook, recording both the `#| label:` tags and the file-loading calls —
+Step 5 classifies figures from that record rather than re-reading the notebook, and the
+data-file rule later in this step reads the loading calls from it.
+
 **Figure selection is always explicit — do not carry all figures forward by default.**
 After inventorying all figures found (embedded in doc + asset folder), present the list
 to the user and ask which to include in the DevNote(G) before writing the draft.
@@ -303,9 +315,10 @@ DevNote narrative. If an instrument parameter is directly stated in the Log Doc 
 inferred from a data file), it may be included. But do not open `.txt` data files and
 copy their headers into the draft.
 
-**Only link data files actually referenced by the analysis notebook.** To determine
-which files are linked, scan the notebook for file-loading calls (`load_platereader_data`,
-`read_csv`, `open()`, etc.) and extract the filename. Only those files get linked in
+**Only link data files actually referenced by the analysis notebook.** The single
+notebook pass above records the file-loading calls (`load_platereader_data`, `read_csv`,
+`open()`, etc.) alongside the `#| label:` tags — take the filenames from that record
+rather than re-opening the notebook. Only those files get linked in
 the DevNote draft. Do not link every file found in the experiment folder — a raw output
 file that the notebook doesn't load adds noise and may mislead reproducers.
 
@@ -339,8 +352,11 @@ default:
 
 > **INVOKE** `devstudio-read-from-google-drive` — download the notebook to scan for `#| label:` tags
 
-Download via `devstudio-read-from-google-drive` and
-scan each code cell's source for lines beginning with `#| label:`. The label value
+Read from the single notebook pass taken in Step 4 — labels and file-loading calls are
+recorded together there. **Download each notebook at most once per run**; a notebook
+already inspected for this run is not re-fetched. Where no pass has been taken yet,
+download via `devstudio-read-from-google-drive` and scan each code cell's source for
+lines beginning with `#| label:`. The label value
 is everything after `#| label: ` on that line. Map each labeled cell to its
 corresponding figure by position (a plot cell's output is the figure produced by that
 cell) or by filename match between `savefig(...)` calls and asset-folder PNG names.

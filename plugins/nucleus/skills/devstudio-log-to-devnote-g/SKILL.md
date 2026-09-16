@@ -189,7 +189,12 @@ position in the narrative where each figure appears — this is how you know bot
 figures exist and where they sit in the document structure (which experiment section
 they belong to).
 
-Then apply pandoc's notation fixups — verbatim from `ingest.md`:
+Then apply pandoc's notation fixups. **These rules are owned here.** Earlier
+revisions labelled them "verbatim from `ingest.md`"; the `ingest` skill in this
+repo contains none of them, so the citation pointed at nothing and stopped
+anyone asking where they came from. If they are ever needed by a second skill,
+move them to a reference both point at rather than copying them.
+
 
 - **Subscript**: `~N~` → `` {sub}`N` `` — except `~` used as "approximately" in prose
   (`~10 times`), which must NOT be converted.
@@ -427,7 +432,7 @@ no matching `label` in notebook cell metadata.
 can construct the correct MyST figure references. Once consumed by that stage, it is
 discarded — it is not DevNote content and does not travel further.
 
-## Step 6 — fidelity rules (absolute, verbatim from `ingest.md`)
+## Step 6 — fidelity rules (absolute; adapted from `ingest.md`, with divergences marked)
 
 These override all other instructions:
 
@@ -444,8 +449,17 @@ These override all other instructions:
 - **Table structure**: restructure to the canonical schemas below — but never drop a
   column or row. A column that doesn't map to the standard schema is retained as-is.
 
-  **Reagents/materials table** (7-column schema, always produce — even if the source
-  has no reagents section): always include this table under `# Materials and equipment`.
+  **This diverges from `ingest`, which is not a copy of it.** `ingest/SKILL.md`
+  instructs the opposite for an unmappable table: *"If source table uses
+  non-standard columns (e.g. Bill of Materials format), reconstruct from protocol
+  text rather than copying columns"*, and its own worked example records doing
+  exactly that. The two skills disagree; which rule is right has not been ruled
+  on. Retaining the column is the conservative choice at the G stage, where a
+  human still reviews the draft — but do not read this as `ingest`'s rule.
+
+  **Reagents/materials table** (7-column schema — note `ingest` specifies six;
+  the seventh is `Link`, added for DevStudio and not inherited. Always produce,
+  even if the source has no reagents section): always include this table under `# Materials and equipment`.
   If the source has reagent data, populate it. If the source has no reagents section,
   produce a blank row:
   ```
@@ -574,7 +588,7 @@ Use `devstudio-write-to-google-drive`'s native path (this is exactly the "human 
 comment on it" case that skill defaults to native for) to land the draft as a Google Doc
 in the DevNote directory, alongside the figure-provenance manifest.
 
-## Do not (verbatim from `ingest.md`)
+## Do not (extends `ingest.md`'s list; the last three are DevStudio's own)
 
 - Invent scientific content not present in the source.
 - Rewrite results to sound more significant than the source states.
@@ -595,6 +609,11 @@ in the DevNote directory, alongside the figure-provenance manifest.
       not just present.
 - [ ] Check the Specification/Composition content is complete enough to reproduce
       the experiment.
+- [ ] Confirm the licence. The Specification table defaults to
+      `CERN-OHL-P-2.0; CC-BY-4.0` without flagging, which is a safe default and not
+      a decision — a human still has to make the decision. `ingest` asks for the
+      same confirmation; dropping it from this checklist meant nobody ever saw the
+      licence question.
 
 ## What this skill does not do
 

@@ -59,245 +59,147 @@ From `nucleus-docs`:
 No images are committed. All figure references use placeholder filenames; the PR
 description names which notebook each figure must be exported from.
 
+## Read the template first
+
+**The page structure is owned by nucleus-docs, not by this skill.** Read the
+template from the clone before writing anything. The clone path is already an
+invocation parameter, so nothing new is needed:
+
+```
+<nucleus-docs path>/templates/module-template/spec-functional.md
+<nucleus-docs path>/templates/module-template/spec-formulation.md
+```
+
+Choose by Category. **`devstudio-devnote-to-docs-g`'s "Template selection"
+section owns that mapping** — the same Category picked the Docs(G) archetype
+upstream, and the two stages must not disagree about which template a module
+belongs to. Read it there; it is deliberately not repeated here.
+
+For a module that could plausibly go either way, the template states the tiebreak
+itself: the split is not where the module sits in the composition tree, it is
+whether the page documents a recipe or a function.
+
+Fill the template's sections in the order it gives them, keeping its comments
+until their instruction has been carried out. **Do not reproduce the template
+here or work from memory of it** — it changes, and a copy in this file is how
+a page ends up shaped like a template that no longer exists. It has already
+split once: `nucleus-docs` replaced the single `spec.md` with these two
+archetypes.
+
 ## MyST conversion rules
 
-Apply these rules when converting Docs(G) HTML to MyST. Do not hard-wrap prose — write
-all paragraph text as a single unbroken line regardless of length (nucleus-docs
-`check-formatting.py` enforces this).
+These are the decisions the template does not make — they are about turning
+Docs(G) HTML into MyST, not about what a module page contains.
+
+Do not hard-wrap prose — write all paragraph text as a single unbroken line
+regardless of length. `check-formatting.py` reports hard-wrapped lines but is
+warning-only, so this will not fail CI; hard-wrapped prose still produces bad
+diffs, so fix it before opening the PR.
 
 **Tag cleanup:** Strip all `<!-- nucleus:docs -->` comment lines from the MyST output.
 These tags are DevNote authoring markers and must not appear in the committed spec.
 
+**Flags carry forward:** every `[PLEASE FILL IN]` and `TODO:` left in the reviewed
+Docs(G) becomes a `TODO:` comment in the MyST, and every one of them is listed in
+the PR description. A flag that survives into the spec without appearing in the PR
+body is a flag nobody will action.
+
 ### Frontmatter
 
-```yaml
----
-title: "Category: Module Name"
-subtitle: "Module Specification"
-status: draft
-thumbnail: schematic.png
-site:
-    hide-toc: true
-    numbered_references: false
----
+Template owns it. Two values this skill supplies:
+
+- `title:` — `"Category: Module Name"`, matching the existing title format in
+  nucleus-docs. Must match Category exactly; it is user-visible and permanent.
+- `status:` — always `draft` for a new page. The template's comment explains when
+  it moves to `unvalidated-published` and `validated-published`, and which status
+  banner pairs with each. Follow that; the banner and the field must agree.
+
+### Composition tables
+
+**Use the template's Cytosol-tab schema.** Ruled 2026-09-16: where the template
+and the devstudio corpus disagreed on this table, nucleus-docs is authoritative.
+The template's columns are Component, Stock Concentration, Final Concentration,
+then **one volume column per condition**:
+
+```
+| Component | Stock Concentration | Final Concentration | − TODO (µL) | + TODO (µL) |
 ```
 
-`status: draft` — always for a new page. Remove the `thumbnail:` line only if no
-schematic image is available at merge time.
+This replaces the three-column "flattened, no volume columns" form this skill
+previously specified. Values that differ across conditions are still written
+*varies* in italic; that was never in dispute.
 
-### Overview
+The one-level-deep rule still holds and is the template's own: list each direct
+constituent with its working concentration, and do not re-expand a constituent
+into its own sub-components — that belongs on the constituent's page.
 
-One paragraph from the Docs(G) Overview section. If the Docs(G) flags a
-cytosol-centric Overview, that text is still a starting point — carry the flag forward
-as a MyST comment so the reviewer sees it:
+**Table label:** follow the template's placeholder, `comp-<something>`. Earlier
+revisions of this skill required `comp-<directory>-cytosol` and attributed that
+requirement to `check-bom-labels.py`. **That attribution was false** —
+`check-bom-labels.py` contains no `comp-` rule at all; it governs `bom-<slug>`
+labels, a different prefix for the lab-ready BOM pipeline. No published spec
+matches the old pattern either. Do not reinstate it.
 
-```myst
-<!-- TODO: Overview is cytosol-centric — rewrite to describe the module's function
-before publishing. Starting text below. -->
-```
+**Inline, not transclusion:** write the table inline; do not use MyST xref
+transclusion (`xref:`) even when the source DevNote has a DOI. Inline is the
+established pattern in nucleus-docs and switching a page to transclusion is a
+human's call, not this skill's.
 
-Then the paragraph text on the next line (no hard wrap).
+**Caption:** name the source DevNote —
+`This composition was evaluated in this [DevNote title](url).`
 
-Add the draft attention banner immediately after the paragraph:
+### DNA tab
 
-```myst
-:::{attention} 🚧 Draft
-This page is a work in progress and not yet ready for use.
-:::
-```
+The template gives the table shape. Two rules it depends on this skill to honour:
 
-For the schematic figure placeholder:
+- `Length (bp)` is an **identity claim**, not a label — it must equal the target
+  file's GenBank `LOCUS` length. If the Docs(G) carried a LOCUS mismatch warning,
+  forward it as a comment on the row rather than dropping it:
+  `<!-- TODO: LOCUS name in .gbk is X, not Y — verify before publishing. -->`
+- Do not add a row because a construct name resembles a filename in
+  `nucleus-eng/DNA`. Name similarity is not identity. `devstudio-verify-dna-constructs`
+  owns this distinction and the Nucleus-equivalent block to use instead.
 
-```myst
-:::{figure} schematic.png
-:name: fig-schematic
-:align: center
-:width: 75%
+### Figures
 
-TODO: One sentence describing what the schematic shows.
-:::
-```
+The template says where each kind of figure goes. What this skill decides:
 
-If no schematic exists yet, omit the `:::{figure}` block entirely and add a comment:
-`<!-- TODO: Add schematic.png before publishing. -->`
+- **Only figures present in the Docs(G) are included.** The Docs(G) already carries
+  the curated set, tagged `<!-- nucleus:docs -->` in the source DevNote(M). Do not
+  re-add figures that were left out upstream.
+- **Filenames are placeholders.** Name the source notebook for each figure in the
+  PR description, not in the spec. Figures are committed as local PNGs beside
+  `spec.md` — never referenced by MyST cross-reference, or the page stops being
+  self-contained at build time.
+- **Captions carry provenance:** append `Data from [DevNote title](url).` using the
+  DOI where published, otherwise the GitHub PR URL from the Docs(G) Source DevNote
+  line.
+- Where a context has only one figure, use a single `:::{figure}` rather than a
+  tab-set of one.
 
-### Reference Composition
+### Sections with nothing to say
 
-Tab-set with three tabs in order: Module Dependencies → DNA → Cytosol.
-Use the five-colon fence for the outer tab-set, four-colon for each tab-item, and
-three-colon for directives inside:
-
-```myst
-:::::{tab-set}
-
-::::{tab-item} Module Dependencies
-<!-- gen:composition-diagram -->
-<!-- /gen:composition-diagram -->
-::::
-
-::::{tab-item} DNA
-:::{table}
-| **Name** | **Length (bp)** | **File** |
-| --- | --- | --- |
-| `pConstruct-Name` | 2812 | [filename.gbk](https://github.com/nucleus-eng/DNA/blob/main/…) |
-:::
-::::
-
-::::{tab-item} Cytosol
-:::{table} TODO: table caption
-:label: comp-<directory>-cytosol
-
-| Component | Stock Concentration | Final Concentration | − condition (µL) | + condition (µL) |
-| --- | --- | --- | --- | --- |
-| TODO | TODO | TODO | TODO | TODO |
-| **Total** | | | **TODO** | **TODO** |
-:::
-::::
-
-:::::
-```
-
-**DNA tab rules:**
-- `name` must be code-formatted with backticks
-- `Length (bp)` is the value fetched from the LOCUS line (from the Docs(G)); if the
-  Docs(G) carried a LOCUS name mismatch warning, forward it as a MyST comment on the
-  row: `<!-- TODO: LOCUS name in .gbk is X, not Y — verify before publishing. -->`
-- File links to nucleus-eng/DNA using the blob URL
-
-**Cytosol tab rules:**
-- Table label must be `comp-<directory>-cytosol` (required by `check-bom-labels.py`)
-- Always write an **inline table** — do not use MyST xref transclusion (`xref:`) even
-  when a DevNote DOI exists. xref for composition tables is not the established pattern
-  (10 of 12 nucleus-docs specs use inline tables); leave that decision to a human reviewer.
-- Column format: **Component | Stock Concentration | Final Concentration in Reaction**
-  (3 columns, value and unit merged into a single string, no volume columns)
-- Values that differ across conditions in the canonical experiment → *varies* (italic)
-- Table caption: `This composition was evaluated in this [DevNote title](url).`
-- If the Docs(G) carries a `[PLEASE FILL IN — confirm canonical composition]` flag,
-  propagate it as a MyST comment above the table
-
-### Expected Behavior
-
-```myst
-# Expected Behavior
-
-## Cytosols
-
-<narrative paragraph(s) from Docs(G) — no hard wrap>
-
-:::::{tab-set}
-
-::::{tab-item} Kinetics
-:::{figure} cytosol-kinetics.png
-<caption from Docs(G) figure placeholder>. Data in [DevNote](https://doi.org/TODO).
-:::
-::::
-
-::::{tab-item} Endpoint
-:::{figure} cytosol-endpoint.png
-<caption>. Data from [DevNote](https://doi.org/TODO).
-:::
-::::
-
-:::::
-
-## Cells
-
-<narrative from Docs(G), if present>
-
-:::::{tab-set}
-
-::::{tab-item} Image 1
-:::{figure} cell-image1.png
-<caption>
-:::
-::::
-
-:::::
-```
-
-**Figure rules:**
-- Only figures that appeared in the Docs(G) are included — the Docs(G) already
-  contains the curated set (tagged `<!-- nucleus:docs -->` in the source DevNote(M)).
-  Do not re-add figures that were omitted from the Docs(G).
-- Filename is a placeholder — write the actual source notebook in the PR description
-  (see PR description below), not in the spec. Figures are committed as local PNGs
-  alongside `spec.md`; they are never referenced via MyST cross-references.
-- Caption must include a provenance link to the source DevNote: append
-  `Data from [DevNote title](url).` using the DOI if published, otherwise the
-  GitHub PR URL from the Docs(G) Source DevNote line.
-- If the Docs(G) only has one figure for a context (not kinetics + endpoint), use a
-  single figure directive instead of a tab-set.
-- Omit the `## Cells` subsection entirely if the Docs(G) has no Cells section.
-
-### Requirements
-
-```myst
-# Requirements
-
-<one sentence per requirement, no stub if empty — omit section if no requirements>
-```
-
-If the Docs(G) has the T7 auto-generated stub, convert it to:
-
-```myst
-Requires pT7 transcription and translation (e.g. [Base Cytosol](../base-cytosol/spec.md)).
-```
-
-Omit `[PLEASE FILL IN]` stubs — the nucleus-docs CLAUDE.md says to omit a section
-rather than stub it empty.
-
-### Implementations
-
-Omit this section if the Docs(G) only has the `[PLEASE FILL IN]` stub. Add it only
-when the reviewer has supplied actual implementation links.
-
-### Materials
-
-If the Docs(G) Materials table has all N/A rows, omit the section and add a comment:
+nucleus-docs' CLAUDE.md prefers an omitted section to an empty stub. Omit any
+template section whose Docs(G) content is only `[PLEASE FILL IN]`, and leave a
+comment naming what is missing so it is recoverable:
 
 ```myst
 <!-- TODO: Materials table — fill from https://docs.nucleus.engineering/guides/materials-reference/ before publishing. -->
 ```
 
-If any rows are populated, include the table with label `critical-materials`:
-
-```myst
-:::{table}
-:label: critical-materials
-
-| Material | Description | Manufacturer | Part # | Storage | Link |
-| --- | --- | --- | --- | --- | --- |
-| TODO | TODO | TODO | TODO | TODO | [link](TODO) |
-:::
-```
-
-### Credits
-
-```myst
-# Credits
-
-Developed by <Name> (<affiliation>).
-```
-
-Link ORCID where available:
-`Developed by [Anton Molina](https://orcid.org/0000-0002-7253-2714) (b.next).`
+The exception is a context that was *tested and not written up* — the template
+asks for that to be stated plainly in an `:::{attention}` block rather than
+omitted, because an absent section reads as "not applicable" when the truth is
+"not yet documented".
 
 ### References
 
-**Do not write a `# References` section.** MyST auto-generates it from DOI links cited
-inline. Ensure every DOI that appeared in the Docs(G) References list is cited inline
-in the body (Overview, Expected Behavior, etc.) using the format:
+**Do not write a `# References` section.** MyST generates it from DOI links cited
+inline. Ensure every DOI in the Docs(G) References list is cited inline in the body
+— narrative (`as shown in [Author et al., YYYY](https://doi.org/…)`) or
+parenthetical (`([Author et al., YYYY](https://doi.org/…))`). A DOI that appears
+only in a list nobody writes will not appear on the page at all.
 
-```myst
-([Author et al., YYYY](https://doi.org/…))
-```
-
-or narrative form:
-
-```myst
-as shown in [Author et al., YYYY](https://doi.org/…)
-```
 
 ## TOC updates
 

@@ -28,15 +28,19 @@ depends on it — **this is a port; keep it in sync with the DevNote**:
 | Column | Holds |
 | --- | --- |
 | `Well` | Alphanumeric location, e.g. `K13` |
-| `Date` | Experiment date, **`yyyy-mm-dd`** — never `mm/dd/yy`. `01/02/25` is a date nobody can recover: month/day or day/month, and a year with no century. |
+| `Date` | Experiment date, **`yyyy-mm-dd`** — never `mm/dd/yy`. `01/02/25` is a date nobody can recover: month/day or day/month, and a year with no century. (The DevNote gives `yyyy-mm-dd` as an example of a machine-readable format; the prohibition is this skill's own tightening.) |
 | `Experiment` | Short description of the run |
-| `Name` | A brief description of the well's contents. **Unique per condition, identical across replicates** — the second is what makes statistics possible. |
+| `Name` | A brief description of the well's contents. **Identical across replicates** — this is what makes statistics possible, and it is the DevNote's own point. *Unique per condition* is this skill's addition, not the DevNote's; it follows from the above but is not stated there. |
 | `Type` | `Sample`, `Standard`, `Blank`, `Control`, `Positive Control`, `Negative Control` |
 
 **Strongly recommended:** `Rxn Volume (uL)`, the total liquid volume. The
-DevNote lists it among the optional columns, so its absence is a warning —
-but without it nothing can check that a well's components account for its
-volume.
+DevNote treats reaction volume as optional, so its absence is a warning — but
+without it nothing can check that a well's components account for its volume.
+
+**The column name comes from the tutorial, not the DevNote.** The DevNote's
+worked example heads it `Volume (µL)`. `Rxn Volume (uL)` is what the CDK reads,
+so it is the right name to write — but do not cite the DevNote for the spelling,
+only for the requirement level.
 
 Two places where the tutorial is the outlier and should not be followed:
 

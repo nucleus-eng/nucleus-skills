@@ -107,18 +107,25 @@ use the first and add a `[PLEASE FILL IN — multiple compositions tagged; confi
 which is canonical]` flag. If no composition table is tagged, include all experiments
 from Methods and add the same flag.
 
-The tagged table is reformatted when writing the Docs(G) (and later the MyST):
-collapse to three columns with value and unit merged into a single string:
+The tagged table is reformatted when writing the Docs(G): merge value and unit into
+a single string, and match the column shape of the nucleus-docs module template's
+composition tab — Component, Stock Concentration, Final Concentration, then **one
+volume column per condition**:
 
-| Component | Stock Concentration | Final Concentration in Reaction |
-|---|---|---|
-| PMix | 15 mg/mL | 1.8 mg/mL |
-| Magnesium acetate | 200 mM | 8 mM |
+| Component | Stock Concentration | Final Concentration | − aTc (µL) | + aTc (µL) |
+|---|---|---|---|---|
+| PMix | 15 mg/mL | 1.8 mg/mL | 4.20 | 4.20 |
+| Magnesium acetate | 200 mM | 8 mM | 1.40 | 1.40 |
+
+**Ruled 2026-09-16.** This skill previously collapsed to three columns and dropped
+all volume columns on the grounds that volumes are DevNote detail. The nucleus-docs
+template keeps them, and where the two disagreed the template was ruled
+authoritative. The template owns this shape — check it rather than this example if
+the two ever diverge again.
 
 Where a stock or final concentration differs across conditions within the tagged
 experiment, write `varies` in italics. Where only one value exists across all
-conditions, write that value. Drop all volume columns — volumes are DevNote detail,
-not docs content.
+conditions, write that value.
 
 Caption: `` This composition was evaluated in this [DevNote title](<url>). `` — substitute the DevNote DOI or GitHub PR URL.
 
@@ -241,9 +248,10 @@ reagent (→ Materials) or has an expression construct (→ its own DNA row).
 **Tab: Cytosol**
 
 From the composition table tagged `<!-- nucleus:docs -->` in `## Methods` — see
-nucleus:docs tagging above. Reformat to three columns (Component | Stock Concentration |
-Final Concentration in Reaction); merge value+unit; write `varies` for values that
-differ across conditions; drop volume columns. Caption links to the DevNote.
+nucleus:docs tagging above. Reformat to the template's composition-tab shape (see
+above — Component, Stock Concentration, Final Concentration, one volume column per
+condition); merge value+unit; write `varies` for values that differ across
+conditions. Caption links to the DevNote.
 
 If no table is tagged, include all experiment compositions verbatim and add a
 `[PLEASE FILL IN — confirm canonical composition]` flag.

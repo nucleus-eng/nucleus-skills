@@ -445,20 +445,21 @@ These override all other instructions:
 
   **Reaction composition tables** — sourced from the build file only:
 
-  For each log folder, check for `build-composition.json` (written by
+  For each log folder, check for `build-composition.csv` (written by
   `devstudio-build-to-composition`). Composition tables do not live in log
   files — the build file is the only source.
 
-  *Build sidecar found*: insert the HTML table from `build-composition.html`
+  *Build sidecar found*: read the CSV row by row and render as an HTML
+  `<table>` (Totals row in `<strong>`, `—` cells as em-dash) for insertion
   into the `# Methods` section under the log's experiment heading. Emit a note:
   ```
-  <!-- Composition table sourced from build file: [source_file from sidecar] -->
+  <!-- Composition table sourced from build file: [filename of .xlsx] -->
   ```
 
   *Build sidecar not found*: do not attempt to reconstruct from log prose.
   Emit a blocking REVIEW flag:
   ```
-  ⚠️ REVIEW (missing build file): No build-composition.json found for
+  ⚠️ REVIEW (missing build file): No build-composition.csv found for
   [log folder name]. Composition table cannot be produced. Run
   devstudio-build-to-composition on the build file for this experiment
   before proceeding.

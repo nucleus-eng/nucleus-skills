@@ -52,91 +52,35 @@ slash-separated values signal a variable component.
 Where Stock Conc. and Final Conc. are both absent for a component (e.g. Water),
 write `—` in both the Stock Conc. and Final Conc. cells, and both unit cells.
 
-## Step 3 — write HTML table
+## Step 3 — write CSV sidecar
 
-Produce an HTML table suitable for embedding in a Google Doc via `create_file` with
-`contentMimeType: text/html`.
+Write `build-composition.csv` in the log folder via `devstudio-write-to-google-drive`
+(raw file). This is what `devstudio-log-to-devnote-g` reads to insert the composition
+table into the DevNote(G).
 
-Rules:
-- Header row: `<th>` cells, plain text.
-- Condition column headers: append ` [µL]` to the sheet name.
-- `—` cells: literal em-dash, not a hyphen.
-- Totals row: `<strong>` wrapping every cell value.
-- No inline styles beyond bold on the Totals row — Google Doc import handles
-  table styling.
+Column order: `Component`, `Stock Conc.`, `Unit`, `Final Conc.`, `Unit`, then one
+column per condition named `[condition name] [µL]`. Last row is `Total [µL]`.
 
-```html
-<table>
-  <tr>
-    <th>Component</th>
-    <th>Stock Conc.</th>
-    <th>Unit</th>
-    <th>Final Conc.</th>
-    <th>Unit</th>
-    <th>Condition A [µL]</th>
-    <th>Condition B [µL]</th>
-    <th>Condition C [µL]</th>
-  </tr>
-  <tr>
-    <td>4X SMix</td><td>4.00</td><td>×</td><td>1</td><td>×</td>
-    <td>8.75</td><td>8.75</td><td>8.75</td>
-  </tr>
-  ...
-  <tr>
-    <td><strong>Total [µL]</strong></td><td></td><td></td><td></td><td></td>
-    <td><strong>35</strong></td><td><strong>35</strong></td><td><strong>35</strong></td>
-  </tr>
-</table>
+Example (tetR build file, 3 conditions):
+
 ```
-
-Write as `build-composition.html` in the log folder via `devstudio-write-to-google-drive`
-(raw file — it is consumed by tools and embedded in the Doc, not edited natively).
-
-## Step 4 — write JSON sidecar
-
-Write `build-composition.json` alongside the HTML. This is what
-`devstudio-log-to-devnote-g` reads to insert the composition table into the DevNote(G)
-without reconstructing from log prose.
-
-Schema:
-
-```json
-{
-  "source_file": "20260914-tetR-module-PLA1-plasmid.xlsx",
-  "conditions": ["Unregulated", "Repressed 500 nM", "Induced 500 nM"],
-  "rxn_volume_ul": 30,
-  "components": [
-    {
-      "name": "Smix",
-      "stock_concentration": "3.33",
-      "stock_unit": "×",
-      "final_concentration": "1",
-      "final_unit": "×",
-      "volumes_ul": {"Unregulated": 9.009, "Repressed 500 nM": 9.009, "Induced 500 nM": 9.009}
-    },
-    {
-      "name": "Water",
-      "stock_concentration": null,
-      "stock_unit": null,
-      "final_concentration": null,
-      "final_unit": null,
-      "volumes_ul": {"Unregulated": 4.747, "Repressed 500 nM": 3.247, "Induced 500 nM": 2.497}
-    }
-  ],
-  "warnings": []
-}
+Component,Stock Conc.,Unit,Final Conc.,Unit,Unregulated [µL],Repressed 500 nM [µL],Induced 500 nM [µL]
+Smix,3.33,×,1,×,9.009,9.009,9.009
+Pmix,15,mg/mL,1.8,mg/mL,3.6,3.6,3.6
+tetR,10000,nM,500,nM,0,1.5,1.5
+Alexa Fluor 647,—,—,—,—,0.1,0.1,0.1
+Water,—,—,—,—,4.747,3.247,2.497
+Total [µL],,,,,30,30,30
 ```
 
 ## Integration with devstudio-log-to-devnote-g
 
-`devstudio-log-to-devnote-g` must check for `build-composition.json` in each log
-folder before reconstructing composition from log prose.
+`devstudio-log-to-devnote-g` checks for `build-composition.csv` in each log folder.
 
-- **Found**: read the sidecar, insert the HTML table (from `build-composition.html`)
-  into the `# Methods` section of the DevNote(G). Do not reconstruct composition from
-  the log.
-- **Not found**: reconstruct from log prose as normal, emit `⚠️ No build file found —
-  composition table reconstructed from log. Verify values against original setup.`
+- **Found**: read the CSV row by row and render as an HTML `<table>` (Totals row in
+  `<strong>`, `—` cells as em-dash) for insertion into the `# Methods` section of
+  the DevNote(G).
+- **Not found**: emit a blocking REVIEW flag — do not reconstruct from log prose.
 
 ## What this skill does not do
 

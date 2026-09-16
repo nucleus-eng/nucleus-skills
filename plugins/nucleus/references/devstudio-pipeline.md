@@ -1,10 +1,14 @@
 # DevStudio pipeline reference
 
 The DevStudio pipeline converts raw experiment log folders in Google Drive into
-published DevNotes on `devnotes.nucleus.engineering`. This file is the single
-source of truth for the stage sequence, the handoff objects between stages, and
-each stage's preconditions and postconditions. Individual skills cross-reference
-this document rather than restating it.
+published DevNotes on `devnotes.nucleus.engineering`. This file owns the pipeline's
+**topology**: the stage sequence, which skill invokes which, each stage's
+preconditions and postconditions, and the human gates between them. Individual
+skills cross-reference this document rather than restating it.
+
+It names the handoff objects that pass between stages but does not define their
+formats — those sit one layer below, in their own references. See "Handoff
+objects" near the end of this file.
 
 ## Stage diagram
 
@@ -150,96 +154,25 @@ devstudio-devnote-g-to-devnote-m
 
 ---
 
-## Handoff object: manifest.json
+## Handoff objects — formats live one layer below
 
-Written by `devstudio-log-to-devnote-g` alongside the DevNote(G) Doc. Read by
-`devstudio-devnote-g-to-devnote-m` to emit correct MyST figure directives, and by
-`devstudio-assemble-devnote-assets` to know which files to download. Discarded after
-assembly — it is not DevNote content.
+This file says which stage produces and consumes each handoff object. It does
+**not** give their formats. A wire format changes far more often than the stage
+sequence does — the figure-provenance line has already gone from a multi-line
+block to a single line — and holding both here meant every format revision
+touched the topology document, while the formats themselves had no owner.
 
-```json
-{
-  "figures": [
-    {
-      "filename": "figures/image1.png",
-      "pattern": "embedded-in-doc | quarto-label | static-png | zarr-viewer",
-      "cell_label": "20251212-kinetics",
-      "source_notebook": "YYYYMMDD-slug/Analysis.ipynb",
-      "platemap": "YYYYMMDD-slug/filename.csv",
-      "data_source": "YYYYMMDD-slug/filename.txt",
-      "zarr_url": "https://data.nucleus.engineering/path/to/data.zarr",
-      "section_context": "Experiment 1 — pOpen-deGFP expression",
-      "asset_chain_complete": true,
-      "extraction_method": "notebook cell output | pandoc --extract-media",
-      "findings": []
-    }
-  ]
-}
-```
+| Object | Produced by | Consumed by | Format |
+| --- | --- | --- | --- |
+| Figure-provenance record — `manifest.json` and its inline Doc line | `devstudio-log-to-devnote-g` | `devstudio-devnote-g-to-devnote-m`, `devstudio-assemble-devnote-assets` | [`devstudio-figure-provenance.md`](devstudio-figure-provenance.md) |
+| `curvenote.yml` toc comments | `devstudio-devnote-g-to-devnote-m` | `devstudio-assemble-devnote-assets` | [`devstudio-curvenote-toc.md`](devstudio-curvenote-toc.md) |
 
-Field rules:
-- `pattern`: one of the four string values above; `quarto-label` requires `cell_label`
-- `cell_label`: whatever string the notebook author put after `#| label:` — not reformatted
-- `platemap`, `data_source`: filenames, not Drive URLs; `null` if not found
-- `zarr_url`: only present when `pattern` is `zarr-viewer`; never fetch content from it during G stage
-- `asset_chain_complete`: `false` when no notebook found for an embedded figure, or when
-  platemap/raw data cannot be confirmed present
-- `findings`: list of non-blocking strings (e.g. duplicate `cell_label` warnings)
+The JSON and the inline line are two encodings of one record and are documented
+together, deliberately: they must agree about what the record contains, and when
+they were documented apart a field ended up in one and not the other.
 
 ---
 
-## Handoff object: figure-provenance line
-
-The human-readable equivalent of `manifest.json`, written by `devstudio-log-to-devnote-g`
-into the DevNote(G) Doc body (immediately after the prose each figure belongs to). Used
-by `devstudio-devnote-g-to-devnote-m` when the manifest is absent or the Doc was edited
-after manifest generation.
-
-**Canonical format** (single line, named fields, backtick-quoted values):
-```
-[`fig:kinetics-exp1`, notebook:`Analysis.ipynb`, platemap:`20251104-NucleusPURE-deGFP-platemap.csv`, data source:`2025-11-04`, caption: (Translation kinetics of Cytosol and PURExpress reactions using two different pOpen-deGFP DNA preps.)]
-```
-
-For zarr microscopy references:
-```
-[zarr-viewer, source:`https://data.nucleus.engineering/path/to/data.zarr`, caption: (Interactive microscopy viewer.)]
-```
-
-For schematics pre-placed in `general/`:
-```
-[`fig:schematic-overview`, file:`general/schematic-overview.png`, caption: (Schematic overview.)]
-```
-
-The G→M skill also handles the older multi-line block format (for DevNote(G)s authored
-before this format was standardized):
-```
-Figure N: [caption text]
-Analysis: [notebook filename]
-Data: [URL or filename]
-Platemap: [filename]
-```
-
----
-
-## Handoff object: curvenote.yml toc comments
-
-Written by `devstudio-devnote-g-to-devnote-m` as commented-out toc entries carrying
-Drive/Colab URLs. Read by `devstudio-assemble-devnote-assets` to discover which notebooks
-to download and where to place them.
-
-```yaml
-toc:
-  - file: main.md
-  # - file: experiments/YYYYMMDD-slug/Analysis.ipynb  # https://colab.research.google.com/drive/<ID>
-  # - file: experiments/YYYYMMDD-slug/notebook.ipynb  # https://drive.google.com/file/d/<ID>/view
-```
-
-After `devstudio-assemble-devnote-assets` downloads a notebook, it uncomments the entry:
-```yaml
-  - file: experiments/YYYYMMDD-slug/Analysis.ipynb
-```
-
----
 
 ## Drive scope constraint
 

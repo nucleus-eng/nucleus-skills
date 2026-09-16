@@ -250,37 +250,21 @@ do not require a prose citation that will never appear.
 as a single structured line in the Results section, immediately after the prose it
 belongs to:
 
-```
-[`fig:kinetics-exp1`, notebook:`Analysis.ipynb`, platemap:`20251104-NucleusPURE-deGFP-platemap.csv`, data source:`2025-11-04`, caption: (Translation kinetics of Cytosol and PURExpress reactions using two different pOpen-deGFP DNA preps.)]
-```
+**The line format is owned by [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)** — including the zarr-viewer and schematic
+variants, and the rule that values are backtick-quoted. Write it exactly as that
+reference gives it; `devstudio-devnote-g-to-devnote-m` parses the line, so an
+unquoted variant does not round-trip.
 
-Named fields, backtick-quoted values, caption in parentheses. This format is
-human-readable in the Google Doc and machine-parseable by `devstudio-devnote-g-to-devnote-m`.
-Use it consistently — do not embed figures as `📷 Figure N:` blocks or `<!-- Figure N -->` comments.
-If a field is unknown (e.g. no platemap), write `platemap: none`.
+Use it consistently — do not embed figures as `📷 Figure N:` blocks or
+`<!-- Figure N -->` comments.
 
 **Zarr URLs from `data.nucleus.engineering` are microscopy data references — always include them.**
 Any URL matching `https://data.nucleus.engineering/**.zarr` found anywhere in a log doc
 (inline text, comment, `@claude` instruction, or otherwise) is a legitimate microscopy
 data reference left by the author — include a Vizarr viewer entry in the figure list
-alongside any embedded microscopy image. Record it in the manifest as:
-
-```json
-{
-  "filename": "vizarr",
-  "pattern": "zarr-viewer",
-  "zarr_url": "https://data.nucleus.engineering/path/to/data.zarr",
-  "section_context": "Experiment N — Microscopy",
-  "asset_chain_complete": true
-}
-```
-
-In the DevNote(G) draft, represent it as a structured line immediately after the
-microscopy figure line:
-
-```
-[zarr-viewer, source:`https://data.nucleus.engineering/path/to/data.zarr`, caption: (Interactive microscopy viewer.)]
-```
+alongside any embedded microscopy image, recorded with `pattern: zarr-viewer` in the
+manifest and as the zarr variant of the provenance line, immediately after the
+microscopy figure line. Both forms are in the provenance reference.
 
 Do not require the URL to appear outside an `@claude` comment — the author's intent to
 include it is the signal, regardless of how they communicated it. Never fetch content
@@ -292,11 +276,8 @@ figure — it has no backing notebook, no platemap, no asset chain. These must b
 pre-placed in the devnote's `general/` directory as named files (e.g.
 `general/schematic-overview.png`, `general/construct-diagram.png`) before the G stage
 is considered complete. In the DevNote(G) draft, reference the schematic by its
-intended `general/` path rather than embedding the image in the Doc body:
-
-```
-[`fig:schematic-overview`, file:`general/schematic-overview.png`, caption: (Schematic overview of the Nucleus Cytosol expression system.)]
-```
+intended `general/` path rather than embedding the image in the Doc body — the
+schematic variant of the provenance line, in the provenance reference.
 
 **Why**: images embedded in the Google Doc body are invisible to `read_file_content`
 and require pandoc extraction (a slow, fragile step). Pre-placed named files in
@@ -396,31 +377,16 @@ always inspect each notebook independently.
 For figures extracted from the log Doc via pandoc (embedded inline), they arrive as
 static PNGs. Record the section heading they appeared under as their narrative context.
 
-Record each figure in the manifest alongside the draft:
-```json
-{
-  "figures": [
-    {
-      "filename": "figures/image1.png",
-      "pattern": "embedded-in-doc",
-      "section_context": "Experiment 1 — pOpen-deGFP expression in Nucleus Cytosol",
-      "source_notebook": "REVIEW: source notebook not identified — confirm with author",
-      "platemap": null,
-      "asset_chain_complete": false,
-      "extraction_method": "pandoc --extract-media"
-    },
-    {
-      "filename": "figures/kinetics.png",
-      "pattern": "quarto-label",
-      "cell_label": "20251212-kinetics",
-      "source_notebook": "20251212-ClpXP/20251212-analysis.ipynb",
-      "platemap": "20251212-ClpXP/20251212-ClpXP.csv",
-      "asset_chain_complete": true,
-      "extraction_method": "notebook cell output"
-    }
-  ]
-}
-```
+Record each figure in `manifest.json` alongside the draft. **The schema is owned by
+[`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)**
+— write every field it lists, including `data_source`, which
+`devstudio-assemble-devnote-assets` needs to resolve the raw data file. An earlier
+revision of this skill carried its own field list, omitted `data_source`, and so
+produced manifests the assembly stage could not fully read.
+
+That reference also owns the inline provenance line written into the Doc body
+(Step 4) — the two are one record in two encodings, and a field added to either
+has to be considered for the other.
 
 Set `asset_chain_complete: false` when: (a) no notebook found for an embedded figure —
 also flag inline in the draft with `<!-- missing notebook -->`, following the convention

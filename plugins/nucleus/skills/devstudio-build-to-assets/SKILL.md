@@ -36,43 +36,18 @@ How many replicates per condition? (1–3)
 
 Wait for the response. Accept 1, 2, or 3.
 
-## Step 3 — generate the platemap
+## Step 3 — hand off to build-platemap
 
-Produce one row per replicate per condition. Required columns first, then one pair of
-columns per component:
+Pass the extracted conditions to `build-platemap`, which owns layout and column
+conventions. Provide:
 
-**Required columns:**
+- **Conditions**: one entry per sheet — name, per-component final concentrations and
+  volumes, total reaction volume
+- **Replicate count**: from Step 2
+- **Derived metadata**: Date (from filename prefix or clock), Experiment (filename slug)
 
-| Column | Value |
-|---|---|
-| `Well` | *(empty — experimenter fills after plating)* |
-| `Date` | from filename date prefix (`YYYYMMDD` → `YYYY-MM-DD`), or system clock |
-| `Experiment` | filename slug (strip date prefix and extension) |
-| `Name` | sheet name |
-| `Type` | `[PLEASE FILL IN]` |
-| `Rxn Volume (uL)` | total volume from build file |
+`build-platemap` handles well IDs, column naming (`[<Component>] (<unit>)`,
+`<Component> Vol (uL)`), the provenance YAML sidecar, and `check-platemap.py`.
 
-**Per-component columns** (one pair per component, in the order they appear in the
-build file):
-
-| Column | Value |
-|---|---|
-| `[<Component>] (<Final unit>)` | Final concentration value |
-| `<Component> Vol (uL)` | Volume per reaction |
-
-Where Final concentration or unit is missing in the build file, write `—` for that
-column value.
-
-Well ID format: `A1` not `A01`.
-
-## Step 4 — write and report
-
-Write the CSV to the log folder in Drive using `devstudio-write-to-google-drive`.
-Filename: `[date]-[experiment-slug]-platemap.csv`.
-
-Report:
-```
-✓ [filename] written — [N] rows ([conditions] × [replicates] replicates)
-  Well column is empty — fill in after plating.
-  Type column is [PLEASE FILL IN] — mark controls before analysis.
-```
+Write the output CSV to the log folder in Drive using `devstudio-write-to-google-drive`
+once `build-platemap` produces it.

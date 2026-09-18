@@ -84,7 +84,7 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 
 | Refused | Use | Kind | Auto | Hits | Note |
 | --- | --- | --- | --- | --- | --- |
-| vesicle | liposome | Collapses | **yes** | 0 | GUV, SUV and LUV are distinct and must not merge |
+| vesicle | GUV, SUV or LUV | Narrows | **yes** | 12 | GUV, SUV and LUV are distinct and must not merge. **Not a collapse** — `liposome` is itself general and has its own row below, so swapping one general word for another taught nothing. The rule flags and does not replace, because only the author knows which class it is. **The 12 are all plural**: `vesicle` singular appears 0 times, which is why the old `Collapses` rule caught none of them |
 | incompatibility | Conflict | Collapses | **yes** | 4 | All four are real — a Conflict is computed from a sensitivity and an imposition, and asserting it directly hides which half is the claim |
 | `DevCell Studio` | DevStudio | Prefer | **yes** | 0 | |
 | `milliQ water` | ultrapure water | Prefer | **yes** | 0 | Vendor-neutral |

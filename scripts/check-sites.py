@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-"""Check every `| File | Line | Current | Proposed |` row in a repo's staging documents
-against that repo's working tree. Reports drift. Applies nothing.
+"""Anchor every `| File | Line | Current | Proposed |` row of a repo's staging documents
+against its working tree. Reports drift. Applies nothing.
+
+Usage:
+    check-sites.py <repo-root> <staging-glob>       e.g.  . 'tmp/STAGED-*.md'
 
   anchored  Current text found at the cited line          -> row is live
   drifted   found, but elsewhere -> line number is stale, text is good
@@ -10,55 +13,29 @@ against that repo's working tree. Reports drift. Applies nothing.
   new       Line reads `new` and the file is absent       -> a proposed file, nothing to anchor
   exists    Line reads `new` and the file is present      -> the proposal is stale, or overwrites
 
-Usage:
-    check-sites.py <repo-root> <staging-glob>
+Exit 0 when at least one row was read and none is gone, drifted, missing or colliding.
+Exit 1 on drift. Exit 2 when it read no files or no rows: a run over nothing is not a
+clean run. Never a CI gate -- the staging location is gitignored and a fresh clone has
+nothing here.
 
-    check-sites.py ~/src/compositional-biology-theory 'tmp/STAGED-*.md'
-    check-sites.py ~/src/bnext/nucleus-eng/nucleus-docs 'tmp/staging/STAGED-*.md'
-
-The glob is relative to the repo root and is REQUIRED. Each repo declares its own
-staging location in a README (the `staging` skill says where), and a default here
-would be a second declaration that drifts from the first. Two copies of this tool
-existed for four days, 2026-09-17 to 2026-09-21, and differed in exactly that
-constant.
-
-An empty probe matches every window, so without the malformed guard a row whose Current
-cell is only markup reports `anchored` against any line number, including one that does
-not exist. Found 2026-09-09 by the nucleus-docs session. A probe of one or two characters
-is still weak for the same reason; it is reported, not caught.
-
-Two ways to get a clean run that means nothing, both found in practice:
-
-  * **The header must read exactly `| File | Line | Current | Proposed |`.** Any other column
-    names and the table is skipped in silence, which reads like no drift.
-  * **Keep the `Current` cell to the quoted text alone.** Commentary beside the quote reports
-    a false GONE, and a checker that cries wolf gets ignored.
-
-Exit 0 when at least one row was read and none is gone or drifted. Exit 1 on drift.
-**Exit 2 when it read no staging files or no rows** -- a run over nothing is not a clean
-run. A message a human reads is not a status a pipeline honours. Found 2026-09-19 by the
-nucleus-docs session, which had the same shape in its own check-pin-freshness.py.
-
-This is a working-copy check, never a CI gate: the staging location is gitignored, so a
-fresh clone has nothing here and a green result would verify nothing.
-
-Merged 2026-09-21 from `compositional-biology-theory` `scripts/check-sites.py` (written
-2026-09-14) and `nucleus-docs` `scripts/check-sites.py` (adapted from it 2026-09-17).
+The glob is required. Each repo declares its staging location in a README, and a default
+here would be a second declaration that drifts. The header must read exactly
+`| File | Line | Current | Proposed |`; keep the Current cell to the quoted text alone.
+History: this header carried the failures behind each rule verbatim until 2026-09-21; read
+it at nucleus-skills `af17385`, and the rulings in compositional-biology-theory `rulings.md`
+at `e5f3316`.
 """
 import re, os, sys, glob, collections
 
-if len(sys.argv) != 3:
-    print(__doc__.split("Usage:")[1].split("The glob")[0].rstrip())
-    print("NOTHING CHECKED: need <repo-root> and <staging-glob>")
-    sys.exit(2)
-
+if len(sys.argv) != 3 or not os.path.isdir(sys.argv[1]):
+    print("NOTHING CHECKED: usage  check-sites.py <repo-root> <staging-glob>"); sys.exit(2)
 root, pattern = sys.argv[1], sys.argv[2]
-if not os.path.isdir(root):
-    print(f"NOTHING CHECKED: {root} is not a directory"); sys.exit(2)
 os.chdir(root)
 
 HDR  = re.compile(r'^\|\s*File\s*\|\s*Line\s*\|\s*Current\s*\|\s*Proposed\s*\|', re.I)
+# Table cells escape pipes; this normaliser also unescapes them, so it is not the shared one.
 NORM = lambda t: re.sub(r'\s+', ' ', re.sub(r'[>*`_]', '', t.replace('\\|', '|'))).strip()
+SITE_EXT = ('.md', '.py', '.sh', '.yml', '.yaml', '.toml', '.ini')
 
 def unquote(s):
     s = s.strip()
@@ -84,12 +61,8 @@ for sf in files:
         c = [x.strip() for x in re.split(r'(?<!\\)\|', raw.strip().strip('|'))]
         if len(c) < 4: continue
         path = re.sub(r'^\[|\]\(.*$', '', unquote(c[0])).strip('`* ')
-        if not path.endswith(('.md', '.py', '.sh', '.yml', '.yaml', '.toml', '.ini')): continue
+        if not path.endswith(SITE_EXT): continue
         m, cur = re.match(r'^\**:?(\d+)', c[1].strip()), unquote(c[2])
-        # A row proposing a NEW file writes `new` in the Line cell. It anchors to nothing and
-        # is not a miss -- unless the file already exists, in which case the proposal is stale
-        # or would overwrite something, and that is reported. Added 2026-09-21 when four such
-        # rows in a nucleus-skills staging document reported NO FILE and failed the run.
         if c[1].strip().lower() == 'new':
             if os.path.exists(path):
                 out.append(f'  EXISTS    {path}  (proposed as new, but the file is there)'); tally['exists'] += 1
@@ -101,7 +74,7 @@ for sf in files:
         if not m or not cur or cur in ('—', '-'):
             tally['skip'] += 1; continue
         n, lines = int(m.group(1)), open(path, encoding='utf-8').read().split('\n')
-        probe = NORM(cur)[:60]
+        probe = NORM(cur)[:60]           # an empty probe matches every window, hence `malformed`
         win   = lambda a, b: NORM(' '.join(lines[max(0, a):b]))
         if not probe:
             out.append(f'  MALFORMED {path}:{n}  "{cur[:44]}"'); tally['malformed'] += 1; continue
@@ -124,7 +97,6 @@ if rows == 0:
     print('and the header must match exactly -- any other column names and the table is')
     print('skipped in silence, which reads like no drift.')
     sys.exit(2)
-
 print(f'read {len(files)} staging file(s), {rows} row(s): ' + ' | '.join(
     f'{k} {tally[k]}' for k in
     ('anchored', 'drifted', 'gone', 'described', 'malformed', 'new', 'exists', 'nofile', 'skip') if tally[k]))

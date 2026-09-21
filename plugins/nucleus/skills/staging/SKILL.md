@@ -281,14 +281,10 @@ subtly wrong; a false clean ends the question where no grep at all would not.
 `scripts/check-tags.py` in this repo is that extractor written once, and it
 refuses to report a clean run over zero files or zero candidate strings.
 
-**Four more checkers live beside it in `scripts/`, and each takes the repo to check as its
-first argument** — because each ran as a copy in one repo, and two copies of one of them
-drifted in four days. `check-sites.py <root> <glob>` anchors every edit-site row against the
-working tree. `check-citations.py <root> [--repos=…]` checks that a cross-repo citation carries
-a hash, or the escape. `check-pins.py <root>` checks that a pin resolves in the tree it names.
-`check-pin-freshness.py <root> <glob>` checks that a quotation pinned in a staging document is
-still true at the tip. Every one exits 2 when it read nothing, and none is a CI gate: the
-staging location is gitignored, and a fresh clone has nothing for them to read.
+**Four more checkers live beside it in `scripts/`, each taking the repo to check as its first
+argument**, and `README.md` § Checks lists them. Every one exits 2 when it read nothing, and
+none is a CI gate: the staging location is gitignored, and a fresh clone has nothing for them
+to read.
 
 ## What this skill does not hold
 

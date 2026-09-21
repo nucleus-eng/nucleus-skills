@@ -180,7 +180,7 @@ that no two skills claim the same name, that every skill has a
 `skills/` directory survives at the repo root.
 
 **`scripts/` also holds checkers for the other repos**, not for this one: `check-tags.py`,
-`check-sites.py`, `check-citations.py`, `check-pins.py` and `check-pin-freshness.py`. Each takes
+`check-sites.py`, `check-citations.py`, `check-pins.py` and `check-pin-freshness.py`, sharing `staging_common.py`. Each takes
 the repo to check as its first argument. The staging skill § Finding the tags says what each
 does; `check-skills.yml` does not run them.
 

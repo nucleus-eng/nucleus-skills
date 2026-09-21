@@ -184,6 +184,73 @@ none of thirty-seven pins. `git ls-remote` and `git branch -r --contains`
 answer whether a reader can get to it. **Verifying the hash is not verifying
 the pin.**
 
+## Open questions go at the top
+
+**Ahead of the drafted edits, each with room for a ruling written inline beside
+it.** A reviewer reads a staging document once, top to bottom. With the
+questions last they read every proposed edit before reaching the one thing the
+drafter needs from them, and a long document buries the ask.
+
+The block is a running ledger of decided against open, updated as rulings
+arrive. **A ruling written beside its question is the record** — not a chat
+reply, and not a second document.
+
+## A staging document is `.md`, and so is every question in it
+
+**Never a `.yml` or other data file.** A question in a data file is invisible
+to the review loop: the reviewer opens documents, not sources, and a data file
+carries no place for an answer to go. A genuine open question written as a
+`yaml` key sat unread because of this.
+
+The same holds in reverse — a data file may *record* that something is open,
+but the question itself lives in the document.
+
+## Retire by moving, never by deleting
+
+**A spent staging document goes to `tmp/archive/<date>-<kind>/` with a README
+row saying what became of it**, where `<kind>` names why it left: applied,
+superseded, parked, absorbed. The kinds are a small closed set; inventing a
+fifth to suit the document being moved defeats the point of having them.
+
+**Move on evidence, never on the document's own header.** A header saying
+"applied" is a claim by its author, and the claim has been wrong. Check the
+commits.
+
+**Carry the residue first.** A document that is finished except for three open
+items is not finished; move those into a live successor before the file goes,
+or they leave the queue silently. **A file whose purpose is to stop items being
+lost cannot be archived while it still holds unanswered items** — archiving it
+performs the failure it documents.
+
+## A document meant for a person says whether it reached them
+
+**Delivery state goes in the document's own `#` heading** — `SENT`, `UNSENT`,
+`POSTED` or `FILED` — with the date, the recipient, and a link where there is
+one.
+
+The mark is visible without opening the file, and once it is expected, **its
+absence means something.** Questions that are finished, correct and undelivered
+look exactly like questions that are done.
+
+## Finding the tags
+
+**Grep raw, case-insensitive, and name the directory:**
+
+```bash
+grep -rn -i "@claude" <path>
+```
+
+**`<path>` is load-bearing and `.` is not a substitute.** A ripgrep wrapper
+honours `.gitignore` when it finds a repo root at or above where it starts, so
+searching `.` from a repo root silently skips ignored directories — which is
+where staging documents live. It searches an ignored path when handed that path
+directly. Measured once at `0` hits against `44`.
+
+**Never read a clean grep as "no tags" without checking the command.** Four
+recorded failures are an agent hand-rolling an extractor and getting the scope
+subtly wrong; a false clean ends the question where no grep at all would not.
+`scripts/check-tags.py` in this repo is that extractor written once, and it
+refuses to report a clean run over zero files or zero candidate strings.
 
 ## What this skill does not hold
 

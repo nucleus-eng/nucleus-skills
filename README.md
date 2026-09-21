@@ -179,6 +179,11 @@ that no two skills claim the same name, that every skill has a
 `description:`, that relative links in `plugins/` resolve, and that no stray
 `skills/` directory survives at the repo root.
 
+**`scripts/` also holds checkers for the other repos**, not for this one: `check-tags.py`,
+`check-sites.py`, `check-citations.py`, `check-pins.py` and `check-pin-freshness.py`. Each takes
+the repo to check as its first argument. The staging skill § Finding the tags says what each
+does; `check-skills.yml` does not run them.
+
 It is a required status check on `main`, with "require branches to be up to
 date" on. That second setting matters: a PR can pass on its own branch and
 still break `main` if `main` moved under it, which is exactly how two skills

@@ -7,12 +7,17 @@ description: Propose edits to tracked files as a staging document rather than ed
 
 **Do not edit a tracked file directly when the edit changes what that file
 claims.** Write the proposal to a staging document, resolve it there, and
-apply only when the developer says to.
+apply only when the Editor says to.
 
 This skill is the single definition of that control. It was reconciled from
 two copies that had drifted and that gave opposite instructions on scope.
 Each repository keeps a short block naming its own working directory,
 reviewer and local exceptions, and points here for the rule.
+
+**The Editor is whatever reviewing body is leaving comments on the staging document** —
+humans, agents, or both. Where provenance needs a name for who decided something, record who
+the Editor was; otherwise *the Editor* is the right word and no name is owed. A ruling names
+the person who gave it; a role names who may give one.
 
 ## When it applies
 
@@ -33,7 +38,7 @@ other is the failure this exists to prevent — **and that has happened.**
 Not everything is a claim. These are not staged:
 
 - Edits inside a gitignored working directory.
-- A mechanical fix the developer named — a typo, a broken link, a renamed
+- A mechanical fix the Editor named — a typo, a broken link, a renamed
   path — where nothing the file asserts changes.
 - A new file that overturns nothing and was asked for directly.
 
@@ -84,7 +89,7 @@ Four parts:
    hides whether the claim had a rationale behind it, and **a rationale is
    what makes a false claim look checked.**
 3. **The edit sites**, as a table of file, line, current text, proposed text.
-4. **What it leaves open**, including questions for the developer.
+4. **What it leaves open**, worded as explicit questions to the Editor. A statement of what is unresolved reads as a status report and gets skimmed; a question gets answered.
 
 ## Why the ceremony is worth it
 
@@ -108,7 +113,7 @@ Settling what is true decides what the staging document should *say*. It does
 not authorise touching a file.
 
 The same holds for answers to questions raised inside the document — **those
-close items in the proposal, not in the review.** A developer answering
+close items in the proposal, not in the review.** An Editor answering
 question 3 has not approved questions 1 and 2.
 
 ## The commit is the fold-in
@@ -184,6 +189,18 @@ none of thirty-seven pins. `git ls-remote` and `git branch -r --contains`
 answer whether a reader can get to it. **Verifying the hash is not verifying
 the pin.**
 
+## A staging document is signed
+
+**By the session that wrote it, and so is an append to someone else's.** On 2026-09-13 an
+unsigned append headed with a repo name and not an author reached the wrong one of three
+sessions working that repo. **A heading precise enough to look sufficient is the authorship
+version of a pin that names the branch and not the hash.**
+
+**A signature carries the address, a durable id, and the date**, because no one field
+survives. The address is what a reader replies to and it drifts: one session was reported
+under two short names on consecutive days. The transcript id is durable and reaches nobody.
+The date says which of the two to trust.
+
 ## Open questions go at the top
 
 **Ahead of the drafted edits, each with room for a ruling written inline beside
@@ -222,6 +239,18 @@ or they leave the queue silently. **A file whose purpose is to stop items being
 lost cannot be archived while it still holds unanswered items** — archiving it
 performs the failure it documents.
 
+## Compact a document that has outlived its decision tree
+
+**A document that absorbs carried items accretes**: what closed stays in, and a reader
+cannot tell a live question from a settled one. Rewrite it down to what is still fresh — the
+open questions, the findings that survive, the edit sites — and move the full version to the
+archive rather than deleting it. **Say what was dropped and why**, so the compaction is
+auditable rather than trusted.
+
+**Compact after a ruling burst, not at a length.** Fold the rulings in, then sweep what they
+closed. Past roughly two thousand words, check whether the length is closed items or fresh
+ones.
+
 ## A document meant for a person says whether it reached them
 
 **Delivery state goes in the document's own `#` heading** — `SENT`, `UNSENT`,
@@ -251,6 +280,15 @@ recorded failures are an agent hand-rolling an extractor and getting the scope
 subtly wrong; a false clean ends the question where no grep at all would not.
 `scripts/check-tags.py` in this repo is that extractor written once, and it
 refuses to report a clean run over zero files or zero candidate strings.
+
+**Four more checkers live beside it in `scripts/`, and each takes the repo to check as its
+first argument** — because each ran as a copy in one repo, and two copies of one of them
+drifted in four days. `check-sites.py <root> <glob>` anchors every edit-site row against the
+working tree. `check-citations.py <root> [--repos=…]` checks that a cross-repo citation carries
+a hash, or the escape. `check-pins.py <root>` checks that a pin resolves in the tree it names.
+`check-pin-freshness.py <root> <glob>` checks that a quotation pinned in a staging document is
+still true at the tip. Every one exits 2 when it read nothing, and none is a CI gate: the
+staging location is gitignored, and a fresh clone has nothing for them to read.
 
 ## What this skill does not hold
 

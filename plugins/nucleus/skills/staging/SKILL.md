@@ -152,12 +152,37 @@ document that overturns a claim must quote it, so a quotation reaches across
 where an edit site does not — which is exactly why the quotation needs the pin
 and the edit site does not.
 
+**The hash must be reachable by the reader, not only by you.** A commit that
+exists only in an unpushed local tree satisfies every part of this rule and
+still cannot be checked by anyone else — push it, or say so in the pin. A
+local resolver answers *can I resolve this*, which is a different question
+from *can anyone*.
+
+**A hash taken on a tree behind the remote is a hash waiting to be rewritten.**
+A rebase changes it, the old one stops resolving, and nothing distinguishes a
+pin that was never pushed from one that was rewritten under you. **Take the pin
+after you rebase, not before.**
+
 Verify a cross-repo hash before writing it. A dead hash has shipped three
 times, and the third was inside the staging document proposing this rule:
 
 ```bash
-gh api repos/<owner>/<repo>/commits/<sha> --jq .sha
+gh api repos/<owner>/<repo>/commits/<sha> --jq .sha || echo "DEAD: <sha>"
 ```
+
+**Branch on the exit code, never on whether it printed something.** On a dead
+hash `gh api` exits non-zero **and writes its error to stdout**, so a
+`[ -n "$output" ]` test passes on exactly the failure it was added to catch. A
+sweep of 37 pins reported 37 resolving for this reason, and it was caught by
+noticing that one of the "resolving" hashes belonged to the repo running the
+sweep.
+
+**Existence is not reachability, and the command above answers the first.**
+`gh api .../commits/<sha>` resolves a commit that sits on no branch at all,
+because objects survive branch deletion — which is why sixteen deletions broke
+none of thirty-seven pins. `git ls-remote` and `git branch -r --contains`
+answer whether a reader can get to it. **Verifying the hash is not verifying
+the pin.**
 
 ## Open questions go at the top
 

@@ -237,8 +237,11 @@ composition is already written in the docs, generate the diagram from it.
 **Prefer a `spec.yml` beside the page where one exists.** The bullet list
 below carries no order, no operator, no process and no compartment, so a diagram
 derived from it can only show *what* composes and never *how* (issue #248). A
-module with a composition source should be rendered from it — in `nucleus-docs`,
-by `scripts/render-composition.py`. Harmonising the two generators is issue #250.
+module with a composition source must be rendered from it. In `nucleus-docs`,
+that is `scripts/render-composition.py`, and it is the only generator to run
+there. This skill's own `scripts/gen-module-diagrams.py` writes the same markers
+from the bullet list, so it reverts those pages to parts lists. Issue #250 closed
+on 2026-09-21 by naming one generator rather than merging the two.
 
 Where there is no source yet, most Nucleus module pages carry a
 `# Constituent Modules` section, which is a machine-readable dependency graph:

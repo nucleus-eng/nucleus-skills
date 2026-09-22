@@ -2,6 +2,18 @@
 """
 gen-module-diagrams.py — generate a composition diagram for each Module spec.
 
+SUPERSEDED. Do not run this against nucleus-docs.
+
+The live generator is `scripts/render-composition.py` in nucleus-docs. It reads
+`spec.yml`, which carries order, operator, process and compartment, and it
+writes the same `gen:composition-diagram` markers this script writes. Running
+this script with `--write` replaces every diagram it finds with a parts list
+drawn from the `# Constituent Modules` bullets, and the bullets still parse, so
+nothing objects.
+
+Keep this script for a repository that has no `spec.yml` at all. Issue #250
+closed on 2026-09-21: one generator, and it is the other one.
+
 Implements issue #209: "By tracing the Composition path of a module (i.e., Base
 Cell from composition of Base Cytosol and Base Membrane), we can construct an
 integration requirements diagram for each module."

@@ -8,8 +8,12 @@ extends: existence
 message: "Name the class — GUV, SUV or LUV — rather than '%s' (Nucleus glossary, narrows)."
 ignorecase: true
 exceptions:
+  - 'Multilamellar Vesicle'
+  - 'Multilamellar Vesicles'
   - 'Multilamellar vesicle'
   - 'Multilamellar vesicles'
+  - 'Unilamellar Vesicle'
+  - 'Unilamellar Vesicles'
   - 'Unilamellar vesicle'
   - 'Unilamellar vesicles'
   - 'multilamellar vesicle'

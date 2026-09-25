@@ -100,7 +100,11 @@ instead of asking when one is supplied.
   master mix with overage, so a `Rxn Volume (uL)` of 10 with a 35 µL recipe
   means 3 × 10 µL plus 5 µL spare — the recipe's total is not the well
   volume.
-- In-well concentrations, and artifact IDs for anything with a stock.
+- In-well concentrations, and artifact IDs for anything with a stock. For each
+  concentration the source states, establish whether it is the stock or the
+  in-well value before you record it. A source that says only
+  "DNA conc 10ng/µL" has not said which, and the two differ by the dilution
+  factor.
 - Replicate count, controls, standards, total reaction volume.
 
 ## 2. Lay out the wells
@@ -134,6 +138,12 @@ actually in a well.
 | `<artifact> ID` | Cross-reference to a specific stock in inventory |
 | `IS <artifact> ...` / `OS <artifact> ...` | Same patterns above, prefixed to a compartment either side of a membrane |
 | `MB <artifact> (mol%)` | Composition of the membrane itself — see `references/assay-and-specimen.md` |
+
+**A concentration column holds the in-well value, so a source that does not
+say which value it gave is a gap rather than a number.** Record the reading
+you took, say so in the report, and mark the column `assumed` in the
+provenance sidecar. A stock read as an in-well value, or the reverse, is wrong
+by the dilution factor, and no checker and no analysis can detect it.
 
 A plate with no `MB`- or `OS`-prefixed column anywhere is cytosol-only —
 one compartment, one build-conditions table downstream. A plate with them
@@ -211,6 +221,9 @@ These are **warnings, not errors** — the analysis should still run:
 
 - A concentration column with no value, or a placeholder like `XX conc.`,
   `TBD`, `TODO`, `?`.
+- A concentration whose basis the source does not state — stock or in-well.
+  This one is only catchable while reading the source, because the value looks
+  complete once it is in a cell.
 - A condition with no assembly recorded at all.
 - Component volumes that do not sum to `Rxn Volume (uL)`.
 - A blank artifact ID where a stock was clearly used.

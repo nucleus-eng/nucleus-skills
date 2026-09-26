@@ -45,13 +45,29 @@ def tracked_md(root):
     return sorted(p for p in sh("git", "ls-files", "*.md", cwd=root)[1].split() if p)
 
 def in_repo(root, name):
-    """A citation naming a file this repo holds is not cross-repo."""
+    """A citation naming a file this repo holds is not cross-repo. EXACT PATHS ONLY.
+
+    A basename fallback lived here until 2026-09-25 and it swallowed 24 of 62 cross-repo
+    citations in compositional-biology-theory: `analyte-atc/spec.md` reduced to `spec.md`,
+    which five local files under reference/ answer to. So the guard was blindest exactly
+    where it was built to see -- a nucleus-docs module page is what a claim here cites,
+    and every one of those pages is called spec.md. It reported "checked 38" and the
+    number was true of what it looked at. Jon's ruling 2026-09-25: the fallback goes.
+
+    A bare filename with no directory still resolves, because that form is common and
+    unambiguous here -- but against the TRACKED FILE LIST, not against any path that
+    happens to end in that name.
+    """
     for cand in (name, name + ".md"):
         if os.path.exists(os.path.join(root, cand)):
             return True
-        if glob.glob(os.path.join(root, "**", os.path.basename(cand)), recursive=True):
-            return True
-    return False
+    if "/" in name:
+        return False
+    if root not in _BASENAMES:
+        _BASENAMES[root] = {os.path.basename(p) for p in tracked_md(root)}
+    return name in _BASENAMES[root] or name + ".md" in _BASENAMES[root]
+
+_BASENAMES = {}
 
 _LOCATED = {}
 def locate(name, root, override=None):

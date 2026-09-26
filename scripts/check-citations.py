@@ -67,7 +67,7 @@ def main(argv):
     for b in bad:
         print("UNPINNED CITATION", b)
     print(f"checked {checked} cross-repo citations, {escaped} on a declared escape, "
-          f"{skipped} in-repo citations skipped")
+          f"{skipped} in-repo citations skipped (exact path or tracked filename)")
     return 1 if bad else 0
 
 if __name__ == "__main__":

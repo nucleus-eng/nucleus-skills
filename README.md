@@ -70,6 +70,7 @@ read when the skill is actually invoked.
 | `extract-conditions` | ELN page, protocol or prose → condition table (no wells) |
 | `build-platemap` | Condition table or description → CDK-compatible platemap CSV/TSV |
 | `staging` | Propose edits to tracked files as a document, not a direct edit |
+| `author-spec-yml` | Write the machine-readable composition source beside a Module page |
 
 ## Use it from another repo
 

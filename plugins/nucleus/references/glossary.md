@@ -46,6 +46,15 @@ Composition defined from it.
 Function is one a Module implements. Both are Processes, so `processes/colorimetric-readout/`
 holding one of each is the layout being right rather than an exception.
 
+**Context is two-part, and `T08` is one half.** The operating conditions a claim holds in are
+ordered — one Context refines another, and a claim can be carried from a wider one to a
+narrower. Context also has a **coordinate**: where the thing sits against a compartment
+boundary, written as codimension and taking values `interior`, `boundary`, `compartment` and
+`exterior`. **The coordinate orders nothing**, so it is not a second poset and it cannot be
+refined. `nucleus-eng/compositional-biology-theory` carries that half as its own `T35` and
+points here for this one. **Neither row is in error and neither replaces the other** — Jon's
+ruling, 2026-09-18. A Function claim needs both: which conditions, and where.
+
 ### Composition
 
 | ID | Term | Definition | Where it appears |
@@ -84,7 +93,7 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 
 | Refused | Use | Kind | Auto | Hits | Note |
 | --- | --- | --- | --- | --- | --- |
-| vesicle | liposome | Collapses | **yes** | 0 | GUV, SUV and LUV are distinct and must not merge |
+| vesicle | GUV, SUV or LUV | Narrows | **yes** | 12 | GUV, SUV and LUV are distinct and must not merge. **Not a collapse** — `liposome` is itself general and has its own row below, so swapping one general word for another taught nothing. The rule flags and does not replace, because only the author knows which class it is. **The 12 are all plural**: `vesicle` singular appears 0 times, which is why the old `Collapses` rule caught none of them |
 | incompatibility | Conflict | Collapses | **yes** | 4 | All four are real — a Conflict is computed from a sensitivity and an imposition, and asserting it directly hides which half is the claim |
 | `DevCell Studio` | DevStudio | Prefer | **yes** | 0 | |
 | `milliQ water` | ultrapure water | Prefer | **yes** | 0 | Vendor-neutral |

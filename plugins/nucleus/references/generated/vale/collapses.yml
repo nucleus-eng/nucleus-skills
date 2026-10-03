@@ -9,4 +9,3 @@ message: "Use '%s' instead of '%s' (Nucleus glossary, collapses)."
 ignorecase: true
 swap:
   'incompatibility': 'Conflict'
-  'vesicle': 'liposome'

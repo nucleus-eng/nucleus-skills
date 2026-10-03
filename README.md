@@ -70,6 +70,7 @@ read when the skill is actually invoked.
 | `extract-conditions` | ELN page, protocol or prose → condition table (no wells) |
 | `build-platemap` | Condition table or description → CDK-compatible platemap CSV/TSV |
 | `staging` | Propose edits to tracked files as a document, not a direct edit |
+| `author-spec-yml` | Write the machine-readable composition source beside a Module page |
 
 ## Use it from another repo
 
@@ -178,6 +179,11 @@ every skill directory holds a `SKILL.md` whose `name:` matches the directory,
 that no two skills claim the same name, that every skill has a
 `description:`, that relative links in `plugins/` resolve, and that no stray
 `skills/` directory survives at the repo root.
+
+**`scripts/` also holds checkers for the other repos**, not for this one: `check-tags.py`,
+`check-sites.py`, `check-citations.py`, `check-pins.py` and `check-pin-freshness.py`, sharing `staging_common.py`. Each takes
+the repo to check as its first argument. The staging skill § Finding the tags says what each
+does; `check-skills.yml` does not run them.
 
 It is a required status check on `main`, with "require branches to be up to
 date" on. That second setting matters: a PR can pass on its own branch and

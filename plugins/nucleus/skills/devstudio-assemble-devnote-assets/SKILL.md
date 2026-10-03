@@ -1,6 +1,6 @@
 ---
 name: devstudio-assemble-devnote-assets
-description: Download the supporting files a DevNote(M) needs in order to build — notebooks, platemaps, raw instrument data, and DNA construct files — from the DevStudio Shared Drive into the devnote directory, resolving what belongs to each figure from the DevNote(G) Google Doc's figure-provenance lines (or the manifest.json cache written beside it). Invoked after devstudio-devnote-g-to-devnote-m has produced main.md and curvenote.yml, and before devstudio-submit-to-github opens the archive PR. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+description: Download the supporting files a DevNote(M) needs to build. These are notebooks, platemaps, raw instrument data, and DNA construct files. They come from the DevStudio Shared Drive into the devnote directory. What belongs to each figure is resolved from main.md's own figure-provenance lines, or from the manifest.json cache beside it. Invoked once a human reviews the links in main.md, and it hands off to devstudio-submit-to-github, which opens the draft archive PR. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
 ---
 
 # devstudio-assemble-devnote-assets
@@ -14,37 +14,44 @@ the supporting files that make the devnote buildable locally and on curvenote.
 
 ## Ground truth and source hierarchy
 
-The **DevNote(G) Google Doc** is the single source of truth for what assets belong to
-each experiment. Its structured figure-provenance lines (written by
-`devstudio-log-to-devnote-g`) name the notebook, platemap, and raw data file for every
-figure. **The line format is owned by [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)** — note that values are backtick-quoted;
-an unquoted variant circulated in this file for a while and does not match what
+`main.md` is the single source of truth for what assets belong to each
+experiment. Its structured figure-provenance lines, in the figure blocks
+`devstudio-log-to-devnote-g` writes directly, name the notebook, platemap,
+and raw data file for every figure. **The line format is owned by
+[`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)**.
+Values are backtick-quoted. An unquoted variant does not match what
 `devstudio-log-to-devnote-g` writes.
 
-The **manifest.json** (written alongside the G doc by `devstudio-log-to-devnote-g`) is
-the machine-readable encoding of the same record, and is specified in that same
-reference. Use it when present — it is
-faster than re-parsing the G doc. If the G doc was edited after the manifest was
-generated (filenames corrected, a figure added), re-read the G doc and treat it as
-authoritative over the manifest.
+`manifest.json` stays, as a sidecar document beside `main.md`. It is a
+cache, kept for debugging and for later review, and it tracks these eleven
+fields per figure:
 
-**`main.md` is not a source for asset discovery.** The `<!-- REVIEW: assets — ... -->`
-comment blocks in main.md contain local file paths (not Drive URLs) and serve as a
-human audit trail that is stripped before submission. Never parse main.md to find Drive
-URLs or determine which files to download.
+```
+filename, pattern, cell_label, source_notebook, platemap, data_source,
+zarr_url, section_context, asset_chain_complete, extraction_method, findings
+```
+
+`main.md` is authoritative over the sidecar when the two disagree, because
+`main.md` is what a reviewer edits.
+
+`main.md`'s REVIEW comment blocks for asset verification, where present,
+still carry local file paths rather than Drive URLs, and still get stripped
+before submission. That convention is unchanged.
 
 ## Invocation model
 
-Run after G→M has produced a complete `main.md` and `curvenote.yml`. Provide:
-- The target devnote directory
-- The DevNote(G) Google Doc URL (used if manifest.json is absent or outdated)
+Run once `main.md` exists and carries figure-provenance lines, and a human
+has reviewed those links. Provide:
+- The target devnote directory, containing `main.md`
 - The sf-node experiment Drive folder (scoped to `san-francisco-node/` only — never
   access other Drive locations)
+
+The DevNote(G) Google Doc URL drops from the required inputs. There is no
+longer a separate Doc this skill falls back to.
 
 ```
 devstudio-assemble-devnote-assets
 Target: /path/to/devnotes/devnote-sy-20251104-20251107/
-DevNote(G): https://docs.google.com/document/d/<ID>/edit
 SF-Node folder ID: 1d2QuOtPDdSxuF1z7NlRt-MtJdNKgNI7s
 ```
 
@@ -53,8 +60,9 @@ SF-Node folder ID: 1d2QuOtPDdSxuF1z7NlRt-MtJdNKgNI7s
 ### Notebooks — required (blocks curvenote build)
 
 Notebooks must be present at the paths declared in `curvenote.yml`'s `toc:` list.
-The toc entries are commented out by G→M with inline Colab/Drive URLs; this skill
-downloads each one and uncomments its entry.
+The toc entries are commented out by `devstudio-log-to-devnote-g` with
+inline Colab or Drive URLs. This skill downloads each one and uncomments its
+entry.
 
 **How to find them**: read `curvenote.yml` and extract every commented-out toc line
 carrying a URL. **The comment format is owned by [`references/devstudio-curvenote-toc.md`](../../references/devstudio-curvenote-toc.md)**, including why an entry stays
@@ -74,12 +82,15 @@ Even when a notebook has saved cell outputs (meaning curvenote can render withou
 re-executing), the devnote must be self-contained. A reader who downloads it and runs
 the notebook locally will get file-not-found errors if data files are absent.
 
-**How to find filenames**: read `manifest.json` in the target devnote directory. Each
-figure entry's `platemap` and `data_source` fields name the files; both are filenames,
-never Drive URLs, and either may be `null` when the asset was not found.
+**How to find filenames**: read the figure-provenance lines directly from
+`main.md`. Each figure's line names the notebook, platemap, and raw data
+file. All are filenames, never Drive URLs, and a field reads `none` when the
+asset was not found. The line format is specified in
+[`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md).
 
-If `manifest.json` is absent, read the DevNote(G) Google Doc and parse the inline
-figure-provenance lines instead. Both encodings are specified in [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md).
+If `manifest.json` is present, you can read it as a faster path to the same
+filenames. Prefer `main.md`'s own lines when the two disagree. `main.md` is
+what a reviewer edits, and the manifest is not.
 
 **How to get Drive IDs**: once you have the filename, search the sf-node Drive folder
 for it by name using `search_files`. Scope the search to the experiment subfolder that
@@ -130,9 +141,9 @@ only needs to be installed once per clone, not once per devnote.
 
 1. **Read `curvenote.yml`** — collect all commented-out toc entries with Drive/Colab URLs
    (notebooks only).
-2. **Read `manifest.json`** in the target devnote directory — collect platemap and raw
-   data filenames per figure. If absent, read the DevNote(G) Google Doc and parse
-   figure-provenance lines directly.
+2. **Read the figure-provenance lines in `main.md`** — collect platemap and raw
+   data filenames per figure. `manifest.json` in the same directory carries the
+   same filenames and is faster to read. Prefer `main.md` when the two disagree.
 3. **For each notebook**:
    - Extract Drive ID from the toc comment URL.
    - Call `download_file_content` with `exportMimeType: application/json`.
@@ -180,6 +191,23 @@ and noted for future inclusion in `nucleus-eng/DNA`.
 
 - Does not commit to GitHub — TA-mediated handoff only.
 - Does not run `devstudio-verify-dna-constructs` — flag it as a REVIEW item.
-- Does not parse `main.md` to discover asset Drive URLs — main.md is derivative.
+- Does not decide what belongs in a DevNote. `main.md`'s figure-provenance
+  lines are the record of that, and this skill only fetches what they name.
 - Does not decide which notebooks are needed — downloads everything in `curvenote.yml`
   toc comments.
+
+## Hand off to `devstudio-submit-to-github`
+
+Once every asset named in `main.md` is in the tree, hand off to
+`devstudio-submit-to-github`. That skill opens the branch and opens its pull
+request as a GitHub draft, against `main`.
+
+Opening the pull request is all that is needed for a preview. It triggers
+the existing `draft.yml` workflow, which posts a Curvenote preview link to
+the pull request. Observed working against `devstudio-board`'s copy of that
+workflow on 2026-10-03: its `on: pull_request` block names no `types:`, so
+GitHub applies its default set, and a draft pull request fires `opened` in
+the same way a ready one does.
+
+The pull request opens here rather than at first cut so that the first
+preview a reviewer reads renders its figures.

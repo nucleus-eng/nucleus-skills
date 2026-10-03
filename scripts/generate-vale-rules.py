@@ -85,11 +85,16 @@ def build_narrow(pairs, kind):
     alts, exceptions = [], []
     for refused, use in sorted(pairs):
         for phrase in NARROW_EXCEPTIONS.get(refused, []):
-            # Both numbers, and both cases: Vale matches exceptions literally,
-            # so a sentence-initial `Multilamellar vesicles` leaks through a
-            # list carrying only the lowercase singular.
+            # Both numbers and THREE cases: Vale matches exceptions literally.
+            # Lowercase for running prose, sentence case because a sentence-initial
+            # `Multilamellar vesicles` leaks through a lowercase-only list, and
+            # TITLE CASE because a page title is written `Unilamellar Vesicle` and
+            # nothing else in the list covers it. Jon, 2026-09-21: "we should allow
+            # both title cases in vale btw". Found when a class page spanning GUV and
+            # SUV could not name itself: the class IS the thing above them, so the
+            # rule's instruction to pick one has no answer at that grain.
             for form in (phrase, phrase + "s"):
-                exceptions += [form, form[0].upper() + form[1:]]
+                exceptions += [form, form[0].upper() + form[1:], form.title()]
             # The long form has to be MATCHED before it can be excepted. Two
             # exception phrases sharing a suffix (uni-/multi-lamellar) yield one
             # token, so this is deduplicated below rather than appended blindly.

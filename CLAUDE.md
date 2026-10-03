@@ -1,22 +1,30 @@
 # nucleus-skills
 
 A Claude plugin marketplace. One marketplace, one plugin, one directory per
-skill. `README.md` holds the layout, the conventions and the ownership table;
+skill. `README.md` holds the layout, the conventions and the ownership table.
 `REFACTOR-PLAN.md` holds the work still outstanding.
 
 ## Staged edits
 
-**This repo stages.** The rule is the `staging` skill in this repo —
-`plugins/nucleus/skills/staging/SKILL.md`. Read it there; it is not restated
-here, because a second copy is how the two copies it replaced came to
-disagree.
+**Staging is off, from 2026-10-03.** Turned off by Anton, for this repo and
+for every session that reads this file. Edit tracked files directly. Do not
+write a staging document and do not wait for a reviewer before applying an
+edit.
 
-Local specifics only:
+The `staging` skill still exists at
+`plugins/nucleus/skills/staging/SKILL.md`. It is kept because `nucleus-docs`
+and `category` consume this plugin and still point at it. It is not in force
+here.
 
-- **Staging location is declared in `README.md`.** Not repeated here.
-- **Scope is the work, not the repository.** A session working here and in
-  `nucleus-docs` stages in both.
-- **Reviewer:** Jon.
+Two things that rule bought are worth keeping without it:
+
+- **Say what a change overturns.** An edit that silently overwrites a claim
+  hides whether the claim had a reason behind it.
+- **Line numbers, hashes and dates are claims.** Measure one before writing
+  it down. A stale line number points confidently at the wrong place.
+
+The staging documents at the repo root are gitignored and stay where they
+are. They are now a record of past reasoning, not a queue.
 
 ## Before opening a PR
 
@@ -26,16 +34,16 @@ python3 scripts/check-skills.py
 
 Required on `main`, with "require branches to be up to date" on. It catches
 the failure this repo exists to fix: a `SKILL.md` whose `name:` does not match
-its directory does not load, and **nothing reports an error** — it simply
-never appears.
+its directory does not load, and **nothing reports an error**. It never
+appears.
 
 ## Two conventions worth stating here
 
-**Descriptions are triggers, not summaries.** Say when to use the skill and
-what it produces.
+**Descriptions are triggers, not summaries.** Name the task that calls for
+the skill. Name what the skill produces.
 
-**Cross-reference, never restate.** If a copy is unavoidable, label it and say
-what it tracks.
+**Cross-reference, never restate.** A copy that cannot be avoided gets a
+label. The label says what it tracks.
 
 ## A note on `git add -A`
 

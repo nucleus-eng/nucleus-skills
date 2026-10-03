@@ -16,11 +16,11 @@ the supporting files that make the devnote buildable locally and on curvenote.
 
 `main.md` is the single source of truth for what assets belong to each
 experiment. Its structured figure-provenance lines, in the figure blocks
-`devstudio-log-to-devnote-g` writes directly, name the notebook, platemap,
+`devstudio-log-to-devnote-m` writes directly, name the notebook, platemap,
 and raw data file for every figure. **The line format is owned by
 [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)**.
 Values are backtick-quoted. An unquoted variant does not match what
-`devstudio-log-to-devnote-g` writes.
+`devstudio-log-to-devnote-m` writes.
 
 `manifest.json` stays, as a sidecar document beside `main.md`. It is a
 cache, kept for debugging and for later review, and it tracks these eleven
@@ -60,7 +60,7 @@ SF-Node folder ID: 1d2QuOtPDdSxuF1z7NlRt-MtJdNKgNI7s
 ### Notebooks — required (blocks curvenote build)
 
 Notebooks must be present at the paths declared in `curvenote.yml`'s `toc:` list.
-The toc entries are commented out by `devstudio-log-to-devnote-g` with
+The toc entries are commented out by `devstudio-log-to-devnote-m` with
 inline Colab or Drive URLs. This skill downloads each one and uncomments its
 entry.
 
@@ -168,11 +168,11 @@ only needs to be installed once per clone, not once per devnote.
 ## DNA construct files
 
 If `main.md` references a seqviz GitHub URL (`nucleus-eng/DNA`), no action is needed —
-the file resolves at build time. If `main.md` references a local `plasmids/` path,
+the file resolves at build time. If `main.md` references a local `dna/` path,
 check `nucleus-eng/DNA` for a filename match (fuzzy — tolerate `.gb` vs `.gbk`
 extension differences and minor casing). If found, surface the GitHub URL and ask the
 TA to confirm, then switch the directive to the GitHub URL pattern (preferred). If not
-found, flag that the `.gb`/`.gbk` file must be placed at `plasmids/<filename>` manually
+found, flag that the `.gb`/`.gbk` file must be placed at `dna/<filename>` manually
 and noted for future inclusion in `nucleus-eng/DNA`.
 
 ## Error handling

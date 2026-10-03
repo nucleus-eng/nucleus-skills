@@ -17,7 +17,7 @@ Log folders (Google Drive, sf-node)
         │  human selects the folders — skill does not decide
         ▼
 ┌───────────────────────────────────┐
-│  devstudio-log-to-devnote-g       │  produces: main.md, curvenote.yml,
+│  devstudio-log-to-devnote-m       │  produces: main.md, curvenote.yml,
 │                                   │  the empty tree, manifest.json
 └───────────────────────────────────┘
         │  human reviews the links in main.md
@@ -77,7 +77,7 @@ These skills are invoked by others but do not themselves invoke pipeline skills:
 ## Dependency graph
 
 ```
-devstudio-log-to-devnote-g
+devstudio-log-to-devnote-m
   ├── devstudio-read-from-google-drive
   ├── devstudio-verify-dna-constructs
   │     └── devstudio-read-from-google-drive
@@ -92,7 +92,7 @@ devstudio-devnote-g-to-devnote-m
 
 ## Stage: Log → main.md
 
-**Skill**: `devstudio-log-to-devnote-g`
+**Skill**: `devstudio-log-to-devnote-m`
 
 **Preconditions**:
 - Human has selected the specific Log folder(s) — skill does not crawl
@@ -107,9 +107,15 @@ devstudio-devnote-g-to-devnote-m
 ├── manifest.json        — figure-provenance sidecar, stays beside main.md
 ├── experiments/         — empty
 ├── figures/             — empty
-├── plasmids/            — empty
+├── dna/            — empty
 └── general/             — schematics pre-placed, if present in source
 ```
+
+The directory is `dna/`, not `plasmids/`. Every plasmid is DNA, and not
+every DNA is a plasmid. A linear template is the case that breaks the older
+name. Named by Jon Calles on 2026-10-03. The two general-purpose skills
+`migrate` and `migrate-devnote` still say `plasmids/`, because they serve
+`nucleus-devnote-archive-1` and its published DevNotes use that name.
 
 This stage does not open a branch and does not open a pull request.
 
@@ -185,9 +191,9 @@ touched the topology document, while the formats themselves had no owner.
 
 | Object | Produced by | Consumed by | Format |
 | --- | --- | --- | --- |
-| Figure-provenance record — `manifest.json` and its inline line in `main.md` | `devstudio-log-to-devnote-g` | `devstudio-assemble-devnote-assets` | [`devstudio-figure-provenance.md`](devstudio-figure-provenance.md) |
-| `curvenote.yml` toc comments | `devstudio-log-to-devnote-g` | `devstudio-assemble-devnote-assets` | [`devstudio-curvenote-toc.md`](devstudio-curvenote-toc.md) |
-| Live admonitions in `main.md`, and the short Doc generated from them | `devstudio-log-to-devnote-g` | `devstudio-devnote-g-to-devnote-m` | no reference yet — the Doc generator is not built |
+| Figure-provenance record — `manifest.json` and its inline line in `main.md` | `devstudio-log-to-devnote-m` | `devstudio-assemble-devnote-assets` | [`devstudio-figure-provenance.md`](devstudio-figure-provenance.md) |
+| `curvenote.yml` toc comments | `devstudio-log-to-devnote-m` | `devstudio-assemble-devnote-assets` | [`devstudio-curvenote-toc.md`](devstudio-curvenote-toc.md) |
+| Live admonitions in `main.md`, and the short Doc generated from them | `devstudio-log-to-devnote-m` | `devstudio-devnote-g-to-devnote-m` | no reference yet — the Doc generator is not built |
 
 The inline line now lives in `main.md`'s own figure blocks rather than in a
 Google Doc body. `main.md` is authoritative over the sidecar when the two

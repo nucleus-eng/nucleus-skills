@@ -1,6 +1,6 @@
 ---
 name: devstudio-devnote-g-to-devnote-m
-description: Fold a reviewer's answers to live gaps in a DevNote(M)'s main.md back into that file, by the admonition label each answer replies to. Confirm every admonition is either resolved (wrapped in an HTML comment) or still correctly flagged, then assign frontmatter. Invoked after a reviewer has answered some or all of the gaps in the short Doc devstudio-log-to-devnote-g generated for that review cycle. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+description: Fold a reviewer's answers to live gaps in a DevNote(M)'s main.md back into that file, by the admonition label each answer replies to. Confirm every admonition is either resolved (wrapped in an HTML comment) or still correctly flagged, then assign frontmatter. Invoked after a reviewer has answered some or all of the gaps in the short Doc devstudio-log-to-devnote-m generated for that review cycle. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
 invokes: []
 ---
 
@@ -13,7 +13,7 @@ pipeline moved to assembling MyST first. Before that date this skill
 converted a reviewed Google Doc into MyST, and it owned frontmatter
 extraction, section mapping, table conversion, figure conversion and
 `curvenote.yml` generation. All of that moved upstream to
-`devstudio-log-to-devnote-g`, which now writes `main.md` directly.
+`devstudio-log-to-devnote-m`, which now writes `main.md` directly.
 
 What is left is the review loop. This skill folds a reviewer's answers back
 into `main.md` and makes sure that no gap is left unflagged before
@@ -80,7 +80,7 @@ human resolves it.
 ## Step 3 — assign frontmatter
 
 Frontmatter is not extracted from a Specification table.
-`devstudio-log-to-devnote-g` instantiates the project with `main.md` and
+`devstudio-log-to-devnote-m` instantiates the project with `main.md` and
 `curvenote.yml`, and their frontmatter fields start unresolved. They stay
 unresolved on every new DevNote, because a log never carries an author ORCID
 or an institution.
@@ -89,7 +89,7 @@ Treat each unresolved field as a gap like any other. Title, date, authors,
 ORCID, email and institution become admonitions, and each review cycle
 echoes the unanswered ones into the review Doc. A human answers them there.
 
-The project id is not assigned here. `devstudio-log-to-devnote-g` already
+The project id is not assigned here. `devstudio-log-to-devnote-m` already
 generated a fresh uuid into `curvenote.yml` at the first cut, per its Step
 8.5. Read it, and make sure that it is not a uuid another DevNote already
 carries. Generate a replacement only if it is.
@@ -124,7 +124,7 @@ Use these consistently so TAs can grep for outstanding items:
 ## What this skill does not do
 
 - Does not write main.md from scratch, and does not fetch anything from
-  Drive — `devstudio-log-to-devnote-g` writes `main.md` directly, and
+  Drive — `devstudio-log-to-devnote-m` writes `main.md` directly, and
   `devstudio-assemble-devnote-assets` owns every file fetched from Drive.
 - Does not generate keywords — flagged as REVIEW, deferred to a future
   keyword-autogeneration step using the controlled vocabulary at

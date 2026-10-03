@@ -1,13 +1,13 @@
 ---
 name: devstudio-submit-to-github
-description: Open a branch against nucleus-eng/devstudio-board and create a draft PR containing a new DevNote directory produced by devstudio-log-to-devnote-g. Invoked by devstudio-assemble-devnote-assets, once every asset named in main.md is in the tree. A TA reviews and merges — the GitHub Action fires on merge to main, submitting to the Curvenote venue and publishing to devnotes.nucleus.engineering. Destination follows provenance: this skill serves the DevStudio-Event pipeline, so it targets devstudio-board. A general-purpose skill still targets nucleus-devnote-archive-1, which stays the primary archive. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+description: Open a branch against nucleus-eng/devstudio-board and create a draft PR containing a new DevNote directory produced by devstudio-log-to-devnote-m. Invoked by devstudio-assemble-devnote-assets, once every asset named in main.md is in the tree. A TA reviews and merges — the GitHub Action fires on merge to main, submitting to the Curvenote venue and publishing to devnotes.nucleus.engineering. Destination follows provenance: this skill serves the DevStudio-Event pipeline, so it targets devstudio-board. A general-purpose skill still targets nucleus-devnote-archive-1, which stays the primary archive. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
 ---
 
 # devstudio-submit-to-github
 
 ## Provenance
 
-Staging skill in the `devstudio` namespace. Bridges `devstudio-log-to-devnote-g`'s
+Staging skill in the `devstudio` namespace. Bridges `devstudio-log-to-devnote-m`'s
 MyST output to the `nucleus-eng/devstudio-board` repo. Relies on GitHub
 credentials already configured for the running Claude Code session — confirmed available
 for 2 of 4 DevStudio TAs. Supersede once a canonical version exists outside this
@@ -54,7 +54,7 @@ ask the TA whether to delete and recreate, or work from the existing branch.
 
 ## Step 3 — copy the DevNote directory
 
-Copy the complete directory structure produced by `devstudio-log-to-devnote-g`
+Copy the complete directory structure produced by `devstudio-log-to-devnote-m`
 into `devnotes/<devnote-slug>/`:
 
 ```bash
@@ -66,7 +66,7 @@ Verify the expected structure is present before committing:
 ```bash
 ls ~/src/nucleus-eng/devstudio-board/devnotes/<devnote-slug>/
 # Expected: main.md, curvenote.yml, base.yml, environment.yml,
-#           experiments/, figures/, plasmids/ (if applicable)
+#           experiments/, figures/, dna/ (if applicable)
 ```
 
 Flag and stop if `main.md` or `curvenote.yml` are missing — these are the
@@ -79,7 +79,7 @@ cd ~/src/nucleus-eng/devstudio-board
 git add devnotes/<devnote-slug>/
 git commit -m "Add DevNote: <title> (<devnote-slug>)
 
-Produced by devstudio-log-to-devnote-g from DevNote(G) draft.
+Produced by devstudio-log-to-devnote-m from DevNote(G) draft.
 REVIEW items remaining: <count> (see main.md for details).
 TA: <qc-name>"
 ```

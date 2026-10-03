@@ -1,5 +1,5 @@
 ---
-name: devstudio-log-to-devnote-g
+name: devstudio-log-to-devnote-m
 description: Convert a human-selected set of one or more DevStudio Log folders (each holding a Log Google Doc, and where present a platemap, analysis notebooks, and raw instrument data) into a single draft DevNote as MyST markdown, writing main.md and curvenote.yml directly. Follows Nucleus DevNote structure, synthesizes across the set when it spans a continuous narrative, keeps fidelity to source content, and raises every uncertain or missing item as a MyST admonition. Use when a human selects the specific folder(s) they have deemed ready to draft into a DevNote. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
 invokes:
   - devstudio-read-from-google-drive   # steps 2, 3, 5: folder search, pandoc download, notebook inspection
@@ -7,7 +7,7 @@ invokes:
   - devstudio-author-myst-content      # step 1: complete-vs-stub signals; steps 5.5-5.6: fence depth, tab-sets, captions
 ---
 
-# devstudio-log-to-devnote-g
+# devstudio-log-to-devnote-m
 
 ## Provenance
 
@@ -49,9 +49,9 @@ here — a separate concern from this skill's own logic.)
 
 ## Breaking changes
 
-**Figure-provenance line format** (affects `devstudio-devnote-g-to-devnote-m`): the
+**Figure-provenance line format** (affects `devstudio-assemble-devnote-assets`): the
 format changed from a multi-line block to a single-line structured format (see Step 4).
-The G→M skill handles both; new DevNote(G) docs always use the single-line format.
+The assembly skill handles both. New DevNotes always use the single-line format.
 
 **`manifest.json` schema additions**: `asset_chain_complete` and `findings` fields were
 added; older manifests without them are treated as `asset_chain_complete: false`.
@@ -245,7 +245,7 @@ data-file rule later in this step reads the loading calls from it.
 
 **Figure selection is always explicit — do not carry all figures forward by default.**
 After inventorying all figures found (embedded in doc + asset folder), present the list
-to the user and ask which to include in the DevNote(G) before writing the draft.
+to the user and ask which to include in `main.md` before writing the draft.
 Format the prompt as:
 
 ```
@@ -255,7 +255,7 @@ Found N figures across the selected log(s):
   3. figures/Kinetics2.png — asset folder, notebook: Analysis.ipynb (cell 8, no #| label:)
   4. figures/endpoint.png — asset folder, notebook: Analysis.ipynb (cell 11, no #| label:)
 
-Which figures should be included in the DevNote(G)? (reply with numbers, e.g. "1, 3")
+Which figures should be included in main.md? (reply with numbers, e.g. "1, 3")
 ```
 
 Wait for the user's selection before proceeding. Only include the selected figures in
@@ -264,13 +264,13 @@ but "does this figure have an intact asset chain" — and the human decides whet
 include it, not the skill. Do not glob-copy the entire folder indiscriminately — but
 do not require a prose citation that will never appear.
 
-**How figures appear in the DevNote(G) draft**: each selected figure is represented
-as a single structured line in the Results section, immediately after the prose it
-belongs to:
+**How figures appear in `main.md`**: each selected figure carries a single
+structured provenance line in the Results section, immediately after the prose
+it belongs to, alongside the MyST figure block Step 5.5 emits:
 
 **The line format is owned by [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)** — including the zarr-viewer and schematic
 variants, and the rule that values are backtick-quoted. Write it exactly as that
-reference gives it; `devstudio-devnote-g-to-devnote-m` parses the line, so an
+reference gives it. `devstudio-assemble-devnote-assets` parses the line, so an
 unquoted variant does not round-trip.
 
 Use it consistently — do not embed figures as `📷 Figure N:` blocks or
@@ -699,9 +699,15 @@ Create the directory tree alongside `main.md` on the first cut, empty:
 ├── curvenote.yml
 ├── experiments/
 ├── figures/
-├── plasmids/
+├── dna/
 └── general/
 ```
+
+**The directory is `dna/`, not `plasmids/`.** Every plasmid is DNA, and not
+every DNA is a plasmid. A linear template is the case that breaks the older
+name. `devnote-swh-20260925-ph-sensor-in-solution` shows it: its two `.gb`
+files are ssDNA oligos, and they sat in a folder called `plasmids/`. Named
+by Jon Calles on 2026-10-03.
 
 These stay empty here. `devstudio-assemble-devnote-assets` owns every file
 that lands inside them, and runs once a human has reviewed the links in

@@ -1,6 +1,6 @@
 ---
 name: devstudio-build-to-composition
-description: Read a build file (xlsx, one sheet per condition) and produce a merged composition table as build-composition.csv — the composition schema with one volume column per condition. Use before devstudio-log-to-devnote-g, which reads the sidecar instead of reconstructing composition from log prose. Takes no user input.
+description: Read a build file (xlsx, one sheet per condition) and produce a merged composition table as build-composition.csv — the composition schema with one volume column per condition. Use before devstudio-log-to-devnote-m, which reads the sidecar instead of reconstructing composition from log prose. Takes no user input.
 ---
 
 # devstudio-build-to-composition
@@ -55,7 +55,7 @@ cells take the missing-value marker from the schema owner.
 ## Step 3 — write CSV sidecar
 
 Write `build-composition.csv` in the log folder via `devstudio-write-to-google-drive`
-(raw file). This is what `devstudio-log-to-devnote-g` reads to insert the composition
+(raw file). This is what `devstudio-log-to-devnote-m` reads to insert the composition
 table into the DevNote(G).
 
 Column order: `Component`, `Stock Conc.`, `Unit`, `Final Conc.`, `Unit`, then one
@@ -73,9 +73,9 @@ Water,—,—,—,—,4.747,3.247,2.497
 Total [µL],,,,,30,30,30
 ```
 
-## Integration with devstudio-log-to-devnote-g
+## Integration with devstudio-log-to-devnote-m
 
-`devstudio-log-to-devnote-g` checks for `build-composition.csv` in each log folder.
+`devstudio-log-to-devnote-m` checks for `build-composition.csv` in each log folder.
 
 - **Found**: read the CSV row by row and render as an HTML `<table>` (Totals row in
   `<strong>`, `—` cells as em-dash) for insertion into the `# Methods` section of

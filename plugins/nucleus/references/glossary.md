@@ -99,7 +99,7 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 | `milliQ water` | ultrapure water | Prefer | **yes** | 0 | Vendor-neutral |
 | `SMixΔCP` | `SMix -CP` | Prefer | **yes** | 0 | Prefer plain characters |
 | colormetric | colorimetric | Prefer | **yes** | 0 | Misspelling |
-| leg | integration path | Prefer | **yes** | 0 | |
+| leg | integration path | Prefer | no | 0 | **Accepted synonym, not refused.** Jon, 2026-09-28: *"let's just make 'leg' a synonym (not preferred) of a path on a graph. so 'leg' is an accepted term for an integration path, or other paths on graphs."* `integration path` stays the preferred word. **The row is kept with `Auto: no` rather than deleted**, because the preference is still real and a deleted row reads as a term nobody considered |
 | `Chicago node` | `Chicago Node` | Prefer | **yes** | 1 | Proper noun. Case-sensitive |
 | `Chicago-node` | `Chicago Node` | Prefer | **yes** | 1 | Same, hyphenated |
 | `London node` | `London Node` | Prefer | **yes** | 0 | Same rule, no current violation |

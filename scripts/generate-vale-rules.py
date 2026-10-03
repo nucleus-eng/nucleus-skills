@@ -85,11 +85,16 @@ def build_narrow(pairs, kind):
     alts, exceptions = [], []
     for refused, use in sorted(pairs):
         for phrase in NARROW_EXCEPTIONS.get(refused, []):
-            # Both numbers, and both cases: Vale matches exceptions literally,
-            # so a sentence-initial `Multilamellar vesicles` leaks through a
-            # list carrying only the lowercase singular.
+            # Both numbers and THREE cases: Vale matches exceptions literally.
+            # Lowercase for running prose, sentence case because a sentence-initial
+            # `Multilamellar vesicles` leaks through a lowercase-only list, and
+            # TITLE CASE because a page title is written `Unilamellar Vesicle` and
+            # nothing else in the list covers it. Jon, 2026-09-21: "we should allow
+            # both title cases in vale btw". Found when a class page spanning GUV and
+            # SUV could not name itself: the class IS the thing above them, so the
+            # rule's instruction to pick one has no answer at that grain.
             for form in (phrase, phrase + "s"):
-                exceptions += [form, form[0].upper() + form[1:]]
+                exceptions += [form, form[0].upper() + form[1:], form.title()]
             # The long form has to be MATCHED before it can be excepted. Two
             # exception phrases sharing a suffix (uni-/multi-lamellar) yield one
             # token, so this is deduplicated below rather than appended blindly.
@@ -165,7 +170,38 @@ def main():
     total = sum(len(v) for v in by_kind.values())
     print(f"\n{total} rule(s) from {os.path.relpath(GLOSSARY, HERE)}"
           + ("" if a.out else "  (dry run — pass --out to write)"))
+    print(CONFIG_NOTE)
     return 0
+
+
+
+# The rules above are only half of what a repo needs. This is the other half, and it
+# is printed rather than written, because a `.vale.ini` is the consuming repo's file
+# and carries its own severities, its own StylesPath and its own other styles.
+#
+# It is stated HERE so there is one source for it. Two repos reproducing the same
+# regex from memory is the duplication this generator exists to remove, one level up.
+CONFIG_NOTE = r"""
+Every consuming .vale.ini section that turns these rules on must also carry:
+
+    TokenIgnores = (\b(?:https?://|www\.)[^\s]+), ("[^"\n]+"|“[^”\n]+”)
+
+The second group exempts a quoted span from every rule above. Jon's ruling,
+2026-09-21: a quotation is evidence in this program, and rewriting someone's words to
+satisfy a linter destroys what the quotation was kept for. A span rather than a
+per-rule exception, so it covers all four rules and the next one too.
+
+Two limits, both measured on 2026-09-21, both worth knowing before you rely on it:
+
+  * A quotation wrapped across two lines is NOT exempt. The pattern needs both marks
+    on one line. Of 1292 quoted lines in the nucleus-docs corpus, 65 were in this
+    class. It fails toward firing rather than toward silence, which is the safe way.
+
+  * TokenIgnores DOES NOT APPLY TO *.yml. Vale honours it for markup and skips it for
+    everything else; the same quoted line is exempt in a .md and fires in a .yml. A
+    machine-readable source must therefore CITE the page that carries a quotation
+    rather than restate it. Do not work around this with an exemption.
+"""
 
 
 if __name__ == "__main__":

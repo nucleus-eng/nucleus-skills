@@ -1,6 +1,6 @@
 ---
 name: mermaid-diagrams
-description: Write Mermaid diagram source for any Nucleus MyST repo — docs or DevNotes — module dependency graphs, process dependency graphs, and combined implementation views. Use when asked to draw, add, regenerate, or fix a diagram, flowchart, schematic, or dependency graph on a docs page; when a page needs a composition or integration diagram; or when a diagram's status markings need updating. Covers fence form, node-id safety, status conventions, greyscale-by-default styling, and deriving a diagram from a page's own Composition sections. Source only — this skill does not render to PNG or SVG.
+description: Write Mermaid diagram source for any Nucleus MyST repo — docs or DevNotes — module dependency graphs, process dependency graphs, and combined implementation views. Use when asked to draw, add, regenerate, or fix a diagram, flowchart, schematic, or dependency graph on a docs page; when a page needs a composition or integration diagram; or when a diagram's status markings need updating. Covers fence form, node-id safety, status conventions, greyscale-by-default styling, and the rules a diagram generator must follow. Source only — this skill ships no generator and does not render to PNG or SVG.
 ---
 
 # Mermaid diagrams for Nucleus MyST repos
@@ -229,25 +229,24 @@ prose.
 subgraph inside the main one — a subgraph wrapper adds a background tint and
 visually implies grouping that is not there.
 
-## Derive the diagram from the page, do not hand-maintain it
+## Derive the diagram from a source, do not hand-maintain it
 
 A hand-drawn dependency diagram drifts from the pages within weeks. If the
-composition is already written in the docs, generate the diagram from it.
+composition is already written down, generate the diagram from it.
 
-**Prefer a `spec.yml` beside the page where one exists.** The bullet list
-below carries no order, no operator, no process and no compartment, so a diagram
-derived from it can only show *what* composes and never *how* (issue #248). A
-module with a composition source should be rendered from it — in `nucleus-docs`,
-by `scripts/render-composition.py`. Harmonising the two generators is issue #250.
+**This skill ships no generator.** A generator reads one repo's source format,
+so it lives in that repo, beside the format, and that repo's `CLAUDE.md` names
+it. If the repo has one, run it. Do not write a second one.
 
-Where there is no source yet, most Nucleus module pages carry a
-`# Constituent Modules` section, which is a machine-readable dependency graph:
+**One generator per marker pair.** Two generators that write the same markers
+overwrite each other. The one that runs last wins, and nothing reports it. This
+skill once shipped a generator that read the `# Constituent Modules` bullet
+list. `nucleus-docs` then moved to a `spec.yml` source, and running the old
+generator there reverted every page to a parts list (nucleus-docs#250).
 
-```python
-m = re.search(r"^#+\s*Constituent Modules\s*$(.*?)(?=^#|\Z)", text, re.M | re.S)
-for link in re.finditer(r"\]\(\.\./([A-Za-z0-9._-]+)/spec\.md", m.group(1)):
-    ...
-```
+**Read a structured source, not a prose list.** A bullet list of constituents
+carries no order, no operator, no process and no compartment. A diagram drawn
+from it can show *what* composes, never *how* (nucleus-docs#248).
 
 Wrap generated output in markers so regeneration is idempotent and hand-written
 content is never clobbered:
@@ -260,7 +259,8 @@ content is never clobbered:
 <!-- /gen:composition-diagram -->
 ```
 
-See `references/deriving.md` for the full pattern, including a `--check` mode
+If the repo has no generator yet and you are writing its first one, see
+`references/deriving.md` for what it must do, including a `--check` mode
 suitable for CI.
 
 **A generated diagram must not assert status.** Composition is derivable from the
@@ -328,4 +328,4 @@ relative ones — relative click targets break on the deployed site.
 - [ ] Pageless processes say `— no page`, not a dashed border
 - [ ] Tab-set fence depths are 5 / 4 / 3
 - [ ] Caption says what the diagram does **not** claim
-- [ ] If generated: wrapped in markers, and re-running produces no diff
+- [ ] If generated: by the repo's one generator, wrapped in markers, and re-running produces no diff

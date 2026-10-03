@@ -1,42 +1,27 @@
-# Deriving diagrams from page structure
+# Deriving diagrams from a composition source
 
-Load this when generating diagrams from docs rather than hand-writing them.
+Load this when writing a repo's first diagram generator. If the repo already
+has one, run it instead. `SKILL.md` § Derive the diagram from a source says why
+a repo has only one, and where it lives.
 
 A hand-drawn dependency diagram drifts from the pages it describes within weeks,
 and the drift is invisible — the diagram still renders, it is just wrong. If the
 structure is already written down somewhere in the docs, read it from there.
 
-## The graph is usually already in the pages
+## Read a declared, structured source
 
-Nucleus module pages declare their constituents in a section:
+Take the graph from a machine-readable source the repo declares for that
+purpose, such as a file beside each page. Never take it from every link on the
+page; see § Scope the graph honestly.
 
-```markdown
-# Constituent Modules
+A prose list of constituents is not that source. It says *what* composes. A
+structured source can also say in what order, by which process, with which
+operator and in which compartment, and only then can the diagram show *how*.
+**If the repo has only prose, write the structured source first.** That is the
+real work, and the diagram follows from it.
 
-- [Input Module A](../input-a/spec.md) — what it contributes
-- [Input Module B](../input-b/spec.md)
-```
-
-That is a dependency edge list. Extract it:
-
-```python
-def constituents(text):
-    m = re.search(r"^#+\s*Constituent Modules\s*$(.*?)(?=^#|\Z)", text, re.M | re.S)
-    if not m:
-        return []
-    out = []
-    for link in re.finditer(r"\]\(\.\./([A-Za-z0-9._-]+)/spec\.md", m.group(1)):
-        slug = link.group(1)
-        if slug not in out:
-            out.append(slug)
-    return out
-```
-
-Restrict to tracked files, so gitignored build artifacts do not enter the graph:
-
-```bash
-git ls-files docs/modules
-```
+Restrict the input to tracked files (`git ls-files`), so gitignored build
+artifacts do not enter the graph.
 
 ## Two relations, not one
 

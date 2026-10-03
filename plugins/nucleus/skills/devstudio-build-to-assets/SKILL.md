@@ -1,6 +1,6 @@
 ---
 name: devstudio-build-to-assets
-description: Convert a build file (xlsx with one sheet per condition) into a Nucleus-compatible platemap CSV — recommended format with per-component concentration and volume columns, Well column left empty for the experimenter to fill after plating. Run before an experiment or before devstudio-log-to-devnote-g.
+description: Convert a build file (xlsx with one sheet per condition) into a Nucleus-compatible platemap CSV — recommended format with per-component concentration and volume columns, Well column left empty for the experimenter to fill after plating. Run before an experiment or before devstudio-log-to-devnote-m.
 ---
 
 # devstudio-build-to-assets

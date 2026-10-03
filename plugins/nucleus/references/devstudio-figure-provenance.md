@@ -2,7 +2,7 @@
 
 One record, two encodings. A figure in a DevNote has to carry where it came
 from: which notebook drew it, which platemap and raw data it was drawn from.
-That record is written twice by `devstudio-log-to-devnote-g` — once as JSON in
+That record is written twice by `devstudio-log-to-devnote-m` — once as JSON in
 `manifest.json`, once as a line of text in the DevNote(G) Doc body.
 
 This file owns both encodings. It exists as one file, rather than one per

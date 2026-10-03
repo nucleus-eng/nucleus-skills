@@ -29,7 +29,7 @@ lab-ready PDF/BOM pipeline, TOC (`myst.yml`) management for Docs, and CI wiring 
 stay with nucleus-docs and its `build-boms`/`lint-docs` skills. Also out of scope:
 pandoc-conversion notation fixups (subscript/superscript/underline/highlight) and the
 verbatim-fidelity rules for turning raw source material into a draft — those are
-`devstudio-log-to-devnote-g`'s job (largely already written in the uploaded `ingest.md`),
+`devstudio-log-to-devnote-m`'s job (largely already written in the uploaded `ingest.md`),
 not this skill's. And `curvenote.yml`/`base.yml` generation plus venue submission checks
 are a separate downstream skill (uploaded as `submit.md`), not part of authoring MyST
 content itself — see the note under "What this skill does not do."
@@ -116,7 +116,7 @@ survive the reflow untouched.
   level** — don't assume a fixed absolute count applies regardless of actual nesting depth.
 - **`{seqviz}`**: a custom directive (specific to the DevNote-archive repo's plugin set,
   not documented in `nucleus-docs`) embedding an interactive plasmid viewer from a `.gb`
-  file, e.g. `:::{seqviz} ./plasmids/pOpen-deGFP.gb`. Full syntax/options not yet
+  file, e.g. `:::{seqviz} ./dna/pOpen-deGFP.gb`. Full syntax/options not yet
   documented here — known gap.
 
 ## Figures
@@ -281,7 +281,7 @@ figure-de-emphasis pattern was found. Treat as Docs(M)-confirmed only.
   DevStudio's own version — TBD, don't assume the two-file structure is final when that
   skill gets built.
 - Does not cover pandoc-conversion notation fixups or source-fidelity rules — that's
-  `devstudio-log-to-devnote-g`'s scope (`ingest.md` uploaded as reference, largely
+  `devstudio-log-to-devnote-m`'s scope (`ingest.md` uploaded as reference, largely
   reusable as-is).
 - Does not yet document DevNote-only directives beyond `{seqviz}`'s existence.
 

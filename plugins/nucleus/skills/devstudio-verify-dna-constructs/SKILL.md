@@ -1,6 +1,6 @@
 ---
 name: devstudio-verify-dna-constructs
-description: Verify that a DNA construct named in a DevStudio composition table actually corresponds to the sequence file it's claimed to match — by length against the GenBank LOCUS line, not by filename resemblance. Use whenever devstudio-log-to-devnote-g or devstudio-devnote-m-to-docs-g drafts or edits a Composition/Designs table row that names a specific construct, or whenever a human asks "does this construct check out." This is a staging-namespace (devstudio-) skill, narrowly scoped from nucleus-docs' broader construct-verification conventions — see "Provenance" below before treating it as canonical.
+description: Verify that a DNA construct named in a DevStudio composition table actually corresponds to the sequence file it's claimed to match — by length against the GenBank LOCUS line, not by filename resemblance. Use whenever devstudio-log-to-devnote-m or devstudio-devnote-m-to-docs-g drafts or edits a Composition/Designs table row that names a specific construct, or whenever a human asks "does this construct check out." This is a staging-namespace (devstudio-) skill, narrowly scoped from nucleus-docs' broader construct-verification conventions — see "Provenance" below before treating it as canonical.
 invokes:
   - devstudio-read-from-google-drive   # step 2: current-folder check via folder-scoped search_files
 ---
@@ -138,7 +138,7 @@ For each construct actually named with a bp claim in a Composition/Designs table
 - Does not verify sequence identity beyond length — a same-length swap passes this
   check and would need actual sequence comparison to catch.
 - Does not run as a standing CI check — this is invoked per-draft, at the point
-  `devstudio-log-to-devnote-g` or `devstudio-devnote-m-to-docs-g` produces or edits a
+  `devstudio-log-to-devnote-m` or `devstudio-devnote-m-to-docs-g` produces or edits a
   table row naming a construct, not as a corpus-wide sweep.
 - Does not decide whether a missing construct should be submitted to `nucleus-eng/DNA`
   — that's a human call; this skill's job stops at flagging the gap clearly.

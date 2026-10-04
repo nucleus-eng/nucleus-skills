@@ -478,12 +478,35 @@ Pattern zarr-viewer, a microscopy store on `data.nucleus.engineering`:
 
 {
     "source": "<zarr URL from the provenance line>",
-    "height": "600px"
+    "height": "600px",
+    "menuOpen": true
 }
 :::
 ```
 
-Two rules on this one, both measured.
+Point `source` at one well, not at the plate root. A plate store addresses a
+well by row and column, so well C3 of an OME-NGFF plate is
+`<store>.zarr/C/3/0`. A reader who opens the root gets the whole plate and no
+way to pick a well.
+
+Three rules on this one, all measured.
+
+Always write `"menuOpen": true`. The widget calls
+`vizarr.createViewer(div, { menuOpen: !!model.get('menuOpen') })`, and its own
+source comment reads "hard code closed for now". Without the key the sidebar
+starts closed, and the sidebar is the only place a reader adjusts per-channel
+contrast. This was measured on 2026-10-04 against a real store. With the key,
+the panel shows opacity and the channel list. It also shows one contrast slider
+and one color menu per channel.
+
+A closed sidebar is not the only reason a viewer looks flat. Vizarr honors the
+`omero` channel metadata inside the store. A store written with
+`window.start` 0 and `window.end` 65535 renders almost black, because real
+signal sits a few hundred counts above zero. The widget forwards only `source`,
+`height` and `menuOpen`, so `contrast_limits` and `colors` cannot be set per
+viewer, although `vizarr.addImage` accepts both. Fix the window values where
+the store is written. Where a DevNote needs a particular default view, raise it
+as a review item rather than writing it into the viewer block.
 
 Stack these viewers one after another. Do not put them in a tab-set and do
 not put them in a dropdown. The widget creates its viewer on a detached

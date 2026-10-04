@@ -1,14 +1,13 @@
 ---
-name: devstudio-log-to-devnote-g
-description: Convert a human-selected set of one or more DevStudio Log folders (each holding a Log Google Doc, and where present a platemap, analysis notebooks, and raw instrument data) into a single draft DevNote as a native, commentable Google Doc — following Nucleus DevNote structure, synthesizing across the set when it spans a continuous narrative, with fidelity to source content and explicit flags for anything uncertain or missing. Use when a human selects the specific folder(s) they've deemed ready to draft into a DevNote. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+name: devstudio-log-to-devnote-m
+description: Convert a human-selected set of one or more DevStudio Log folders (each holding a Log Google Doc, and where present a platemap, analysis notebooks, and raw instrument data) into a single draft DevNote as MyST markdown, writing main.md and curvenote.yml directly. Follows Nucleus DevNote structure, synthesizes across the set when it spans a continuous narrative, keeps fidelity to source content, and raises every uncertain or missing item as a MyST admonition. Use when a human selects the specific folder(s) they have deemed ready to draft into a DevNote. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
 invokes:
   - devstudio-read-from-google-drive   # steps 2, 3, 5: folder search, pandoc download, notebook inspection
-  - devstudio-write-to-google-drive    # step 8: write the draft Doc and manifest
   - devstudio-verify-dna-constructs    # step 7: construct identity check before naming in draft
-  - devstudio-author-myst-content      # step 1: complete-vs-stub signals
+  - devstudio-author-myst-content      # step 1: complete-vs-stub signals; steps 5.5-5.6: fence depth, tab-sets, captions
 ---
 
-# devstudio-log-to-devnote-g
+# devstudio-log-to-devnote-m
 
 ## Provenance
 
@@ -17,18 +16,21 @@ Staging skill in the `devstudio` namespace, adapted from the uploaded `ingest.md
 deliberate architectural divergence, described below, to fit DevStudio's two-stage
 pipeline rather than `ingest.md`'s single-stage one.
 
-**The divergence:** `ingest.md` goes straight from raw material to MyST-formatted
-`main.md` — real `:::{table}` and `:::{figure}` directives, YAML frontmatter, the whole
-thing — in one pass. DevStudio's pipeline has an explicit reason to split this into two
-stages: DevNote(G) exists specifically so a TA can comment on it before it's finalized,
-and it's a **native Google Doc**, which does not render MyST directive syntax — a Doc
-full of literal `:::{table}` text would look broken to a human reviewer, not just
-unstyled. So this skill produces a **plain, well-structured draft** (Doc headings, real
-Doc tables, embedded images, visible REVIEW flags) using `ingest.md`'s content rules
-(fidelity, table restructuring, REVIEW-flag conventions) without its MyST serialization.
-`devstudio-devnote-g-to-devnote-m` (not yet built) is responsible for turning the
-reviewed draft into actual MyST syntax, applying `devstudio-author-myst-content`'s
-conventions, and assigning the final frontmatter/id.
+The divergence this skill used to keep, and why it is removed: `ingest.md`
+goes straight from raw material to MyST-formatted `main.md` in one pass. This
+skill used to diverge from that. A native Google Doc cannot render MyST
+directive syntax, and DevNote(G) was the whole draft, read by a TA before
+anything moved to MyST.
+
+This skill no longer diverges. It writes `main.md` directly, the same as
+`ingest.md`. The reason to diverge assumed DevNote(G) had to be the full
+draft. It does not. DevNote(G) is now a short Doc. A tool regenerates it from
+`main.md`'s own live admonitions once per review cycle, carrying only the
+gaps a TA still needs to answer.
+
+A Doc still cannot render MyST. That no longer matters. The short Doc carries
+no MyST syntax. It carries prose gaps and a link to a rendered Curvenote
+preview for full context.
 
 This skill is invocation-driven, like `devstudio-read-from-google-drive` and
 `devstudio-write-to-google-drive` — but **the invocation unit is a human-curated set of
@@ -47,9 +49,9 @@ here — a separate concern from this skill's own logic.)
 
 ## Breaking changes
 
-**Figure-provenance line format** (affects `devstudio-devnote-g-to-devnote-m`): the
+**Figure-provenance line format** (affects `devstudio-assemble-devnote-assets`): the
 format changed from a multi-line block to a single-line structured format (see Step 4).
-The G→M skill handles both; new DevNote(G) docs always use the single-line format.
+The assembly skill handles both. New DevNotes always use the single-line format.
 
 **`manifest.json` schema additions**: `asset_chain_complete` and `findings` fields were
 added; older manifests without them are treated as `asset_chain_complete: false`.
@@ -136,43 +138,47 @@ during `devstudio-read-from-google-drive`'s own testing: a log turned up as a Do
 `lab-log`, a platemap as a `.tsv`) — role-based identification, not filename matching,
 applies to every folder in the set.
 
-## Step 2.5 — produce Specification and Authors tables
+## Step 2.5 — seed the frontmatter fields
 
-Always place a Specification table and an Authors table at the top of the draft Google
-Doc, matching the DevNote(G) template structure. These are required headers even when
-the source Log doc has no equivalent tables (which is the common case for raw logs).
+Frontmatter does not go in the body. Write the Specification and Authors
+fields into `curvenote.yml`, per Step 8.5, and write no Specification table
+and no Authors table into `main.md`.
 
-**Specification table** — write blank rows for any field not found in the source:
+Write `[PLEASE FILL IN]` (all-caps, in brackets) as the value of every field
+not found in the source. No markup goes around it. Observed directly on
+2026-10-03: a rendered Curvenote preview shows `[PLEASE FILL IN]` as plain
+bracket text, with no color and no styling. A reader finds it that way.
 
-| Field | Value |
-|---|---|
-| Title | [value from source Specification table only, or `[PLEASE FILL IN]`] |
-| Date | [value from source, or `[PLEASE FILL IN]`] |
-| License | CERN-OHL-P-2.0; CC-BY-4.0 |
+Fields and their sources:
 
-**Do not infer the title from document headings, folder names, or experiment labels.**
-The title must come from the Specification table's Title row. If it is blank or absent,
-use `[PLEASE FILL IN]`. You may add a comment noting candidate text found in the doc
-(e.g. `<!-- Candidate title from first heading: "pOpen-deGFP expression in Nucleus
-Cytosol and PURExpress" — QC to confirm -->`), but never adopt it silently as the title.
-A wrong title in a DevNote is a serious error; the conservative default is always blank.
-
-**Authors table** — write one blank row when no authors are found in the source:
-
-| Name | ORCID | Email | Institution |
-|---|---|---|---|
-| [extracted, or `[PLEASE FILL IN]`] | `[PLEASE FILL IN]` | `[PLEASE FILL IN]` | `[PLEASE FILL IN]` |
-
-Use `[PLEASE FILL IN]` (all-caps, in brackets) as the placeholder text in every blank
-cell. Per Step 7.5, the draft is written as HTML — render these in red bold so they
-appear red in the converted Google Doc automatically:
-```html
-<span style="color:#cc0000;font-weight:bold">[PLEASE FILL IN]</span>
+```
+title        from the source Specification table's Title row only
+date         from the source, formatted YYYY-MM-DD
+license      content CC-BY-4.0, code CERN-OHL-P-2.0
+authors      one entry per row of the source Authors table
+affiliations one entry per distinct institution
 ```
 
-Do not author or fabricate any field — a blank placeholder is always correct when the
-value is unknown. License defaults to `CERN-OHL-P-2.0; CC-BY-4.0` (the template
-default) without flagging, since this is a safe, policy-driven default.
+**Do not infer the title from document headings, folder names, or experiment
+labels.** The title must come from the Specification table's Title row. If it
+is blank or absent, write `[PLEASE FILL IN]`. You can add a comment naming
+candidate text found in the doc, for example:
+
+```yaml
+# Candidate title from first heading: "pOpen-deGFP expression in Nucleus
+# Cytosol and PURExpress" — QC to confirm
+```
+
+Never adopt a candidate silently as the title. A wrong title in a DevNote is
+a serious error, and the conservative default is always blank.
+
+Do not author or fabricate any field. A blank placeholder is always correct
+when the value is unknown. The license pair above is the template default and
+is written without a flag.
+
+Each field left as `[PLEASE FILL IN]` is a gap.
+`devstudio-devnote-g-to-devnote-m` echoes the unanswered ones into each
+review Doc, per its Step 3.
 
 ## Step 3 — extract and preprocess the log content
 
@@ -239,7 +245,7 @@ data-file rule later in this step reads the loading calls from it.
 
 **Figure selection is always explicit — do not carry all figures forward by default.**
 After inventorying all figures found (embedded in doc + asset folder), present the list
-to the user and ask which to include in the DevNote(G) before writing the draft.
+to the user and ask which to include in `main.md` before writing the draft.
 Format the prompt as:
 
 ```
@@ -249,7 +255,7 @@ Found N figures across the selected log(s):
   3. figures/Kinetics2.png — asset folder, notebook: Analysis.ipynb (cell 8, no #| label:)
   4. figures/endpoint.png — asset folder, notebook: Analysis.ipynb (cell 11, no #| label:)
 
-Which figures should be included in the DevNote(G)? (reply with numbers, e.g. "1, 3")
+Which figures should be included in main.md? (reply with numbers, e.g. "1, 3")
 ```
 
 Wait for the user's selection before proceeding. Only include the selected figures in
@@ -258,13 +264,13 @@ but "does this figure have an intact asset chain" — and the human decides whet
 include it, not the skill. Do not glob-copy the entire folder indiscriminately — but
 do not require a prose citation that will never appear.
 
-**How figures appear in the DevNote(G) draft**: each selected figure is represented
-as a single structured line in the Results section, immediately after the prose it
-belongs to:
+**How figures appear in `main.md`**: each selected figure carries a single
+structured provenance line in the Results section, immediately after the prose
+it belongs to, alongside the MyST figure block Step 5.5 emits:
 
 **The line format is owned by [`references/devstudio-figure-provenance.md`](../../references/devstudio-figure-provenance.md)** — including the zarr-viewer and schematic
 variants, and the rule that values are backtick-quoted. Write it exactly as that
-reference gives it; `devstudio-devnote-g-to-devnote-m` parses the line, so an
+reference gives it. `devstudio-assemble-devnote-assets` parses the line, so an
 unquoted variant does not round-trip.
 
 Use it consistently — do not embed figures as `📷 Figure N:` blocks or
@@ -410,9 +416,138 @@ used in `module-Clpxp-Cytosol/main.md` by the author themselves; (b) notebook ex
 but platemap or raw data can't be confirmed present; (c) a `#fig:` glue reference has
 no matching `label` in notebook cell metadata.
 
-**Purpose and lifespan**: this manifest exists solely so `devstudio-devnote-g-to-devnote-m`
-can construct the correct MyST figure references. Once consumed by that stage, it is
-discarded — it is not DevNote content and does not travel further.
+**Purpose and lifespan**: this manifest is a sidecar that stays beside
+`main.md`. It is kept for debugging and for later review, not for one
+downstream read. `devstudio-assemble-devnote-assets` reads it as a faster
+path to the filenames `main.md`'s own figure-provenance lines already name.
+When the two disagree, `main.md` wins, because `main.md` is what a reviewer
+edits.
+
+The manifest is not DevNote content. It is not listed in `curvenote.yml`'s
+`toc`, and it is not part of the published article.
+
+## Step 5.5 — emit the MyST figure block
+
+> **INVOKE** `devstudio-author-myst-content` — caption number stripping, tab-sets, `:sync:` keys and fence depth are owned there, not here
+
+Write one MyST figure block per selected figure, at the position in `main.md`
+the figure's prose belongs to. Route by the pattern Step 5 already recorded
+in the manifest. Do not re-open the notebook to re-derive it.
+
+On a figure or a table, write `:label:`, not `:name:`. A figure or table
+carrying `:label:` resolves under `{numref}` and `{ref}`. This is what the
+one built DevNote uses throughout, and its cross-references resolve. An
+admonition is the other case: it carries `:name:`, which is what
+`devstudio-devnote-g-to-devnote-m` matches a reviewer's answer against.
+
+Pattern quarto-label, a notebook cell carrying a `#| label:` tag:
+
+```
+:::{figure} #<cell_label>
+:label: fig-<cell_label>
+:align: center
+:width: 75%
+Caption text.
+:::
+```
+
+Copy `<cell_label>` verbatim from the manifest. Step 5 already checked it for
+collisions inside its own notebook. The `fig-` prefix on `:label:` only keeps
+it clear of the notebook's own anchor. Add the notebook to `curvenote.yml`'s
+`toc` list, per Step 8.5.
+
+Pattern static-png:
+
+```
+:::{figure} ./figures/<name>.png
+:label: fig-<slug>
+:align: center
+:width: 75%
+Caption text.
+:::
+```
+
+Add `<!-- missing notebook -->` when the figure exists and no backing
+notebook was found.
+
+Pattern zarr-viewer, a microscopy store on `data.nucleus.engineering`:
+
+```
+:::{anywidget} https://curvenote.github.io/widgets/widgets/vizarr-viewer.js
+:class: w-full
+
+{
+    "source": "<zarr URL from the provenance line>",
+    "height": "600px"
+}
+:::
+```
+
+Two rules on this one, both measured.
+
+Stack these viewers one after another. Do not put them in a tab-set and do
+not put them in a dropdown. The widget creates its viewer on a detached
+element that has a height and no width, and it never re-measures. Any
+instance hidden when the page mounts stays blank for good.
+
+A viewer does not survive JATS conversion, in any arrangement. Where viewers
+carry a result, also emit one static figure that carries the same result, and
+say in its caption that it is the archival record of the viewers.
+
+Cross-references in prose: write ``{ref}`fig-slug` ``, never a hard-coded
+number.
+
+## Step 5.6 — the section skeleton
+
+Emit these top-level sections, in this order, and write `[PLEASE FILL IN]`
+under any one the log does not fill:
+
+```
+# Overview
+# Reagents
+# Constructs
+# Protocol
+# Methods
+# Results
+# Notes
+# What's next
+# Resources
+```
+
+Where log content maps:
+
+```
+Overview      the log's own overview or introduction, verbatim
+Reagents      the materials table, as a :::{table} with a :label:
+Constructs    the DNA table, as a :::{table} with a :label:
+Protocol      the log's protocol narrative, verbatim
+Methods       one ## subsection per composition or condition set
+Results       one ## subsection per reported well or experiment
+Notes         the log's own notes or failure modes, heading preserved
+What's next   the log's forward-looking section
+Resources     links to each experiments/ file, and to the review Doc
+```
+
+Composition tables go under `# Methods`, never under `# Results`. In the
+Results narrative, replace any "as shown in Table N" prose with a `{numref}`
+cross-reference to the Methods table. MyST renders these as hover cards, so a
+reader inspects the composition without leaving Results.
+
+Preserve a non-template section the author wrote rather than forcing it into
+one above. Flag it:
+
+```
+<!-- STYLE: non-standard section heading "<name>" — preserved per
+participant intent -->
+```
+
+Do not emit a References section. Inline DOI links auto-generate one, and a
+hand-written second one duplicates every entry. Resources is the different
+thing: it holds what cannot be cited by DOI.
+
+Drive URLs never appear as hyperlink hrefs in `main.md`. Curvenote's link
+checker reports them 401 Unauthorized, and a reader without Drive access
+cannot open them.
 
 ## Step 6 — fidelity rules (absolute; adapted from `ingest.md`, with divergences marked)
 
@@ -532,43 +667,103 @@ If the draft names a specific DNA construct in a composition-table row, run this
 before finalizing — don't let an unverified construct↔file identity claim land in a
 draft, even a draft still pending human review.
 
-## Step 7.5 — draft formatting: links, red text, and HTML content
+## Step 7.5 — draft formatting
 
-**Write the draft as HTML** (pass `contentMimeType: text/html` to `create_file`).
-Drive auto-converts HTML to a native Google Doc, preserving inline styles including
-text color. This is the mechanism for red author reminders — not a manual step.
+Write `main.md` as plain MyST markdown. Use no HTML wrapping and no inline
+color. A REVIEW item is a MyST admonition at the point in the document it
+concerns, following `devstudio-author-myst-content`'s fence-depth rules. To
+resolve one once answered, wrap it in an HTML comment, `<!-- ... -->`, rather
+than deleting it. This keeps the reasoning in the file. It is also the signal
+a later gap-extraction pass reads to know the item is closed.
 
-**Red text rule**: every `[PLEASE FILL IN]` placeholder and every author-action
-reminder must be wrapped in a red bold span:
-```html
-<span style="color:#cc0000;font-weight:bold">[PLEASE FILL IN]</span>
-```
-This applies to: Specification table blank cells, Authors table blank cells, blank
-section bodies, and any inline REVIEW prompt addressed to the author. REVIEW flags
-that are informational (e.g. flagging a data gap for QC awareness, not requiring
-author action) may remain in black.
-
-**Link display**: wherever a Drive file is referenced, use an HTML anchor with the
-filename as display text — never show the raw Drive URL or file ID in the visible body:
-```html
-<a href="https://drive.google.com/file/d/FILE_ID/view">Analysis.ipynb</a>
-```
-For GitHub links, use the construct name as display text:
-```html
-<a href="https://github.com/nucleus-eng/DNA/blob/main/reporters/pOpen-deGFP.gbk">pOpen-deGFP.gbk</a>
-```
-File IDs belong in the manifest JSON only, not in the human-facing document.
-
-This applies to: constructs table Name column, reagent Link column, data/platemap
-references in figure captions, and any asset cross-references in the narrative.
+Link display: a plain markdown link, `[Analysis.ipynb](<drive url>)` or
+`[pOpen-deGFP.gbk](<github url>)`. File IDs still belong in the manifest, not
+in the visible body.
 
 ## Step 8 — write the draft
 
-> **INVOKE** `devstudio-write-to-google-drive` — native-Doc path: creates a commentable Google Doc in the DevNote directory and writes the figure-provenance manifest alongside it
+Write `main.md`, `curvenote.yml`, the figure-provenance manifest and the
+directory structure into a working copy of `nucleus-eng/devstudio-board`, in
+its `devnotes/` directory.
 
-Use `devstudio-write-to-google-drive`'s native path (this is exactly the "human will
-comment on it" case that skill defaults to native for) to land the draft as a Google Doc
-in the DevNote directory, alongside the figure-provenance manifest.
+Do not open a branch and do not open a pull request here. The pull request
+opens after `devstudio-assemble-devnote-assets` has filled the tree, so that
+the first Curvenote preview a reviewer reads renders its figures. A pull
+request opened at this point carries an empty tree.
+
+Create the directory tree alongside `main.md` on the first cut, empty:
+
+```
+<devnote-slug>/
+├── main.md
+├── curvenote.yml
+├── experiments/
+├── figures/
+├── dna/
+└── general/
+```
+
+**The directory is `dna/`, not `plasmids/`.** Every plasmid is DNA, and not
+every DNA is a plasmid. A linear template is the case that breaks the older
+name. `devnote-swh-20260925-ph-sensor-in-solution` shows it: its two `.gb`
+files are ssDNA oligos, and they sat in a folder called `plasmids/`. Named
+by Jon Calles on 2026-10-03.
+
+These stay empty here. `devstudio-assemble-devnote-assets` owns every file
+that lands inside them, and runs once a human has reviewed the links in
+`main.md`.
+
+Stop here and hand off. The next stage is a human review of the links in
+`main.md`, which fires `devstudio-assemble-devnote-assets`.
+
+## Step 8.5 — write `curvenote.yml`
+
+Write this file beside `main.md`. Every field below appears in the one
+DevNote built this way, and nothing beyond them is written on a first cut.
+
+```yaml
+version: 1
+project:
+  title: '[PLEASE FILL IN]'
+  description: >
+    <one or two sentences from the log's own overview>
+  authors:
+    - name: '[PLEASE FILL IN]'
+      affiliations:
+        - affiliations-curvenote-generated-uid-0
+      id: contributors-curvenote-generated-uid-0
+  affiliations:
+    - id: affiliations-curvenote-generated-uid-0
+      name: b.next
+  date: '<YYYY-MM-DD>'
+  open_access: true
+  license:
+    content: CC-BY-4.0
+    code: CERN-OHL-P-2.0
+  exports:
+    - format: meca
+  toc:
+    - file: main.md
+  resources:
+    - experiments/**
+  id: <generated-uuid>
+site:
+  template: article-theme
+```
+
+Generate a fresh uuid for the `id` field. Never reuse one from another
+DevNote or an earlier draft:
+
+```bash
+python3 -c "import uuid; print(uuid.uuid4())"
+```
+
+Add one `toc` entry per notebook that a quarto-label figure references, per
+Step 5.5.
+
+Do not write `extends: base.yml`. When `extends:` is active, `base.yml`'s
+bare `seqviz.mjs` plugin entry wins over the `curvenote.yml` override and the
+build fails with ENOENT.
 
 ## Do not (extends `ingest.md`'s list; the last three are DevStudio's own)
 
@@ -589,21 +784,26 @@ in the DevNote directory, alongside the figure-provenance manifest.
 - [ ] Verify composition-table values are correct before this goes further.
 - [ ] Confirm the figure-provenance manifest's notebook/platemap links are accurate,
       not just present.
-- [ ] Check the Specification/Composition content is complete enough to reproduce
+- [ ] Check the frontmatter and composition content is complete enough to reproduce
       the experiment.
-- [ ] Confirm the licence. The Specification table defaults to
-      `CERN-OHL-P-2.0; CC-BY-4.0` without flagging, which is a safe default and not
+- [ ] Confirm the licence. `curvenote.yml` defaults to content `CC-BY-4.0` and
+      code `CERN-OHL-P-2.0` without flagging, which is a safe default and not
       a decision — a human still has to make the decision. `ingest` asks for the
-      same confirmation; dropping it from this checklist meant nobody ever saw the
+      same confirmation. Dropping it from this checklist meant nobody ever saw the
       licence question.
+- [ ] Review the links in `main.md`. That review is the gate that fires
+      `devstudio-assemble-devnote-assets`.
 
 ## What this skill does not do
 
-- Does not produce MyST syntax, frontmatter YAML, or assign a final id/uuid — that's
-  `devstudio-devnote-g-to-devnote-m`, using `devstudio-author-myst-content`'s
-  conventions once this draft is reviewed.
-- Does not generate `curvenote.yml`/`base.yml` or run venue submission checks — a
-  separate downstream skill (`submit.md` uploaded as reference).
+- Produces `main.md` directly, including REVIEW content as admonitions. Does
+  not assign frontmatter YAML or a final id/uuid — that is
+  `devstudio-devnote-g-to-devnote-m`'s job, narrowed to folding answered gaps
+  back by label and confirming every admonition is resolved before
+  assignment.
+- Does not generate `base.yml` and does not run venue submission checks — a
+  separate downstream skill (`submit.md` uploaded as reference). It does
+  write `curvenote.yml`, per Step 8.5.
 - Does not decide an experiment is "done" — that's a human call made before invocation.
 - Steps 3–8 not yet validated end-to-end against a real complete experiment. Validated
   against real Drive folders to confirm the design decisions above (two experimentalist

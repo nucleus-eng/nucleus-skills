@@ -131,7 +131,7 @@ dispatch otherwise held up as designed.
   don't build it speculatively.
 - Figure-provenance (which platemap/notebook produced a given figure in a `.ipynb`'s
   output) is explicitly out of scope for this skill — that's a separate convention to be
-  designed alongside `devstudio-log-to-devnote-g`, not a Drive-reading concern.
+  designed alongside `devstudio-log-to-devnote-m`, not a Drive-reading concern.
 - `.ipynb` handling here is read-only and untyped — this skill hands back raw notebook
   JSON; parsing cell outputs, labels, or `glue` tags is the caller's job, not this
   skill's.

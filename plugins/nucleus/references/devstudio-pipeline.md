@@ -16,27 +16,31 @@ objects" near the end of this file.
 Log folders (Google Drive, sf-node)
         │  human selects the folders — skill does not decide
         ▼
-┌─────────────────────────────────┐
-│  devstudio-log-to-devnote-g     │  produces: DevNote(G) + manifest.json
-└─────────────────────────────────┘
-        │  human TA reviews and comments on the Doc
+┌───────────────────────────────────┐
+│  devstudio-log-to-devnote-m       │  produces: main.md, curvenote.yml,
+│                                   │  the empty tree, manifest.json
+└───────────────────────────────────┘
+        │  human reviews the links in main.md
         ▼
-┌─────────────────────────────────┐
-│  devstudio-devnote-g-to-devnote-m│  produces: main.md, curvenote.yml, directory structure
-└─────────────────────────────────┘
+┌───────────────────────────────────┐
+│  devstudio-assemble-devnote-assets│  downloads: notebooks, platemaps, raw data
+└───────────────────────────────────┘
         │
         ▼
-┌─────────────────────────────────┐
-│  devstudio-assemble-devnote-assets│ downloads: notebooks, platemaps, raw data
-└─────────────────────────────────┘
-        │
+┌───────────────────────────────────┐
+│  devstudio-submit-to-github       │  opens: branch + draft PR against
+│                                   │  devstudio-board
+└───────────────────────────────────┘
+        │  draft.yml posts a Curvenote preview link to the PR
         ▼
-┌─────────────────────────────────┐
-│  devstudio-submit-to-github     │  opens: branch + draft PR against nucleus-devnote-archive-1
-└─────────────────────────────────┘
-        │  TA reviews and merges the PR
+┌───────────────────────────────────┐
+│  review cycle, repeated           │
+│  a short Doc carries live gaps    │
+│  devstudio-devnote-g-to-devnote-m │  folds the answers back into main.md
+└───────────────────────────────────┘
+        │  zero live admonitions, then a human marks the PR ready
         ▼
-GitHub Action → Curvenote venue → devnotes.nucleus.engineering
+TA merges → GitHub Action → Curvenote venue → devnotes.nucleus.engineering
 
 [separate track, after DevNote(M) exists:]
 ┌─────────────────────────────────┐
@@ -47,6 +51,18 @@ GitHub Action → Curvenote venue → devnotes.nucleus.engineering
 nucleus-eng/nucleus-docs commit
 ```
 
+**The loop is the point.** Before 2026-10-03 this was a straight line through
+a Google Doc that held the whole draft. Now `main.md` is written first and
+the Doc carries only the gaps still open. Each review cycle closes some of
+them. A DevNote is ready when none are left.
+
+**Destination follows provenance.** Content originating in the
+DevStudio-Event Google Drive lands in `nucleus-eng/devstudio-board`.
+Everything else lands in `nucleus-eng/nucleus-devnote-archive-1`, which stays
+the primary archive. Every `devstudio`-namespaced skill takes the first
+branch. A general-purpose skill such as `nucleus:migrate-devnote` takes the
+second, and must not be swept into a repo-wide rename.
+
 ## Leaf skills (no downstream invocations)
 
 These skills are invoked by others but do not themselves invoke pipeline skills:
@@ -54,71 +70,57 @@ These skills are invoked by others but do not themselves invoke pipeline skills:
 - `devstudio-read-from-google-drive` — resolves Drive references, reads content or raw bytes
 - `devstudio-write-to-google-drive` — creates native Docs or raw files in Drive
 - `devstudio-author-myst-content` — MyST authoring conventions for DevNote(M) and Docs(M)
-- `devstudio-submit-to-github` — branch + draft PR against the DevNote archive repo
-- `devstudio-assemble-devnote-assets` — downloads supporting files into the devnote directory
+- `devstudio-submit-to-github` — branch + draft PR against `devstudio-board`
+- `devstudio-devnote-g-to-devnote-m` — folds a reviewer's answers back into `main.md`
 - `devstudio-devnote-to-docs-g` — transforms DevNote(M) into a Docs(G) draft
 
 ## Dependency graph
 
 ```
-devstudio-log-to-devnote-g
+devstudio-log-to-devnote-m
   ├── devstudio-read-from-google-drive
-  ├── devstudio-write-to-google-drive
-  │     └── devstudio-read-from-google-drive
   ├── devstudio-verify-dna-constructs
   │     └── devstudio-read-from-google-drive
   └── devstudio-author-myst-content
 
-devstudio-devnote-g-to-devnote-m
-  ├── devstudio-verify-dna-constructs
-  │     └── devstudio-read-from-google-drive
-  ├── devstudio-author-myst-content
+devstudio-assemble-devnote-assets
   └── devstudio-submit-to-github
+
+devstudio-devnote-g-to-devnote-m
+  (invokes nothing)
 ```
 
-## Stage: Log → DevNote(G)
+## Stage: Log → main.md
 
-**Skill**: `devstudio-log-to-devnote-g`
+**Skill**: `devstudio-log-to-devnote-m`
 
 **Preconditions**:
 - Human has selected the specific Log folder(s) — skill does not crawl
 - Folders are confirmed non-stubs (complete-vs-stub check, see that skill)
 - Each selected folder contains a Log Google Doc (identified by role, not filename)
 
-**Produces**:
-- A native Google Doc in `san-francisco-node/devnotes/<experiment>/` titled `[DRAFT] ...`
-- `manifest.json` alongside the Doc — see schema below
-- Schematics pre-placed in `general/` (if present in source)
-
-**Human gate**: TA reviews the Doc and leaves comments; signals "ready" to trigger G→M.
-
----
-
-## Stage: DevNote(G) → DevNote(M)
-
-**Skill**: `devstudio-devnote-g-to-devnote-m`
-
-**Preconditions**:
-- DevNote(G) Google Doc exists in Drive and has been reviewed by a TA
-- `manifest.json` present alongside the Doc (or absent, with explicit flag)
-- No unresolved `??` markers in the Doc
-
-**Produces**:
+**Produces**, in a working copy of `nucleus-eng/devstudio-board` under `devnotes/`:
 ```
 <devnote-slug>/
-├── main.md              — MyST body with +++ abstract, sections, figures as directives
-├── curvenote.yml        — standalone (no extends: base.yml), full field set
-├── lorem.mjs            — local copy (identical in every devnote)
-├── base.yml             — copied verbatim from nucleus-eng/devnote-template
-├── environment.yml      — copied verbatim from nucleus-eng/devnote-template
-├── experiments/YYYYMMDD-slug/
-│   └── (notebooks listed in curvenote.yml toc, commented out pending assembly)
-├── figures/             — static PNGs from pandoc extraction
-├── plasmids/            — .gb files (if construct not yet in nucleus-eng/DNA)
-└── general/             — schematics and non-results figures
+├── main.md              — MyST body, every gap a live admonition
+├── curvenote.yml        — the measured first-cut field set, see that skill's Step 8.5
+├── manifest.json        — figure-provenance sidecar, stays beside main.md
+├── experiments/         — empty
+├── figures/             — empty
+├── dna/            — empty
+└── general/             — schematics pre-placed, if present in source
 ```
 
-**Human gate**: `devstudio-assemble-devnote-assets` runs immediately after, then TA reviews the PR.
+The directory is `dna/`, not `plasmids/`. Every plasmid is DNA, and not
+every DNA is a plasmid. A linear template is the case that breaks the older
+name. Named by Jon Calles on 2026-10-03. The two general-purpose skills
+`migrate` and `migrate-devnote` still say `plasmids/`, because they serve
+`nucleus-devnote-archive-1` and its published DevNotes use that name.
+
+This stage does not open a branch and does not open a pull request.
+
+**Human gate**: a human reviews the links in `main.md`, which fires asset
+assembly.
 
 ---
 
@@ -127,13 +129,16 @@ devstudio-devnote-g-to-devnote-m
 **Skill**: `devstudio-assemble-devnote-assets`
 
 **Preconditions**:
-- `main.md` and `curvenote.yml` exist at the devnote path
-- `curvenote.yml` has commented-out toc entries with Drive/Colab URLs
+- `main.md` exists and carries figure-provenance lines
+- A human has reviewed those links
+- `curvenote.yml` has commented-out toc entries with Drive or Colab URLs
 
 **Produces**:
 - Notebooks downloaded to `experiments/<slug>/`
 - Platemaps and raw instrument data downloaded to `experiments/<slug>/`
 - Toc entries in `curvenote.yml` uncommented after each successful download
+
+**Hands off** to `devstudio-submit-to-github` once the tree is full.
 
 ---
 
@@ -142,17 +147,39 @@ devstudio-devnote-g-to-devnote-m
 **Skill**: `devstudio-submit-to-github`
 
 **Preconditions**:
-- `main.md` and `curvenote.yml` present (minimum for GitHub Action to run)
+- The asset tree is full — the pull request opens after assets land, so that
+  the first preview a reviewer reads renders its figures
 - `gh auth status` passes
-- `nucleus-eng/nucleus-devnote-archive-1` cloned locally
+- `nucleus-eng/devstudio-board` cloned locally
 
 **Produces**:
-- Branch `devstudio/<devnote-slug>` in `nucleus-eng/nucleus-devnote-archive-1`
+- Branch `devstudio/<devnote-slug>` in `nucleus-eng/devstudio-board`
 - Draft PR with TA checklist
-
-**Human gate**: TA reviews and merges. GitHub Action fires on merge → Curvenote venue → published.
+- A Curvenote preview link, posted by `draft.yml`. That workflow's
+  `on: pull_request` block names no `types:`, so a draft pull request fires
+  `opened` in the same way a ready one does.
 
 ---
+
+## Stage: review cycle, repeated
+
+**Skill**: `devstudio-devnote-g-to-devnote-m`
+
+**Preconditions**:
+- `main.md` carries live admonitions
+- A short Doc for this cycle carries a reviewer's replies, matched by each
+  admonition's `:name:` label
+
+**Produces**:
+- Replies appended inside the admonitions they answer
+- Resolved admonitions wrapped in an HTML comment rather than deleted
+- Frontmatter assigned once no live gap is left
+
+**Human gate**: a human marks the pull request ready. The TA then reviews and
+merges, and the GitHub Action fires on merge to `main`.
+
+---
+
 
 ## Handoff objects — formats live one layer below
 
@@ -164,8 +191,13 @@ touched the topology document, while the formats themselves had no owner.
 
 | Object | Produced by | Consumed by | Format |
 | --- | --- | --- | --- |
-| Figure-provenance record — `manifest.json` and its inline Doc line | `devstudio-log-to-devnote-g` | `devstudio-devnote-g-to-devnote-m`, `devstudio-assemble-devnote-assets` | [`devstudio-figure-provenance.md`](devstudio-figure-provenance.md) |
-| `curvenote.yml` toc comments | `devstudio-devnote-g-to-devnote-m` | `devstudio-assemble-devnote-assets` | [`devstudio-curvenote-toc.md`](devstudio-curvenote-toc.md) |
+| Figure-provenance record — `manifest.json` and its inline line in `main.md` | `devstudio-log-to-devnote-m` | `devstudio-assemble-devnote-assets` | [`devstudio-figure-provenance.md`](devstudio-figure-provenance.md) |
+| `curvenote.yml` toc comments | `devstudio-log-to-devnote-m` | `devstudio-assemble-devnote-assets` | [`devstudio-curvenote-toc.md`](devstudio-curvenote-toc.md) |
+| Live admonitions in `main.md`, and the short Doc generated from them | `devstudio-log-to-devnote-m` | `devstudio-devnote-g-to-devnote-m` | no reference yet — the Doc generator is not built |
+
+The inline line now lives in `main.md`'s own figure blocks rather than in a
+Google Doc body. `main.md` is authoritative over the sidecar when the two
+disagree, because `main.md` is what a reviewer edits.
 
 The JSON and the inline line are two encodings of one record and are documented
 together, deliberately: they must agree about what the record contains, and when

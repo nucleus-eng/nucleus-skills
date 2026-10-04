@@ -1,14 +1,14 @@
 ---
 name: devstudio-submit-to-github
-description: Open a branch against nucleus-eng/nucleus-devnote-archive-1 and create a draft PR containing a new DevNote directory produced by devstudio-devnote-g-to-devnote-m. Invoked immediately after that skill produces its MyST output. A TA reviews and merges — the GitHub Action fires on merge to main, submitting to the Curvenote venue and publishing to devnotes.nucleus.engineering. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+description: Open a branch against nucleus-eng/devstudio-board and create a draft PR containing a new DevNote directory produced by devstudio-log-to-devnote-m. Invoked by devstudio-assemble-devnote-assets, once every asset named in main.md is in the tree. A TA reviews and merges — the GitHub Action fires on merge to main, submitting to the Curvenote venue and publishing to devnotes.nucleus.engineering. Destination follows provenance: this skill serves the DevStudio-Event pipeline, so it targets devstudio-board. A general-purpose skill still targets nucleus-devnote-archive-1, which stays the primary archive. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
 ---
 
 # devstudio-submit-to-github
 
 ## Provenance
 
-Staging skill in the `devstudio` namespace. Bridges `devstudio-devnote-g-to-devnote-m`'s
-MyST output to the `nucleus-eng/nucleus-devnote-archive-1` repo. Relies on GitHub
+Staging skill in the `devstudio` namespace. Bridges `devstudio-log-to-devnote-m`'s
+MyST output to the `nucleus-eng/devstudio-board` repo. Relies on GitHub
 credentials already configured for the running Claude Code session — confirmed available
 for 2 of 4 DevStudio TAs. Supersede once a canonical version exists outside this
 namespace.
@@ -18,13 +18,13 @@ namespace.
 Before running, confirm:
 ```bash
 gh auth status
-git -C ~/src/nucleus-eng/nucleus-devnote-archive-1 log --oneline -1
+git -C ~/src/nucleus-eng/devstudio-board log --oneline -1
 ```
 
 If the repo isn't cloned locally:
 ```bash
-git clone https://github.com/nucleus-eng/nucleus-devnote-archive-1.git \
-  ~/src/nucleus-eng/nucleus-devnote-archive-1
+git clone https://github.com/nucleus-eng/devstudio-board.git \
+  ~/src/nucleus-eng/devstudio-board
 ```
 
 If `gh auth` fails, stop and ask the TA to authenticate before proceeding —
@@ -34,7 +34,7 @@ don't attempt to work around missing credentials.
 
 Always start from a fresh main to avoid branch conflicts:
 ```bash
-cd ~/src/nucleus-eng/nucleus-devnote-archive-1
+cd ~/src/nucleus-eng/devstudio-board
 git checkout main
 git pull origin main
 ```
@@ -54,19 +54,19 @@ ask the TA whether to delete and recreate, or work from the existing branch.
 
 ## Step 3 — copy the DevNote directory
 
-Copy the complete directory structure produced by `devstudio-devnote-g-to-devnote-m`
+Copy the complete directory structure produced by `devstudio-log-to-devnote-m`
 into `devnotes/<devnote-slug>/`:
 
 ```bash
 cp -r /path/to/produced-devnote/ \
-  ~/src/nucleus-eng/nucleus-devnote-archive-1/devnotes/<devnote-slug>/
+  ~/src/nucleus-eng/devstudio-board/devnotes/<devnote-slug>/
 ```
 
 Verify the expected structure is present before committing:
 ```bash
-ls ~/src/nucleus-eng/nucleus-devnote-archive-1/devnotes/<devnote-slug>/
+ls ~/src/nucleus-eng/devstudio-board/devnotes/<devnote-slug>/
 # Expected: main.md, curvenote.yml, base.yml, environment.yml,
-#           experiments/, figures/, plasmids/ (if applicable)
+#           experiments/, figures/, dna/ (if applicable)
 ```
 
 Flag and stop if `main.md` or `curvenote.yml` are missing — these are the
@@ -75,11 +75,11 @@ minimum required for the GitHub Action to run successfully.
 ## Step 4 — commit
 
 ```bash
-cd ~/src/nucleus-eng/nucleus-devnote-archive-1
+cd ~/src/nucleus-eng/devstudio-board
 git add devnotes/<devnote-slug>/
 git commit -m "Add DevNote: <title> (<devnote-slug>)
 
-Produced by devstudio-devnote-g-to-devnote-m from DevNote(G) draft.
+Produced by devstudio-log-to-devnote-m from DevNote(G) draft.
 REVIEW items remaining: <count> (see main.md for details).
 TA: <qc-name>"
 ```
@@ -92,7 +92,7 @@ at a glance whether this is clean or needs attention before merging.
 ```bash
 git push origin devstudio/<devnote-slug>
 gh pr create \
-  --repo nucleus-eng/nucleus-devnote-archive-1 \
+  --repo nucleus-eng/devstudio-board \
   --base main \
   --head devstudio/<devnote-slug> \
   --title "DevNote: <title>" \
@@ -129,7 +129,7 @@ The TA decides when it's ready to merge.
 
 If the Curvenote CLI is available in the session:
 ```bash
-cd ~/src/nucleus-eng/nucleus-devnote-archive-1/devnotes/<devnote-slug>
+cd ~/src/nucleus-eng/devstudio-board/devnotes/<devnote-slug>
 curvenote check bnext-devnotes
 ```
 

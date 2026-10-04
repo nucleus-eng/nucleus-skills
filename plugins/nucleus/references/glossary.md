@@ -93,13 +93,13 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 
 | Refused | Use | Kind | Auto | Hits | Note |
 | --- | --- | --- | --- | --- | --- |
-| vesicle | GUV, SUV or LUV | Narrows | **yes** | 12 | GUV, SUV and LUV are distinct and must not merge. **Not a collapse** — `liposome` is itself general and has its own row below, so swapping one general word for another taught nothing. The rule flags and does not replace, because only the author knows which class it is. **The 12 are all plural**: `vesicle` singular appears 0 times, which is why the old `Collapses` rule caught none of them |
+| vesicle | — | Narrows | **no** | 12 | **RETIRED 2026-10-04 on the Editor's ruling: `vesicle` is the umbrella term and is correct.** It was refused while GUV, SUV and LUV had no pages — the vocabulary ran ahead of the tree, so an author told to name the class could not link to one. `nucleus-docs` `64df8ba` wrote all three, and an author who means a GUV now links to GUV because the page is there. **The rule also refused the one word that fits the case it most needed to allow**: a sentence about any closed bilayer compartment, which is what `encapsulate` returns, has no size class to name. **Two independent axes sit under vesicle**: material (liposome, polymersome) and size (GUV, SUV, LUV) — a GUV may be either material. The twelve lamellarity exceptions go with it; they conceded that "unilamellar vesicle" is fine, which under the umbrella reading is the ordinary case and not an exception |
 | incompatibility | Conflict | Collapses | **yes** | 4 | All four are real — a Conflict is computed from a sensitivity and an imposition, and asserting it directly hides which half is the claim |
 | `DevCell Studio` | DevStudio | Prefer | **yes** | 0 | |
 | `milliQ water` | ultrapure water | Prefer | **yes** | 0 | Vendor-neutral |
 | `SMixΔCP` | `SMix -CP` | Prefer | **yes** | 0 | Prefer plain characters |
 | colormetric | colorimetric | Prefer | **yes** | 0 | Misspelling |
-| leg | integration path | Prefer | **yes** | 0 | |
+| leg | integration path | Prefer | no | 0 | **Accepted synonym, not refused.** Jon, 2026-09-28: *"let's just make 'leg' a synonym (not preferred) of a path on a graph. so 'leg' is an accepted term for an integration path, or other paths on graphs."* `integration path` stays the preferred word. **The row is kept with `Auto: no` rather than deleted**, because the preference is still real and a deleted row reads as a term nobody considered |
 | `Chicago node` | `Chicago Node` | Prefer | **yes** | 1 | Proper noun. Case-sensitive |
 | `Chicago-node` | `Chicago Node` | Prefer | **yes** | 1 | Same, hyphenated |
 | `London node` | `London Node` | Prefer | **yes** | 0 | Same rule, no current violation |
@@ -117,7 +117,7 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 | instance | Implementation | Prefer | no | 3 | *"in this instance"* |
 | constraint | Requirement | Prefer | no | 17 | Common English |
 | ingredient | Component | Prefer | no | 0 | Safe today, but the same shape as the rows above |
-| liposome | synthetic cell | Prefer | no | many | **Contextual, so never a rule** — only where the liposome can reasonably be called a synthetic cell. Reads oddly beside row 1 and is not a contradiction: *vesicle* is always wrong, *liposome* is right until the thing is a cell |
+| liposome | synthetic cell | Prefer | no | many | **Contextual, so never a rule** — only where the liposome can reasonably be called a synthetic cell. **This note read "*vesicle* is always wrong, *liposome* is right" until 2026-10-04**, which the row above reverses: a liposome is a vesicle made of lipid, and a polymersome is a vesicle that is not. The two words are no longer alternatives for one thing, so this row and that one stopped competing |
 
 **A refusal is only a rule when it cannot collide with a heading, a filename or ordinary
 English.** Ten of the twenty-five qualify. The rest are prose preferences, checked by reading —

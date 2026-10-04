@@ -162,18 +162,22 @@ disagree with itself.
 
 ## Staging
 
-Edits that change what a tracked file claims are proposed in a staging
-document first, not applied directly. The rule is the `staging` skill.
+**Off, from 2026-10-03.** Turned off by Anton. Edits to tracked files in
+this repo apply directly. No staging document, and no wait for a reviewer.
 
-**Staging location for this repo:** `<TOPIC>-STAGING.md` at the repo root,
-gitignored. Declared here because the skill takes the location from the
-nearest README that names one, and defaults to `tmp/STAGED-<date>-<topic>.md`
-otherwise.
+The `staging` skill is still published by this plugin. `nucleus-docs` and
+`category` consume the plugin and still follow the skill. This repo does
+not.
 
-This repo differs from `nucleus-docs` and `category`, which use the default.
-The difference is deliberate — there is no `tmp/` here and the working
-documents are few enough to sit at the root — and it is why the location is
-declared rather than assumed.
+**What this changes for a consumer repo:** nothing. The skill reads its
+location from the nearest README that declares one. This README no longer
+declares one, so a session working here does not stage. A session working in
+`nucleus-docs` or `category` falls back to the skill's default,
+`tmp/STAGED-<date>-<topic>.md`, as before.
+
+The `<TOPIC>-STAGING.md` files at this repo's root are gitignored and stay
+where they are. They are a record of past reasoning. The `*-STAGING.md`
+entry in `.gitignore` stays, so none of them can be committed by accident.
 
 ## Checks
 

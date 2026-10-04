@@ -171,6 +171,38 @@ The `<TOPIC>-STAGING.md` files at this repo's root are gitignored and stay
 where they are. They are a record of past reasoning. The `*-STAGING.md`
 entry in `.gitignore` stays, so none of them can be committed by accident.
 
+## Versioning
+
+`plugins/nucleus/.claude-plugin/plugin.json` carries a `version`, and it is
+**both the update check and the cache key**. An install lands in
+`~/.claude/plugins/cache/nucleus/nucleus/<version>/`, and `claude plugin
+update` compares the installed string against the published one. If they are
+equal the update is a no-op and reports success, so a change shipped without a
+new version is a change nobody receives.
+
+**The plugin tracks the Nucleus Distribution's minor version.** `nucleus-docs`
+badges the Distribution on its front page; this plugin carries the same first
+two digits.
+
+| Change | What moves |
+| --- | --- |
+| A skill edited, added or removed | The last digit, by one. `0.6.0` to `0.6.1` to `0.6.2` |
+| The Distribution ships a new minor | The middle digit, to match it, and the last digit back to `0` |
+| The Distribution ships a new major | The first digit. Not this repo's call |
+
+Do not skip a number and do not reuse one.
+
+**The version is written in two files and both must move.**
+`plugins/nucleus/.claude-plugin/plugin.json` is what an installed copy reports.
+`.claude-plugin/marketplace.json` is what a consumer reads before installing.
+A plugin bumped in one and not the other is advertised at the old number.
+
+`scripts/check-plugin-version.py` fails a pull request that touches
+`plugins/nucleus/` without moving the version, and fails one where the two
+files disagree. It checks that the string moved, not that the bump is the
+right one — a wrong bump is visible in review and a missing one is visible
+nowhere.
+
 ## Checks
 
 ```bash
@@ -197,6 +229,14 @@ came to sit at a path that ships in no plugin.
 The first of those is the one that matters. A skill whose `name:` is wrong
 or missing does not load, and nothing anywhere reports an error — it simply
 never appears. Three skills failed that way in nucleus-docs for months.
+
+```bash
+python3 scripts/check-plugin-version.py
+```
+
+Runs on the same workflow. It fails a pull request that changes anything under
+`plugins/nucleus/` without moving the plugin's `version`. See
+[Versioning](#versioning) for how to pick the new number.
 
 Not yet automated: Vale over the skill files themselves. They state unit
 conventions they do not currently obey.

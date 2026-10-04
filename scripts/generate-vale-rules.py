@@ -28,6 +28,12 @@ GLOSSARY = os.path.join(HERE, "plugins/nucleus/references/glossary.md")
 # A refusal whose replacement is only meaningful with the case preserved.
 CASE_SENSITIVE = {"Chicago node", "Chicago-node", "London node"}
 
+# The Kind column's whole vocabulary, lowercased. This is what the generator
+# claims to own: a file named for one of these is its output and is removed when
+# the glossary stops asking for it. Anything else in the output directory is
+# somebody else's and is left alone.
+KINDS = ("collapses", "protected", "prefer", "narrows")
+
 # For a `Narrows` row: the phrases where the refused word is part of a MORE
 # specific term's own name, and so must not be flagged.
 #
@@ -166,6 +172,26 @@ def main():
             print(f"wrote {os.path.join(a.out, name)} — {len(pairs)} rule(s)")
         else:
             print(f"--- {name} ({len(pairs)} rule(s))\n{text}")
+
+    # A KIND WHOSE LAST ROW GOES AWAY MUST LOSE ITS FILE, and the loop above cannot
+    # do it: it visits the kinds that HAVE rows, so a kind with none is never
+    # reached and its file stays on disk saying what the glossary no longer says.
+    #
+    # THIS IS NOT HYPOTHETICAL. Setting the `incompatibility` row to Auto: no left a
+    # `collapses.yml` behind that still swapped the word, in this repo and in every
+    # repo that vendors the output. The de-vendoring would then be a manual step
+    # somebody has to remember, which is the duplication this generator exists to
+    # remove.
+    #
+    # It removes only names this generator itself produces, so a hand-written rule
+    # sharing the directory is never touched.
+    if a.out and os.path.isdir(a.out):
+        written = {f"{k}{'-cased' if cs else ''}.yml" for k, cs in by_kind}
+        ours = {f"{k}{suffix}.yml" for k in KINDS for suffix in ("", "-cased")}
+        for stale in sorted((ours - written) & set(os.listdir(a.out))):
+            os.remove(os.path.join(a.out, stale))
+            print(f"removed {os.path.join(a.out, stale)} — the glossary has no "
+                  f"Auto-yes {stale[:-4].replace('-cased','')} row left")
 
     total = sum(len(v) for v in by_kind.values())
     print(f"\n{total} rule(s) from {os.path.relpath(GLOSSARY, HERE)}"

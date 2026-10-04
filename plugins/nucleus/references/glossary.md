@@ -94,7 +94,7 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 | Refused | Use | Kind | Auto | Hits | Note |
 | --- | --- | --- | --- | --- | --- |
 | vesicle | GUV, SUV or LUV | Narrows | **yes** | 12 | GUV, SUV and LUV are distinct and must not merge. **Not a collapse** — `liposome` is itself general and has its own row below, so swapping one general word for another taught nothing. The rule flags and does not replace, because only the author knows which class it is. **The 12 are all plural**: `vesicle` singular appears 0 times, which is why the old `Collapses` rule caught none of them |
-| incompatibility | Conflict | Collapses | **yes** | 4 | All four are real — a Conflict is computed from a sensitivity and an imposition, and asserting it directly hides which half is the claim |
+| incompatibility | Conflict | Collapses | no | 0 | **A prose preference, not a rule, and the rule is why.** A Conflict is computed from a sensitivity and an imposition, so Vale cannot tell a Process-to-Component case from a Component-to-Component one, and the substitution mislabels the second. It already did: a docs page was changed to say *"the LacZ and theophylline Conflict"*, and neither of those is a Process. The bare noun now appears 0 times in that corpus, so the rule's only live effect was to push the next author into the same error |
 | `DevCell Studio` | DevStudio | Prefer | **yes** | 0 | |
 | `milliQ water` | ultrapure water | Prefer | **yes** | 0 | Vendor-neutral |
 | `SMixΔCP` | `SMix -CP` | Prefer | **yes** | 0 | Prefer plain characters |

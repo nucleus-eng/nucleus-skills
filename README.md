@@ -127,6 +127,14 @@ Four conventions, taken from `REFACTOR-PLAN.md` Phase 6:
 - **Reference files hold detail; SKILL.md holds the flow.** `migrate-devnote`
   is the model — a short index over four reference files, loaded on demand.
 
+**A script lives beside the format it reads.** Ship a script here only when
+this repo defines the format it reads, as `staging` defines the staging
+document, or when more than one repo runs it, as with the checkers in
+`scripts/`. A script that reads one repo's own format belongs in that repo.
+`mermaid-diagrams` once shipped a generator for `nucleus-docs` pages. Three
+weeks later `nucleus-docs` changed its source format, and the generator here
+went stale with nothing to report it (nucleus-docs#250).
+
 ## One owner per domain
 
 This table is the contract. Content that restates another row's domain is a

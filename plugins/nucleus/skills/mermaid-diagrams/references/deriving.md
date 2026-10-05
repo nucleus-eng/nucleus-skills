@@ -32,7 +32,7 @@ supplied, a condition that must hold.
 | Relation | Meaning | Style |
 | --- | --- | --- |
 | composition | "is made of" | `A --> B` solid |
-| requirement | "must be present for this to function" | `A -.->|requires| B` |
+| requirement | "must be present for this to function" | `A -.->\|requires\| B` |
 
 Drawing them the same way is what makes a required-but-not-constituent module
 appear as a floating node with no edges. If a node has no edges, check whether it

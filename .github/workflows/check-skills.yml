@@ -10,8 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # check-plugin-version.py needs a merge base
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Validate skill frontmatter and links
         run: python3 scripts/check-skills.py
+      - name: The plugin version moves when the plugin does
+        run: python3 scripts/check-plugin-version.py --base origin/${{ github.base_ref || 'main' }}

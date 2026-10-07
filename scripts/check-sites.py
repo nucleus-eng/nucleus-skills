@@ -10,6 +10,7 @@ Usage:
   gone      not found anywhere   -> row is stale; go look
   described Current is prose about the site, not a quote  -> unanchorable by design
   malformed Current has no text left after normalizing    -> the row cannot be checked
+  badheader a header naming all four columns but not matching -> the table was skipped
   new       Line reads `new` and the file is absent       -> a proposed file, nothing to anchor
   exists    Line reads `new` and the file is present      -> the proposal is stale, or overwrites
 
@@ -33,6 +34,11 @@ root, pattern = sys.argv[1], sys.argv[2]
 os.chdir(root)
 
 HDR  = re.compile(r'^\|\s*File\s*\|\s*Line\s*\|\s*Current\s*\|\s*Proposed\s*\|', re.I)
+# A header that names all four columns and still does not match HDR -- one extra label
+# column is the way it happens -- used to be skipped in silence, and the run then reported
+# the OTHER files' rows as a clean pass. Reported now: a near miss is the case where the
+# author believes the table is being read.
+NEAR = re.compile(r'^\|.*\bFile\b.*\|.*\bLine\b.*\|.*\bCurrent\b.*\|.*\bProposed\b', re.I)
 # Table cells escape pipes; this normaliser also unescapes them, so it is not the shared one.
 NORM = lambda t: re.sub(r'\s+', ' ', re.sub(r'[>*`_]', '', t.replace('\\|', '|'))).strip()
 SITE_EXT = ('.md', '.py', '.sh', '.yml', '.yaml', '.toml', '.ini')
@@ -55,6 +61,13 @@ for sf in files:
     out, intable = [], False
     for raw in open(sf, encoding='utf-8'):
         if HDR.match(raw): intable = True; continue
+        if not intable and NEAR.match(raw):
+            out.append(f'  BADHEADER "{raw.strip()[:62]}"')
+            out.append('            names all four columns and does not match the header exactly,')
+            out.append('            so every row under it was skipped. Keep the header to')
+            out.append('            `| File | Line | Current | Proposed |` with no extra column.')
+            tally['badheader'] += 1
+            continue
         if not intable: continue
         if not raw.startswith('|'): intable = False; continue
         if set(raw.strip()) <= set('|- :'): continue
@@ -93,11 +106,13 @@ for sf in files:
 rows = sum(tally.values())
 if rows == 0:
     print(f'NOTHING CHECKED: read {len(files)} staging file(s) and found 0 checkable rows.')
-    print('A file with no `| File | Line | Current | Proposed |` table contributes nothing,')
-    print('and the header must match exactly -- any other column names and the table is')
-    print('skipped in silence, which reads like no drift.')
+    print('A file with no `| File | Line | Current | Proposed |` table contributes nothing.')
+    print('A header that names all four columns and does not match is reported as')
+    print('`badheader` rather than skipped, so this message means there was no table.')
     sys.exit(2)
 print(f'read {len(files)} staging file(s), {rows} row(s): ' + ' | '.join(
     f'{k} {tally[k]}' for k in
-    ('anchored', 'drifted', 'gone', 'described', 'malformed', 'new', 'exists', 'nofile', 'skip') if tally[k]))
-sys.exit(1 if tally['drifted'] or tally['gone'] or tally['nofile'] or tally['exists'] else 0)
+    ('anchored', 'drifted', 'gone', 'described', 'malformed', 'badheader',
+     'new', 'exists', 'nofile', 'skip') if tally[k]))
+sys.exit(1 if tally['drifted'] or tally['gone'] or tally['nofile'] or tally['exists']
+         or tally['badheader'] else 0)

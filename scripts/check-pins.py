@@ -76,7 +76,13 @@ def main(argv):
     override = dict(a.split("=", 1) for a in argv[2:] if "=" in a)
     verbose  = "-v" in argv[2:]
     tally, out = collections.Counter(), []
-    for f in tracked_md(ROOT):
+    seen = tracked_md(ROOT)
+    if not seen:
+        print(f"NOTHING CHECKED: no tracked .md files under {ROOT}.")
+        print("`git ls-files` returns nothing outside a repository, and this checker would")
+        print("otherwise print `no cross-repo citations` and exit 0 over zero files.")
+        return 2
+    for f in seen:
         text = open(os.path.join(ROOT, f), encoding="utf-8").read()
         head = preamble(text)          # any heading level ends it, as in check-citations.py; Jon 2026-09-21
         file_hash, file_esc = HASH.search(head), bool(ESCAPE.search(head))

@@ -16,7 +16,8 @@ BEFORE the file-level hash, so a preamble that discusses a hash it refutes does 
 it. A per-citation hash still wins. Dated records are not exempt: a pin is metadata, not
 part of what a record asserts.
 
-Exit 1 on an unpinned citation. Exit 2 when the root is missing or `--repos=` is empty.
+Exit 1 on an unpinned citation. Exit 2 when the root is missing, `--repos=` is empty, or
+the root holds no tracked `.md` files: a run over nothing is not a clean run.
 History: this header carried the failures behind each rule verbatim until 2026-09-21; read
 it at nucleus-skills `af17385`, and the rulings in compositional-biology-theory `rulings.md`
 at `e5f3316`.
@@ -43,7 +44,13 @@ def main(argv):
         return 2
     root = os.path.abspath(args[0])
     bad, checked, skipped, escaped = [], 0, 0, 0
-    for rel in tracked_md(root):
+    seen = tracked_md(root)
+    if not seen:
+        print(f"NOTHING CHECKED: no tracked .md files under {root}.")
+        print("`git ls-files` returns nothing outside a repository and nothing in a repo")
+        print("that tracks no markdown, and a run over zero files reports a clean sweep.")
+        return 2
+    for rel in seen:
         text = open(os.path.join(root, rel), encoding="utf-8", errors="replace").read()
         head = preamble(text)
         file_hash, file_escape = bool(HASH.search(head)), bool(ESCAPE.search(head))

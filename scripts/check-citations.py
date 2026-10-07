@@ -10,6 +10,10 @@ out and so cannot block a commit. Also fires on a file that names one of `--repo
 carries no pin in its preamble, because a claim about another repo's content with no line
 number was passing untouched.
 
+THE SECOND ESCAPE, for the file-level rule only. A file may say `names only, no claim`
+when it mentions a repo and asserts nothing about it -- a style guide listing the pointer
+it forbids is the case. A pin there would claim provenance for a claim that is not made.
+
 THE ESCAPE. A file may say `hash unrecorded` instead, for a read-tree that cannot be
 recovered; inventing a pin is the failure the rule exists to prevent. The escape is tested
 BEFORE the file-level hash, so a preamble that discusses a hash it refutes does not pass on
@@ -23,7 +27,7 @@ at `e5f3316`.
 """
 import os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from staging_common import CITE, HASH, ESCAPE, WINDOW, preamble, tracked_md, in_repo
+from staging_common import CITE, HASH, ESCAPE, NO_CLAIM, WINDOW, preamble, tracked_md, in_repo
 
 DEFAULT_REPOS = "nucleus-docs|nucleus-skills|nucleus-eng"
 
@@ -47,7 +51,8 @@ def main(argv):
         text = open(os.path.join(root, rel), encoding="utf-8", errors="replace").read()
         head = preamble(text)
         file_hash, file_escape = bool(HASH.search(head)), bool(ESCAPE.search(head))
-        if REPO.search(text) and not (file_hash or file_escape):
+        file_no_claim = bool(NO_CLAIM.search(head))
+        if REPO.search(text) and not (file_hash or file_escape or file_no_claim):
             bad.append(f"{rel}: names another repo, no pin in preamble")
         for m in CITE.finditer(text):
             name = m.group(1)

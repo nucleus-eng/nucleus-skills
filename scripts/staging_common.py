@@ -32,6 +32,15 @@ CITE   = re.compile(
     r"([a-z0-9][a-z0-9\-\._]*(?:/[a-z0-9\-\._]+)*):(\d+)")
 HASH   = re.compile(r"`([0-9a-f]{7,40})`")
 ESCAPE = re.compile(r"hash unrecorded", re.I)
+# A FILE MAY NAME A REPO WITHOUT ASSERTING ANYTHING ABOUT IT. The file-level rule
+# exists because "a claim about another repo's content with no line number was
+# passing untouched" -- it has no reach over a file that makes no claim.
+# style-guide/conventions.md in nucleus-docs names the theory repo INSIDE ITS LIST
+# OF POINTERS YOU MUST NOT WRITE, and a pin there would assert provenance for a
+# claim that does not exist. Distinct from ESCAPE on purpose: `hash unrecorded`
+# means "there was a read and the ref is lost", this means "there was no read".
+# It suppresses the FILE-level rule only; a citation still needs its own pin.
+NO_CLAIM = re.compile(r"names only, no claim", re.I)
 WINDOW = 90            # characters after a citation in which its own hash may sit
 
 def norm(t):

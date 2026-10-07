@@ -14,7 +14,22 @@ import os, re, glob, subprocess
 
 # A cross-repo line citation: `page:12`, `dir/page.md:12`, `script.py:12`. The trailing
 # backtick is not required, so `page:12`, `:14` continuation forms still match the first.
-CITE   = re.compile(r"`([a-z0-9][a-z0-9\-]*(?:/[a-z0-9\-\._]+)*?(?:\.md|\.py)?):(\d+)")
+# A NAME IS NOT A RATIO AND NOT A URI SCHEME. Both groups of the old pattern were
+# optional, so it reduced to `word:number` and read `9:1 POPC:cholesterol` and
+# `doi:10.63765/...` as unpinned cross-repo citations. A checker that cries wolf is
+# how ten drifted pins went unnoticed.
+#
+# Requiring a slash or an extension was the first fix and it was WRONG: the theory
+# repo cites this corpus as a bare module slug -- `membrane-pore-cx43:79`,
+# `detector-ph:123` -- and that dropped 29 real citations there, 74 to 40. Measured
+# against all three repos is what caught it.
+#
+# So the test is on the NAME: it must contain a letter, which excludes a ratio, and
+# must not be a URI scheme, which excludes a DOI.
+CITE   = re.compile(
+    r"`(?!(?:doi|https?|ftp|mailto|isbn|arxiv):)"
+    r"(?=[a-z0-9][a-z0-9\-\._/]*[a-z])"
+    r"([a-z0-9][a-z0-9\-\._]*(?:/[a-z0-9\-\._]+)*):(\d+)")
 HASH   = re.compile(r"`([0-9a-f]{7,40})`")
 ESCAPE = re.compile(r"hash unrecorded", re.I)
 WINDOW = 90            # characters after a citation in which its own hash may sit

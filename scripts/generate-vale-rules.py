@@ -138,9 +138,50 @@ swap:
 """
 
 
+def report_drift(d, expected):
+    """Compare a committed rule directory against what the glossary says today.
+
+    THE FAILURE THIS CATCHES HAS HAPPENED TWICE. `incompatibility` went to Auto: no
+    and a `collapses.yml` stayed behind still swapping the word; the `vesicle` row
+    was retired on 2026-10-04 and `narrows.yml` sat in this repo for three days
+    afterwards, still refusing the word, in every repo that vendors the directory.
+    Both were invisible because the generator only reconciles under `--out`, and
+    nobody runs a writer to find out whether anything is wrong.
+
+    Same shape as render-all.py --check in nucleus-docs: regenerate, compare, never
+    write. A rule file is a build artifact and an artifact behind its source is drift.
+    """
+    if not os.path.isdir(d):
+        print(f"⛔️ no such directory: {d}")
+        return 2
+    ours = {f"{k}{suffix}.yml" for k in KINDS for suffix in ("", "-cased")}
+    on_disk = ours & set(os.listdir(d))
+    bad = []
+    for name in sorted(set(expected) | on_disk):
+        path = os.path.join(d, name)
+        if name not in expected:
+            bad.append(f"  ORPHAN   {name} — the glossary has no Auto-yes "
+                       f"{name[:-4].replace('-cased','')} row left")
+        elif name not in on_disk:
+            bad.append(f"  MISSING  {name} — the glossary has rows for it and "
+                       f"no file is committed")
+        elif open(path).read() != expected[name]:
+            bad.append(f"  STALE    {name} — committed text differs from the glossary")
+    if bad:
+        print(f"⛔️ {len(bad)} rule file(s) disagree with {os.path.relpath(GLOSSARY, HERE)}:")
+        print("\n".join(bad))
+        print("\nRegenerate: python3 scripts/generate-vale-rules.py --out " + d)
+        return 1
+    print(f"✅ {len(expected)} rule file(s) in {d} match "
+          f"{os.path.relpath(GLOSSARY, HERE)}.")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", help="a Vale style directory, e.g. styles/nucleus-glossary")
+    ap.add_argument("--check", metavar="DIR", help="compare DIR against what would be "
+                    "written and exit 1 on any difference. Writes nothing.")
     a = ap.parse_args()
 
     if not os.path.exists(GLOSSARY):
@@ -157,6 +198,11 @@ def main():
     if not by_kind:
         print(f"⛔️ no Auto-yes rows found in {os.path.relpath(GLOSSARY, HERE)}")
         return 2
+
+    expected = {f"{kind}{'-cased' if cs else ''}.yml": build(pairs, kind, cs)
+                for (kind, cs), pairs in sorted(by_kind.items())}
+    if a.check:
+        return report_drift(a.check, expected)
 
     for (kind, cs), pairs in sorted(by_kind.items()):
         # Inside a Vale style directory the FILE NAME is the rule name, so this

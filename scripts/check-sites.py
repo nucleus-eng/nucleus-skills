@@ -11,6 +11,8 @@ Usage:
   described Current is prose about the site, not a quote  -> unanchorable by design
   malformed Current has no text left after normalizing    -> the row cannot be checked
   badheader a header naming all four columns but not matching -> the table was skipped
+  emptycell Current is empty -> the row cannot be checked; unescaped `|` is the usual cause
+  badline   Line is neither a number nor `new`     -> the row cannot be checked
   new       Line reads `new` and the file is absent       -> a proposed file, nothing to anchor
   exists    Line reads `new` and the file is present      -> the proposal is stale, or overwrites
 
@@ -84,8 +86,20 @@ for sf in files:
             continue
         if not os.path.exists(path):
             out.append(f'  NO FILE   {path}:{c[1].strip()}'); tally['nofile'] += 1; continue
-        if not m or not cur or cur in ('—', '-'):
+        # Three things used to share one silent `skip`, and only the first is deliberate.
+        # An unescaped `|` inside the Current cell splits the row, so the cell this reads is
+        # a fragment or empty -- and an empty Current then skipped without a word. A staging
+        # file quoting a table row hits it every time, which is exactly the file most likely
+        # to be editing a table.
+        if cur in ('—', '-'):
             tally['skip'] += 1; continue
+        if not cur:
+            why = '  <- unescaped `|` split the row; write them as \\|' if len(c) > 4 else ''
+            out.append(f'  EMPTYCELL {path}:{c[1].strip()}  Current is empty{why}')
+            tally['emptycell'] += 1; continue
+        if not m:
+            out.append(f'  BADLINE   {path}  Line reads "{c[1].strip()[:24]}", not a number or `new`')
+            tally['badline'] += 1; continue
         n, lines = int(m.group(1)), open(path, encoding='utf-8').read().split('\n')
         probe = NORM(cur)[:60]           # an empty probe matches every window, hence `malformed`
         win   = lambda a, b: NORM(' '.join(lines[max(0, a):b]))
@@ -112,7 +126,7 @@ if rows == 0:
     sys.exit(2)
 print(f'read {len(files)} staging file(s), {rows} row(s): ' + ' | '.join(
     f'{k} {tally[k]}' for k in
-    ('anchored', 'drifted', 'gone', 'described', 'malformed', 'badheader',
-     'new', 'exists', 'nofile', 'skip') if tally[k]))
+    ('anchored', 'drifted', 'gone', 'described', 'malformed', 'badheader', 'emptycell',
+     'badline', 'new', 'exists', 'nofile', 'skip') if tally[k]))
 sys.exit(1 if tally['drifted'] or tally['gone'] or tally['nofile'] or tally['exists']
-         or tally['badheader'] else 0)
+         or tally['badheader'] or tally['emptycell'] or tally['badline'] else 0)

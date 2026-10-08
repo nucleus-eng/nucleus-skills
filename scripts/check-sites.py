@@ -13,6 +13,8 @@ Usage:
   badheader a header naming all four columns but not matching -> the table was skipped
   emptycell Current is empty -> the row cannot be checked; unescaped `|` is the usual cause
   badline   Line is neither a number nor `new`     -> the row cannot be checked
+  otherrepo File is `repo:path` naming another tree -> a pointer; anchor it over there
+  badfile   File is not a path                      -> the row cannot be checked
   new       Line reads `new` and the file is absent       -> a proposed file, nothing to anchor
   exists    Line reads `new` and the file is present      -> the proposal is stale, or overwrites
 
@@ -76,7 +78,27 @@ for sf in files:
         c = [x.strip() for x in re.split(r'(?<!\\)\|', raw.strip().strip('|'))]
         if len(c) < 4: continue
         path = re.sub(r'^\[|\]\(.*$', '', unquote(c[0])).strip('`* ')
-        if not path.endswith(SITE_EXT): continue
+        # A cross-repo edit site is written `repo:path`. It names the tree a reader must
+        # stand in, which is not this one, so the row is a pointer and is reported as such
+        # rather than anchored. Before this, the repo was written after the path -- as
+        # `path` *(repo)* -- and the cell then did not end in a known extension, so the row
+        # was dropped before any check. Same spelling in its own repo just means the path.
+        here = os.path.basename(os.path.abspath(root))
+        if ':' in path:
+            repo, _, rest = path.partition(':')
+            if repo == here:
+                path = rest
+            elif rest.endswith(SITE_EXT):
+                out.append(f'  OTHERREPO {repo}:{rest}:{c[1].strip()}  a pointer, so nothing here anchors it')
+                tally['otherrepo'] += 1
+                continue
+        # A File cell holding anything but the path cannot be checked, and used to be
+        # dropped in silence. Seventeen rows in one corpus's archive were in this state,
+        # all of them a path with a repo, a section, an ID or a status marker appended.
+        if not path.endswith(SITE_EXT):
+            out.append(f'  BADFILE   "{path[:60]}"  File must be the path alone, or `repo:path`')
+            tally['badfile'] += 1
+            continue
         m, cur = re.match(r'^\**:?(\d+)', c[1].strip()), unquote(c[2])
         if c[1].strip().lower() == 'new':
             if os.path.exists(path):
@@ -127,6 +149,7 @@ if rows == 0:
 print(f'read {len(files)} staging file(s), {rows} row(s): ' + ' | '.join(
     f'{k} {tally[k]}' for k in
     ('anchored', 'drifted', 'gone', 'described', 'malformed', 'badheader', 'emptycell',
-     'badline', 'new', 'exists', 'nofile', 'skip') if tally[k]))
+     'badline', 'badfile', 'otherrepo', 'new', 'exists', 'nofile', 'skip') if tally[k]))
 sys.exit(1 if tally['drifted'] or tally['gone'] or tally['nofile'] or tally['exists']
-         or tally['badheader'] or tally['emptycell'] or tally['badline'] else 0)
+         or tally['badheader'] or tally['emptycell'] or tally['badline']
+         or tally['badfile'] else 0)

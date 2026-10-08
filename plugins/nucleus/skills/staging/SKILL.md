@@ -157,6 +157,20 @@ document that overturns a claim must quote it, so a quotation reaches across
 where an edit site does not — which is exactly why the quotation needs the pin
 and the edit site does not.
 
+**Where a row names another tree anyway, write the File cell `repo:path` — and
+it is a pointer, never the site of record.**
+`nucleus-skills:plugins/nucleus/skills/staging/SKILL.md` says which tree a
+reader must stand in; `check-sites.py` reports the row as `otherrepo` and does
+not try to anchor it, because it cannot. **Say in the Proposed cell where the
+edit actually lives** — the other repo's own staging document, or the branch
+and pull request carrying it.
+
+**The File cell holds the path and nothing else.** A repo in a parenthesis
+after it, a section, an ID, a status marker: each leaves a cell that no longer
+ends in a known extension, and the row was dropped before any check. Sixteen
+rows in one corpus's archive sat in that state and none of them said so. It is
+`badfile` now, and it fails.
+
 **The hash must be reachable by the reader, not only by you.** A commit that
 exists only in an unpushed local tree satisfies every part of this rule and
 still cannot be checked by anyone else — push it, or say so in the pin. A

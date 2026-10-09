@@ -1,0 +1,45 @@
+name: Vale fixtures
+
+# THE 14 UNITS RULES ARE AUTHORED HERE AS OF 2026-10-05, under UQ2, and this is what
+# makes that safe. Each annotated line in plugins/nucleus/references/vale/tests/*.md
+# becomes one pytest case that runs the real binary and asserts the exact finding.
+#
+# WITHOUT IT THE MOVE WOULD BE A DOWNGRADE. In nucleus-docs these rules ran against the
+# whole corpus on every pull request, so a broken rule showed up as a changed finding
+# count. Here they lint nothing -- Q6 keeps this repo without a `.vale.ini` -- so the
+# fixtures are the only thing standing between an edited rule and a silent regression.
+#
+# THE VERSION IS PINNED TO MATCH THE CONSUMERS. nucleus-docs and
+# nucleus-devnote-archive-1 both run 3.24.0. A rule that passes here and fails there
+# because the engine moved is the failure this pin exists to prevent, and the fixtures
+# are known not to agree across versions: measured on 2026-10-04, two lines of
+# temperature.md fail at 3.14.2 and all pass at 3.24.0.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  vale-fixtures:
+    runs-on: ubuntu-latest
+    env:
+      VALE_VERSION: "3.24.0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Vale
+        run: |
+          set -euo pipefail
+          curl -sSL "https://github.com/vale-cli/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+            | tar xz -C /usr/local/bin vale
+      - name: Install pytest
+        run: pip install pytest
+      - name: Run the fixtures
+        # conftest.py SKIPS when vale is missing rather than failing, which is right for
+        # a laptop and wrong for CI: a skipped suite is a green tick over nothing. The
+        # install step above is what makes the skip unreachable here, and `-ra` prints
+        # any skip that happens anyway.
+        run: python3 -m pytest tests/ -q -ra

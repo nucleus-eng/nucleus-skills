@@ -1,7 +1,7 @@
 {
   "name": "nucleus",
   "displayName": "Nucleus",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Claude skills for Nucleus work: DevNote authoring, docs-site maintenance, and the migrations between them.",
   "author": {
     "name": "nucleus-eng"

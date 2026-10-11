@@ -1,0 +1,30 @@
+extends: substitution
+message: "Use '%s' instead of '%s'."
+ignorecase: false
+# Order specific/longer keys FIRST so e.g. H2O2 matches before H2O.
+swap:
+  # absorbance / optical-density wavelength labels → SUBSCRIPT
+  # (exact tokens only — NOT A\d+, which would hit strain A19 / port A2 / catalog A11)
+  'OD600': 'OD₆₀₀'
+  'A260': 'A₂₆₀'
+  'A280': 'A₂₈₀'
+  'A230': 'A₂₃₀'
+  # molecular formulae → SUBSCRIPT (longer forms first to prevent partial match)
+  'H2O2': 'H₂O₂'
+  'ddH2O': 'ddH₂O'
+  'dH2O': 'dH₂O'
+  'H2O': 'H₂O'
+  'CO2': 'CO₂'
+  'MgCl2': 'MgCl₂'
+  'CaCl2': 'CaCl₂'
+  'MgSO4': 'MgSO₄'
+  'Na2SO4': 'Na₂SO₄'
+  'NaHCO3': 'NaHCO₃'
+  'NH4Cl': 'NH₄Cl'
+  'NaN3': 'NaN₃'
+  'K2HPO4': 'K₂HPO₄'
+  'KH2PO4': 'KH₂PO₄'
+  'Na2HPO4': 'Na₂HPO₄'
+  'NaH2PO4': 'NaH₂PO₄'
+  'H2SO4': 'H₂SO₄'
+  'H3PO4': 'H₃PO₄'

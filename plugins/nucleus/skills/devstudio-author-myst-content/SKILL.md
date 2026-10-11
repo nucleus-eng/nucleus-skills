@@ -1,6 +1,6 @@
 ---
 name: devstudio-author-myst-content
-description: Apply MyST authoring conventions when producing or reviewing DevNote(M) or Docs(M) content — fence depth, figure placement, composition-table schema, DNA sequence formatting, Vale notation rules, and dropdown hygiene. Use whenever devstudio-devnote-g-to-devnote-m or devstudio-docs-g-to-docs-m writes MyST markdown, or whenever a human asks to review MyST content for convention compliance. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+description: Apply MyST authoring conventions when producing or reviewing DevNote(M) or Docs(M) content — fence depth, figure placement, composition-table schema, DNA sequence formatting, Vale notation rules, and dropdown hygiene. Use whenever devstudio-devnote-g-to-devnote-m or devstudio-docs-g-to-m writes MyST markdown, or whenever a human asks to review MyST content for convention compliance. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
 ---
 
 # devstudio-author-myst-content
@@ -116,8 +116,14 @@ survive the reflow untouched.
   level** — don't assume a fixed absolute count applies regardless of actual nesting depth.
 - **`{seqviz}`**: a custom directive (specific to the DevNote-archive repo's plugin set,
   not documented in `nucleus-docs`) embedding an interactive plasmid viewer from a `.gb`
-  file, e.g. `:::{seqviz} ./dna/pOpen-deGFP.gb`. Full syntax/options not yet
-  documented here — known gap.
+  file, e.g. `:::{seqviz} ./dna/pOpen-deGFP.gb`. The argument is a local path or a
+  GitHub blob URL. `:height:` sets the height (default `600px`). `:viewer:` takes
+  `linear`, `circular`, `both` or `both_flip` (default `both`). A `.gbk` whose `LOCUS`
+  line says `circular` can draw a ring for a linear template; Anton set
+  `:viewer: linear` for that case (`devnote-cn-20260924-20261001`, commit `1262f4f`).
+  The directive needs the plugin entry in `curvenote.yml` and `seqviz-widget.mjs`
+  beside `main.md`; see `devstudio-log-to-devnote-m` Step 8.5 and
+  `devstudio-assemble-devnote-assets`.
 
 ## Figures
 
@@ -147,23 +153,10 @@ survive the reflow untouched.
 
 ## Notation and units (Vale-enforced)
 
-Ported from `nucleus-docs`' Vale styles into the DevNote repo's own `.vale.ini` — keep
-in sync with that source if a rule changes there. Run `vale main.md` before considering
-a DevNote publish-ready.
+The rules live in [`references/devnote-style-guide.md`](../../references/devnote-style-guide.md)
+§ Notation and units. Vale enforces them from `plugins/nucleus/references/vale/nucleus/`.
+Do not restate them here. Run `vale main.md` before considering a DevNote publish-ready.
 
-- Space between magnitude and unit (`10 mL`, not `10mL`); no spaces inside compound
-  units (`ng/µL`, not `ng / µL`).
-- `µ` not `u` (`µL`, `µM`, `µg`, `µm`).
-- `°C` with a space before it (`55 °C`), never `55C`/`55 C`/`degC`.
-- Unicode superscripts for ion charges (`Mg²⁺`, `Na⁺`), not `Mg2+`.
-- Unicode subscripts for chemical formulae and OD labels (`H₂O`, `OD₆₀₀`, `A₂₆₀`).
-- House casing: `rpm`, `Kan`, `kDa`, `4x`/`1x` — not `RPM`, `KAN`, `KDA`, `4X`/`1X`.
-- Thousands separator is a space, not a comma (`40 000 units`); numbers under 5 digits
-  take no separator.
-- Time abbreviations (`h`, `min`, `s`, `d`, `yr`, `mo`), not spelled out.
-- Avoid a bare hyphen between two numbers before a unit — `16 mM to 18 mM` or
-  `(16–18) mM`, not `16-18 mM`.
-- Spaces around `+` in mixtures (`LB + Kan`, not `LB+Kan`).
 - **Catalog numbers containing unit-like strings** (e.g. `810158C-1mg`) will be flagged
   by Vale's magnitude-unit-spacing rule as a false positive — suppress locally with
   `<!-- vale nucleus.magnitude-unit-spacing = NO/YES -->` around the table rather than
@@ -189,7 +182,7 @@ should notice, not an automated pass/fail.
 
 # Docs(M) conventions
 
-*(Everything below is `nucleus-docs`-sourced, applies to `devstudio-docs-g-to-docs-m`
+*(Everything below is `nucleus-docs`-sourced, applies to `devstudio-docs-g-to-m`
 output, and should NOT be applied to DevNote(M) content — several of these were wrongly
 cross-applied in this skill's first draft.)*
 
@@ -274,7 +267,7 @@ figure-de-emphasis pattern was found. Treat as Docs(M)-confirmed only.
 - Does not cover process-page structure, the lab-ready PDF/BOM pipeline, or `myst.yml`
   TOC management — nucleus-docs-specific, stays there.
 - Does not run as a standing CI/lint check — applies at the point
-  `devstudio-devnote-g-to-devnote-m` or `devstudio-docs-g-to-docs-m` writes/reviews content.
+  `devstudio-devnote-g-to-devnote-m` or `devstudio-docs-g-to-m` writes/reviews content.
 - Does not cover `curvenote.yml`/`base.yml` generation or the 7 venue submission checks
   — that's a separate downstream skill (`submit.md` uploaded as reference). Note: the
   base.yml/curvenote.yml two-file split may get consolidated into a single artifact in
@@ -283,7 +276,7 @@ figure-de-emphasis pattern was found. Treat as Docs(M)-confirmed only.
 - Does not cover pandoc-conversion notation fixups or source-fidelity rules — that's
   `devstudio-log-to-devnote-m`'s scope (`ingest.md` uploaded as reference, largely
   reusable as-is).
-- Does not yet document DevNote-only directives beyond `{seqviz}`'s existence.
+- Documents `{seqviz}`; no other DevNote-only directive.
 
 ## Validated (2026-09-05)
 

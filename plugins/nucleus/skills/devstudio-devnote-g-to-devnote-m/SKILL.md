@@ -69,6 +69,20 @@ A human, the editor, can move appended content out of the admonition and
 into the document's own prose or tables, at their own judgment. This skill
 does not do that moving. It only appends and only wraps.
 
+**Prose a reviewer says to remove.** Wrap it in an HTML comment, as for a resolved
+admonition. Do not delete it. The comment keeps the reasoning in the file.
+
+**After any move or wrap, sweep for what it left.** Look for:
+
+- a heading whose body is now fully commented;
+- a sentence that says "shown below" or "not verified" about text that is gone;
+- a pointer to a section that is now commented out.
+
+For each label you commented out, search `main.md` for it and fix each reference
+that is left. (Anton's record, from his commit messages on
+`devnote-swh-20260925-ph-sensor-in-solution`: a stale "not verified" note, a dangling
+cross-reference and an empty heading each survived an edit and needed a later fix.)
+
 ## Step 2 — confirm before assigning frontmatter
 
 Before frontmatter and a final id are assigned, read every admonition in

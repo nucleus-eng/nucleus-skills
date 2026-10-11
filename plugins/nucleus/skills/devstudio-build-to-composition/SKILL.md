@@ -21,13 +21,6 @@ volume columns appended:
 Each condition (sheet) in the build file becomes one volume column, headed by the
 sheet name with ` [µL]` appended.
 
-**One deliberate divergence, and what it tracks:** the totals row is rendered bold
-at the G stage, where `devstudio-author-myst-content` specifies plain text. That rule
-governs the MyST table in DevNote(M); the G stage is a Google Doc table, where bold is
-how a totals row reads as a totals row. `devstudio-devnote-g-to-devnote-m` drops the
-bold on conversion. If it stops doing so, this divergence is the thing to remove —
-not to copy forward.
-
 ## Step 1 — read the build file
 
 The build file format and the parse are owned by
@@ -77,8 +70,8 @@ Total [µL],,,,,30,30,30
 
 `devstudio-log-to-devnote-m` checks for `build-composition.csv` in each log folder.
 
-- **Found**: read the CSV row by row and render as an HTML `<table>` (Totals row in
-  `<strong>`, `—` cells as em-dash) for insertion into the `# Methods` section of
+- **Found**: read the CSV row by row and render as an HTML `<table>` (Totals row plain,
+  `—` cells as em-dash) for insertion into the `# Methods` section of
   the DevNote(G).
 - **Not found**: emit a blocking REVIEW flag — do not reconstruct from log prose.
 

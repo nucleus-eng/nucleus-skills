@@ -129,7 +129,7 @@ Some experiments also include an Excel `.xlsx` file as a summary or manual data 
 
 DevNotes are written in formal scientific prose, past tense for experimental actions, present tense for conclusions and interpretations. Hedging language is used appropriately for preliminary results: "These findings are preliminary and require further optimization."
 
-Quantitative results are stated with precision: "yields increasing by nearly 96% relative to the CP/CK module alone," "optimal protein expression achieved at a final Mg2+ concentration of 8 mM."
+Quantitative results are stated with precision: "yields increasing by nearly 96 % relative to the CP/CK module alone," "optimal protein expression achieved at a final Mg²⁺ concentration of 8 mM."
 
 Protocol steps are written as numbered lists using imperative mood: "Add 1 mL mineral oil in the 1.8 mL small glass vial." "Vortex the lipid-in-oil mixture for 10 seconds."
 
@@ -139,7 +139,7 @@ Literature citations use inline Markdown link syntax: `[[Wang *et al.* 2019](htt
 
 ## Notation and units
 
-These conventions are enforced by Vale (`.vale.ini` + `styles/nucleus/`, ported from the `nucleus-docs` Docs maintenance repo — see that directory if a rule needs updating, and keep this section in sync with it):
+These conventions are enforced by Vale. The rules are authored in `plugins/nucleus/references/vale/nucleus/` in this repo, and this list is the prose summary of them. If a rule changes there, change this list:
 
 - **Unit spacing**: a space between the magnitude and its unit (`10 mL`, not `10mL`); no spaces inside compound unit expressions (`ng/µL`, not `ng / µL`).
 - **Micro symbol**: `µ` not `u` (`µL`, `µM`, `µg`, `µm`).
@@ -149,6 +149,8 @@ These conventions are enforced by Vale (`.vale.ini` + `styles/nucleus/`, ported 
 - **House casing**: `rpm` (not `RPM`), `Kan` (not `KAN`), `kDa` (not `KDA`/`kDA`), and `4x`/`1x` (not `4X`/`1X`).
 - **Thousands separator**: group with a space, not a comma (`40 000 units`); numbers under 5 digits take no separator (NIST SP 811).
 - **Time abbreviations**: `h`, `min`, `s`, `d`, `yr`, `mo` — not spelled out (`hours`, `minutes`, etc.).
+- **SI symbols for time**: after a number, `h` not `hr` or `hrs`, and `s` not `sec` (`3 h`, `30 s`). Vale substitutes them (`time-si-substitution.yml`).
+- **Percent**: a space before the percent sign (`25 %`, not `25%`; NIST SP 811 §7.2).
 - **Ranges**: avoid a bare hyphen between two numbers immediately before a unit — prefer `16 mM to 18 mM` or `(16–18) mM` over `16-18 mM` (NIST SP 811 §7.7).
 - **Mixtures**: spaces around `+` (`LB + Kan`, not `LB+Kan`).
 

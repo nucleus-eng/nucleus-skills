@@ -20,7 +20,7 @@ narrative text for drafting/summarizing, or raw bytes for a downstream tool like
 This skill is invocation-driven, not autonomous: it acts on a single file (or a named
 folder) a human points it at. It does not crawl the Shared Drive looking for work, and
 it does not decide when a doc is "ready" — that's always a human call made before this
-skill is invoked (see `devstudio-devnote-g-to-devnote-m` and `devstudio-docs-g-to-docs-m`
+skill is invoked (see `devstudio-devnote-g-to-devnote-m` and `devstudio-docs-g-to-m`
 for where that gate lives).
 
 ## Step 1 — Resolve the reference to a fileId

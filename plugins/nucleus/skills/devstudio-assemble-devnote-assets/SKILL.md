@@ -137,6 +137,14 @@ If the `plugins/seqviz/` directory is missing `package.json`, run
 `npm init -y && npm install seqparse` there first. This is a shared dependency — it
 only needs to be installed once per clone, not once per devnote.
 
+## Copy the widget beside `main.md`
+
+If `main.md` uses `{seqviz}`, copy `plugins/seqviz/seqviz-widget.mjs` from
+`devstudio-board` into the DevNote folder, beside `main.md`. Without it the build
+fails with `Cannot find asset for 'esm'` (Anton's record, commit `4b5b4b0`: he built
+without the file, then with it). Do not copy `seqviz.mjs`. The shared plugin is the
+only copy of that file, and `curvenote.yml` points to it.
+
 ## Step-by-step
 
 1. **Read `curvenote.yml`** — collect all commented-out toc entries with Drive/Colab URLs

@@ -11,12 +11,27 @@ instead. That column is measured against the corpus, not guessed -- see the
 glossary's own note on `demo`, which reads like an obvious refusal and is used
 correctly 52 times.
 
-One file per kind, so each repo sets severity per kind in its own .vale.ini:
+One file per kind, so each repo sets severity per kind in its own .vale.ini. The
+style name is the DIRECTORY name under StylesPath and the rule name is the file
+name inside it. Both consuming repos put the files in `styles/glossary/`:
 
     [*.md]
-    nucleus-glossary.collapses = error   # the dir name, then the file name
-    nucleus-glossary.protected = error
-    nucleus-glossary.prefer    = warning      # suggestion in a DevNote repo
+    glossary.collapses    = error    # styles/glossary/collapses.yml
+    glossary.prefer       = error
+    glossary.prefer-cased = error
+
+A DevNote repo sets the same three to `warning`, because new vocabulary enters the
+program there and blocking the source would stop the glossary growing.
+
+THOSE LINES NAME ONLY THE KINDS BEING EMITTED TODAY. A line naming a kind with no
+rows is a rule Vale cannot find, and Vale then reports a clean run rather than an
+error, so the mistake is silent. Run this script with no arguments to see what is
+emitted before you write a severity line.
+
+KINDS below is wider than that on purpose. It lists every kind the generator owns,
+including ones with no rows left, so the file of a kind whose last row goes away is
+deleted rather than left on disk asserting a retired rule. `protected` has never had
+a row, and `narrows` lost its last one on 2026-10-04.
 
 Writes nothing unless --out is given; prints what it would write otherwise.
 """
@@ -179,7 +194,7 @@ def report_drift(d, expected):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", help="a Vale style directory, e.g. styles/nucleus-glossary")
+    ap.add_argument("--out", help="a Vale style directory, e.g. styles/glossary")
     ap.add_argument("--check", metavar="DIR", help="compare DIR against what would be "
                     "written and exit 1 on any difference. Writes nothing.")
     a = ap.parse_args()
@@ -206,9 +221,9 @@ def main():
 
     for (kind, cs), pairs in sorted(by_kind.items()):
         # Inside a Vale style directory the FILE NAME is the rule name, so this
-        # is `collapses.yml`, not `nucleus-glossary-collapses.yml`. Getting that
-        # wrong produces `nucleus-glossary.nucleus-glossary-collapses`, which no
-        # .vale.ini names — and Vale then reports a clean run rather than an error.
+        # is `collapses.yml`, not `glossary-collapses.yml`. Getting that wrong
+        # produces `glossary.glossary-collapses`, which no .vale.ini names — and
+        # Vale then reports a clean run rather than an error.
         name = f"{kind}{'-cased' if cs else ''}.yml"
         text = build(pairs, kind, cs)
         if a.out:
@@ -261,7 +276,9 @@ Every consuming .vale.ini section that turns these rules on must also carry:
 The second group exempts a quoted span from every rule above. Jon's ruling,
 2026-09-21: a quotation is evidence in this program, and rewriting someone's words to
 satisfy a linter destroys what the quotation was kept for. A span rather than a
-per-rule exception, so it covers all four rules and the next one too.
+per-rule exception, so it covers every rule above at once and the next one too. It
+covered four rules when it was written and covers three now, which is the reason it
+is not written as a count.
 
 Two limits, both measured on 2026-09-21, both worth knowing before you rely on it:
 

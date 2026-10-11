@@ -89,7 +89,7 @@ Four parts:
    hides whether the claim had a rationale behind it, and **a rationale is
    what makes a false claim look checked.**
 3. **The edit sites**, as a table of file, line, current text, proposed text.
-4. **What it leaves open**, worded as explicit questions to the Editor. A statement of what is unresolved reads as a status report and gets skimmed; a question gets answered.
+4. **What it leaves open**, worded as explicit questions to the Editor. A statement of what is unresolved reads as a status report and gets skimmed; a question gets answered. Each question carries the text and terms it needs; see *Open questions go at the top*.
 
 ## Why the ceremony is worth it
 
@@ -225,6 +225,37 @@ drafter needs from them, and a long document buries the ask.
 The block is a running ledger of decided against open, updated as rulings
 arrive. **A ruling written beside its question is the record** — not a chat
 reply, and not a second document.
+
+**A ruling given in chat goes into the ledger too, written by the drafter.**
+Copy it beside its question, marked as given in chat, with the Editor's words
+and the date. Never turn it back into a question so the Editor can rule again
+in place. On 2026-10-11 a document re-asked a version question the Editor had
+already answered in chat, and the answer came back as *"why is this a question
+in the file, I told you this in chat?"* Before adding any question, search the
+conversation for an answer to it.
+
+**A question carries what it takes to answer it.** The Editor reads this
+document top to bottom, often in a terminal, and does not open the files it
+cites. So:
+
+- A question that asks for a read quotes the text, with file, line and pin.
+- A question that uses a term the Editor may not know says in one sentence
+  what it is and why it matters here.
+- A question that asks for a choice gives the options and a recommendation.
+- A question whose answer belongs to someone else names that person, and asks
+  the Editor only the part that is theirs.
+
+The edit-site table does not cover this. It quotes only the lines a batch
+changes, and a question is often about a line the batch leaves alone. On
+2026-10-11, three of the five questions in one document came back with the
+Editor asking what they meant. Before handing a document over, reread each
+open question as the Editor would: if answering it means opening another file,
+the question is not finished.
+
+**The format that reads well:** a bold `**Qn. The question.**` opening one
+paragraph, the material above after it, and a `> Editor:` line directly below
+for the ruling. A ruled question keeps its place and gains "RULED" and the
+Editor's words.
 
 ## A staging document is `.md`, and so is every question in it
 

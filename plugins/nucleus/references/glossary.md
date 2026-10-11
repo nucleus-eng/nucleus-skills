@@ -79,12 +79,12 @@ ruling, 2026-09-18. A Function claim needs both: which conditions, and where.
 
 | ID | Term | Definition | Where it appears |
 | --- | --- | --- | --- |
-| `T19` | **Assay** | A Protocol whose product includes an Observation. | inside a Process page |
-| `T20` | **Measurement** | A particular run of an Assay. | inside a Process page |
-| `T21` | **Sample** | A portion of a Component taken at a stated time, on which a Measurement is performed. | protocol steps |
-| `T22` | **Observation** | The value a Measurement produces about a Sample. Also written *result*. | figures and tables |
+| `T19` | **Assay** | A Protocol whose product is an Observation about a Sample. **The arrow, not the value it produces.** | inside a Process page |
+| `T20` | **Measurement** | **A quantitative Observation**, and what a `T19` Assay produces when the result carries a number. **It refines `T22`**: every Measurement is an Observation, and an Observation that is not quantitative is not a Measurement. | figures and tables |
+| `T21` | **Sample** | A portion of a Component taken at a stated time, on which a `T19` Assay is performed. | protocol steps |
+| `T22` | **Observation** | What a `T19` Assay produces about a Sample. **It may be quantitative or qualitative**, and the quantitative case is a `T20` Measurement. Also written *result*. | figures and tables |
 | `T23` | **Data** | The written record of an Observation. | figures, tables, `generated/` artifacts |
-| `T24` | **Readout** | An accepted synonym for Measurement, normalized to it where the text makes a claim. **Settled only in that sense** — it also names the instrument (*"a weak readout"*) and sometimes the value, and those stay loose. | 162 uses in nucleus-docs |
+| `T24` | **Readout** | **Loose language, and not for use where the text makes a claim** — read it as `T22` Observation, not as `T20` Measurement. It also names the instrument (*"a weak readout"*) and sometimes the value, and those stay loose. | 247 uses across 78 files in nucleus-docs `docs/` |
 
 ## Refused spellings
 

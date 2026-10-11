@@ -19,3 +19,5 @@ jobs:
         run: python3 scripts/check-skills.py
       - name: The plugin version moves when the plugin does
         run: python3 scripts/check-plugin-version.py --base origin/${{ github.base_ref || 'main' }}
+      - name: Every table row matches its header
+        run: python3 scripts/check-table-shape.py

@@ -94,7 +94,7 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 | Refused | Use | Kind | Auto | Hits | Note |
 | --- | --- | --- | --- | --- | --- |
 | vesicle | — | Narrows | **no** | 12 | **RETIRED 2026-10-04 on the Editor's ruling: `vesicle` is the umbrella term and is correct.** It was refused while GUV, SUV and LUV had no pages — the vocabulary ran ahead of the tree, so an author told to name the class could not link to one. `nucleus-docs` `64df8ba` wrote all three, and an author who means a GUV now links to GUV because the page is there. **The rule also refused the one word that fits the case it most needed to allow**: a sentence about any closed bilayer compartment, which is what `encapsulate` returns, has no size class to name. **Two independent axes sit under vesicle**: material (liposome, polymersome) and size (GUV, SUV, LUV) — a GUV may be either material. The twelve lamellarity exceptions go with it; they conceded that "unilamellar vesicle" is fine, which under the umbrella reading is the ordinary case and not an exception |
-| incompatibility | Conflict | Collapses | **yes** | 4 | All four are real — a Conflict is computed from a sensitivity and an imposition, and asserting it directly hides which half is the claim |
+| incompatibility | Conflict | Collapses | no | 1 | **A prose preference, not a rule, and the rule is why.** A Conflict is computed from a sensitivity and an imposition, so Vale cannot tell a Process-to-Component case from a Component-to-Component one, and the substitution mislabels the second. It already did: a docs page was changed to say *"the LacZ and theophylline Conflict"*, and neither of those is a Process. **RESTORED 2026-10-05.** This row was set to Auto: no in `cc991a8`, merged as `#74` on 2026-10-04, and the merge from main into the `vesicle` branch at `52cf89a` took the branch side and put it back to Auto: yes. `#75` never touched this row and its own body cites `#74` approvingly, so the reversal was a merge accident. Re-measured 2026-10-05: the bare noun appears **once** in `nucleus-docs` `docs/`, at `docs/modules/reporter-lacz/spec.md:181`, and it is the sentence this ruling was made about. It reads *"the LacZ and theophylline incompatibility"* again, which is correct |
 | `DevCell Studio` | DevStudio | Prefer | **yes** | 0 | |
 | `milliQ water` | ultrapure water | Prefer | **yes** | 0 | Vendor-neutral |
 | `SMixΔCP` | `SMix -CP` | Prefer | **yes** | 0 | Prefer plain characters |
@@ -122,6 +122,18 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 **A refusal is only a rule when it cannot collide with a heading, a filename or ordinary
 English.** Ten of the twenty-five qualify. The rest are prose preferences, checked by reading —
 which is the `style-guide` skill's job, not Vale's.
+
+**`formulation` was considered for a row on 2026-10-05 and refused one.** The
+compositional-biology-theory repo retired `Formulation` for `Component` that day and listed
+`formulation` among `Component`'s refused spellings. **It is not one here.** Measured over every
+tracked file in `nucleus-docs` at `6d163e92`: **64 occurrences, and 47 are the ordinary chemistry
+word** — *"the Chicago formulation"*, *"Protein buffer formulations (v1.0)"*, and `about/license.md`
+granting *"Cell designs, protocols, methods, formulations, and sequence maps"*. **A substitution
+rule would rewrite a licence grant.** 12 more name the `spec-formulation.md` page template. The 5
+that were the type name were fixed in nucleus-docs instead. `demo` is in the table because it is a
+Nucleus term used loosely; `formulation` is ordinary English that happens to collide, and a word
+that is right 47 times in 64 is a homonym rather than a refusal. **Recorded here so the theory
+repo's list does not arrive again and get added without the measurement.**
 
 **This was measured, not assumed, and the measurement changed the answer twice.** `demo` reads
 like an obvious refusal and is used correctly 52 times. Generating a rule from every refusal would

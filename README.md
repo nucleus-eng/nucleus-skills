@@ -246,6 +246,15 @@ Runs on the same workflow. It fails a pull request that changes anything under
 `plugins/nucleus/` without moving the plugin's `version`. See
 [Versioning](#versioning) for how to pick the new number.
 
+```bash
+python3 scripts/check-table-shape.py
+```
+
+Runs on the same workflow, over this repo's own markdown. It flags a table row
+whose column count differs from its header's, which renders as a dropped or
+shifted cell rather than as a broken table. **Shared**: the other repos run it
+against their own trees, passing the roots as arguments.
+
 Not yet automated: Vale over the skill files themselves. They state unit
 conventions they do not currently obey.
 

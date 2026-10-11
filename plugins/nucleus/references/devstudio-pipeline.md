@@ -84,6 +84,8 @@ devstudio-log-to-devnote-m
   └── devstudio-author-myst-content
 
 devstudio-assemble-devnote-assets
+  ├── devstudio-check-platemap
+  │     └── devstudio-read-from-google-drive
   └── devstudio-submit-to-github
 
 devstudio-devnote-g-to-devnote-m

@@ -33,8 +33,8 @@ stage, don't leave it to the caller's discretion:
   deterministic tool with no human review step in between (e.g. a platemap about to be
   validated against `nucleus-cdk`'s loader, with no TA reading it first). Going through a
   native round-trip here risks silent type coercion (a numeric cell becoming text, a
-  format shift) with no error to flag it — see the platemap-lifecycle note (pinned,
-  revisit when building `devstudio-check-platemaper`).
+  format shift) with no error to flag it — see `devstudio-check-platemap`,
+  which reads a platemap as raw CSV.
 
 **Mechanics**, both via `create_file`:
 - Native: pass `textContent` with `contentMimeType` set to the *source* format you're

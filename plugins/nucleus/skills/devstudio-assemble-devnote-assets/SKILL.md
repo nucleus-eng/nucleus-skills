@@ -1,6 +1,8 @@
 ---
 name: devstudio-assemble-devnote-assets
 description: Download the supporting files a DevNote(M) needs to build. These are notebooks, platemaps, raw instrument data, and DNA construct files. They come from the DevStudio Shared Drive into the devnote directory. What belongs to each figure is resolved from main.md's own figure-provenance lines, or from the manifest.json cache beside it. Invoked once a human reviews the links in main.md, and it hands off to devstudio-submit-to-github, which opens the draft archive PR. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+invokes:
+  - devstudio-check-platemap   # hand-off: check each platemap before the pull request opens
 ---
 
 # devstudio-assemble-devnote-assets
@@ -197,6 +199,13 @@ and noted for future inclusion in `nucleus-eng/DNA`.
   toc comments.
 
 ## Hand off to `devstudio-submit-to-github`
+
+Before you hand off, run the platemap check.
+
+> **INVOKE** `devstudio-check-platemap` — check each platemap before the hand-off
+
+Run `devstudio-check-platemap` over each platemap now in the tree. A blocking
+finding stops the hand-off until a person has seen it.
 
 Once every asset named in `main.md` is in the tree, hand off to
 `devstudio-submit-to-github`. That skill opens the branch and opens its pull

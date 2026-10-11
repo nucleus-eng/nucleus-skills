@@ -123,6 +123,18 @@ above. **Hits** is measured against `nucleus-docs` `docs/` on 2026-09-15.
 English.** Ten of the twenty-five qualify. The rest are prose preferences, checked by reading —
 which is the `style-guide` skill's job, not Vale's.
 
+**`formulation` was considered for a row on 2026-10-05 and refused one.** The
+compositional-biology-theory repo retired `Formulation` for `Component` that day and listed
+`formulation` among `Component`'s refused spellings. **It is not one here.** Measured over every
+tracked file in `nucleus-docs` at `6d163e92`: **64 occurrences, and 47 are the ordinary chemistry
+word** — *"the Chicago formulation"*, *"Protein buffer formulations (v1.0)"*, and `about/license.md`
+granting *"Cell designs, protocols, methods, formulations, and sequence maps"*. **A substitution
+rule would rewrite a licence grant.** 12 more name the `spec-formulation.md` page template. The 5
+that were the type name were fixed in nucleus-docs instead. `demo` is in the table because it is a
+Nucleus term used loosely; `formulation` is ordinary English that happens to collide, and a word
+that is right 47 times in 64 is a homonym rather than a refusal. **Recorded here so the theory
+repo's list does not arrive again and get added without the measurement.**
+
 **This was measured, not assumed, and the measurement changed the answer twice.** `demo` reads
 like an obvious refusal and is used correctly 52 times. Generating a rule from every refusal would
 have produced roughly 250 findings, nearly all of them wrong, on a corpus that is broadly

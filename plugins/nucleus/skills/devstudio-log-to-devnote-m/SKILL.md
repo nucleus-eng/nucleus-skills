@@ -292,9 +292,8 @@ from the URL at this stage; just record it.
 A schematic (overview diagram, construct map, workflow illustration) is not a data
 figure — it has no backing notebook, no platemap, no asset chain. These must be
 pre-placed in the devnote's `general/` directory as named files (e.g.
-`general/schematic-overview.png`, `general/construct-diagram.png`) before the G stage
-is considered complete. In the DevNote(G) draft, reference the schematic by its
-intended `general/` path rather than embedding the image in the Doc body — the
+`general/schematic-overview.png`, `general/construct-diagram.png`) before the first
+review. In `main.md`, reference the schematic by its intended `general/` path — the
 schematic variant of the provenance line, in the provenance reference.
 
 **Why**: images embedded in the Google Doc body are invisible to `read_file_content`
@@ -571,8 +570,8 @@ These override all other instructions:
   non-standard columns (e.g. Bill of Materials format), reconstruct from protocol
   text rather than copying columns"*, and its own worked example records doing
   exactly that. The two skills disagree; which rule is right has not been ruled
-  on. Retaining the column is the conservative choice at the G stage, where a
-  human still reviews the draft — but do not read this as `ingest`'s rule.
+  on. Retaining the column is the conservative choice in a draft, where a
+  human still reviews it — but do not read this as `ingest`'s rule.
 
   **Reagents/materials table** (7-column schema — note `ingest` specifies six;
   the seventh is `Link`, added for DevStudio and not inherited. Always produce,
@@ -606,10 +605,9 @@ These override all other instructions:
 
   *Build sidecar found*: read the CSV row by row and render it as an HTML
   `<table>` for insertion into the `# Methods` section under the log's
-  experiment heading. How that table presents — including the totals row,
-  where the G stage diverges deliberately from the MyST rule in
-  `devstudio-author-myst-content` — is stated once in
+  experiment heading. How that table presents is stated once in
   `devstudio-build-to-composition`. Follow it there; do not re-decide it here.
+  The totals row is plain text, as `devstudio-author-myst-content` specifies.
   Emit a note:
   ```
   <!-- Composition table sourced from build file: [filename of .xlsx] -->
@@ -651,9 +649,9 @@ These override all other instructions:
   rather than the Template's, to save `devstudio-devnote-g-to-devnote-m` a remapping
   step. Renaming a source section to match is flagged:
   `<!-- RENAMED: "[original]" → "[target name]" -->`.
-- **Uncertainty markers (`??`, informal "not sure" notes) may appear at this G stage —
+- **Uncertainty markers (`??`, informal "not sure" notes) may appear in a first draft —
   that's expected, not an error.** But per direct guidance: **every such marker must be
-  resolved or explicitly flagged by the time content reaches DevNote(M)** — never
+  resolved or explicitly flagged before the pull request is marked ready** — never
   silently dropped. (A real published DevNote was found to have simply deleted an
   unresolved `??`-marked table rather than flagging it — that's the wrong precedent,
   not the convention to follow. `devstudio-devnote-g-to-devnote-m` should treat any
@@ -742,10 +740,15 @@ project:
     code: CERN-OHL-P-2.0
   exports:
     - format: meca
+  plugins:
+    - ../../plugins/seqviz/seqviz.mjs
   toc:
     - file: main.md
   resources:
     - experiments/**
+    - dna/**
+    - figures/**
+    - general/**
   id: <generated-uuid>
 site:
   template: article-theme
@@ -761,7 +764,8 @@ python3 -c "import uuid; print(uuid.uuid4())"
 Add one `toc` entry per notebook that a quarto-label figure references, per
 Step 5.5.
 
-Do not write `extends: base.yml`. When `extends:` is active, `base.yml`'s
+List the plugin under `plugins:` in this file, not through `extends:`. Do not write
+`extends: base.yml`. When `extends:` is active, `base.yml`'s
 bare `seqviz.mjs` plugin entry wins over the `curvenote.yml` override and the
 build fails with ENOENT.
 

@@ -1,6 +1,8 @@
 ---
 name: devstudio-assemble-devnote-assets
 description: Download the supporting files a DevNote(M) needs to build. These are notebooks, platemaps, raw instrument data, and DNA construct files. They come from the DevStudio Shared Drive into the devnote directory. What belongs to each figure is resolved from main.md's own figure-provenance lines, or from the manifest.json cache beside it. Invoked once a human reviews the links in main.md, and it hands off to devstudio-submit-to-github, which opens the draft archive PR. This is a staging-namespace (devstudio-) skill — see "Provenance" below before treating it as canonical.
+invokes:
+  - devstudio-check-platemap   # hand-off: check each platemap before the pull request opens
 ---
 
 # devstudio-assemble-devnote-assets
@@ -137,6 +139,14 @@ If the `plugins/seqviz/` directory is missing `package.json`, run
 `npm init -y && npm install seqparse` there first. This is a shared dependency — it
 only needs to be installed once per clone, not once per devnote.
 
+## Copy the widget beside `main.md`
+
+If `main.md` uses `{seqviz}`, copy `plugins/seqviz/seqviz-widget.mjs` from
+`devstudio-board` into the DevNote folder, beside `main.md`. Without it the build
+fails with `Cannot find asset for 'esm'` (Anton's record, commit `4b5b4b0`: he built
+without the file, then with it). Do not copy `seqviz.mjs`. The shared plugin is the
+only copy of that file, and `curvenote.yml` points to it.
+
 ## Step-by-step
 
 1. **Read `curvenote.yml`** — collect all commented-out toc entries with Drive/Colab URLs
@@ -197,6 +207,13 @@ and noted for future inclusion in `nucleus-eng/DNA`.
   toc comments.
 
 ## Hand off to `devstudio-submit-to-github`
+
+Before you hand off, run the platemap check.
+
+> **INVOKE** `devstudio-check-platemap` — check each platemap before the hand-off
+
+Run `devstudio-check-platemap` over each platemap now in the tree. A blocking
+finding stops the hand-off until a person has seen it.
 
 Once every asset named in `main.md` is in the tree, hand off to
 `devstudio-submit-to-github`. That skill opens the branch and opens its pull

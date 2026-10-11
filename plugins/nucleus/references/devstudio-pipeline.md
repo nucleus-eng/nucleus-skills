@@ -46,7 +46,7 @@ TA merges → GitHub Action → Curvenote venue → devnotes.nucleus.engineering
 ┌─────────────────────────────────┐
 │  devstudio-devnote-to-docs-g    │  produces: Docs(G) draft Google Doc
 └─────────────────────────────────┘
-        │  devstudio-docs-g-to-m (not yet built)
+        │  devstudio-docs-g-to-m
         ▼
 nucleus-eng/nucleus-docs commit
 ```
@@ -84,11 +84,18 @@ devstudio-log-to-devnote-m
   └── devstudio-author-myst-content
 
 devstudio-assemble-devnote-assets
+  ├── devstudio-check-platemap
+  │     └── devstudio-read-from-google-drive
   └── devstudio-submit-to-github
 
 devstudio-devnote-g-to-devnote-m
   (invokes nothing)
 ```
+
+`devstudio-build-to-composition` and `devstudio-build-to-assets` run **before**
+`devstudio-log-to-devnote-m`. They are inputs it reads, not skills it invokes:
+`devstudio-build-to-composition` writes `build-composition.csv`, and
+`devstudio-build-to-assets` writes the platemap CSV.
 
 ## Stage: Log → main.md
 

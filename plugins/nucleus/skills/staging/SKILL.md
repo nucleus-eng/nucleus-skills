@@ -157,6 +157,20 @@ document that overturns a claim must quote it, so a quotation reaches across
 where an edit site does not — which is exactly why the quotation needs the pin
 and the edit site does not.
 
+**Where a row names another tree anyway, write the File cell `repo:path` — and
+it is a pointer, never the site of record.**
+`nucleus-skills:plugins/nucleus/skills/staging/SKILL.md` says which tree a
+reader must stand in; `check-sites.py` reports the row as `otherrepo` and does
+not try to anchor it, because it cannot. **Say in the Proposed cell where the
+edit actually lives** — the other repo's own staging document, or the branch
+and pull request carrying it.
+
+**The File cell holds the path and nothing else.** A repo in a parenthesis
+after it, a section, an ID, a status marker: each leaves a cell that no longer
+ends in a known extension, and the row was dropped before any check. Sixteen
+rows in one corpus's archive sat in that state and none of them said so. It is
+`badfile` now, and it fails.
+
 **The hash must be reachable by the reader, not only by you.** A commit that
 exists only in an unpushed local tree satisfies every part of this rule and
 still cannot be checked by anyone else — push it, or say so in the pin. A
@@ -229,9 +243,25 @@ row saying what became of it**, where `<kind>` names why it left: applied,
 superseded, parked, absorbed. The kinds are a small closed set; inventing a
 fifth to suit the document being moved defeats the point of having them.
 
-**Move on evidence, never on the document's own header.** A header saying
-"applied" is a claim by its author, and the claim has been wrong. Check the
-commits.
+**Move on evidence, never on the document's own header, in either direction.** A
+header is a claim by its author and the claim has been wrong both ways. **One
+saying "applied" has been false** — the case this rule was written for. **One
+saying "pending" has been false five times in one day**, 2026-10-07, and two of
+those were reported to a reviewer as ready to apply before anyone ran `git log`.
+***The second kind costs more, because nothing about it looks wrong***: an
+unapplied file invites checking, and a file that says it is unapplied does not.
+Check the commits.
+
+**A checker's verdict is a header too.** `check-sites.py` prints `anchored` to
+mean *the Current text is present at the cited line*, which a reader takes for
+*not applied yet* — and a replace-in-place edit that keeps its opening still
+anchors after it has been applied. The same day, that checker skipped a whole
+edit table in silence because the table's header carried one extra column, and
+reported the other files' rows as a clean run; and `check-citations.py` printed
+a clean summary and exited 0 over a directory with no tracked files in it. **So
+the rule is not *check your tools*. It is: state what predicate the tool
+computes, beside what you wanted it to compute.** Every one of these was
+checked, and checked for the wrong thing.
 
 **Carry the residue first.** A document that is finished except for three open
 items is not finished; move those into a live successor before the file goes,

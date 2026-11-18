@@ -1,0 +1,9 @@
+{
+  "name": "copyedit-pdf",
+  "private": true,
+  "type": "module",
+  "description": "Pinned dependency for render.mjs. copyedit-pdf.sh installs it into a cache directory, not here.",
+  "dependencies": {
+    "myst-parser": "1.7.5"
+  }
+}

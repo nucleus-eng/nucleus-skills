@@ -71,6 +71,7 @@ read when the skill is actually invoked.
 | `build-platemap` | Condition table or description → CDK-compatible platemap CSV/TSV |
 | `staging` | Propose edits to tracked files as a document, not a direct edit |
 | `author-spec-yml` | Write the machine-readable composition source beside a Module page |
+| `copyedit-pdf` | MyST page → double spaced PDF with source line numbers, for copy editing |
 
 ## Use it from another repo
 
@@ -157,6 +158,7 @@ disagree with itself.
 | Reaction composition read out of unstructured sources | `extract-conditions` |
 | Platemap layout, columns, and CDK compatibility | `build-platemap` |
 | What a staged proposal is, and when to stage | `staging` |
+| Copy edit PDF of a MyST page, with source line numbers | `copyedit-pdf` |
 | Prose style, notation, units | `references/devnote-style-guide.md` (a reference, not a skill) |
 | Assay frame vs specimen, compartments, sub-mix expansion | `references/assay-and-specimen.md` (a reference, not a skill) |
 

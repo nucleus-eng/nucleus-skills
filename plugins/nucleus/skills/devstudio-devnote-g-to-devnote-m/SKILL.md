@@ -89,6 +89,12 @@ Treat each unresolved field as a gap like any other. Title, date, authors,
 ORCID, email and institution become admonitions, and each review cycle
 echoes the unanswered ones into the review Doc. A human answers them there.
 
+**`title` lives in two places; keep them identical.** `curvenote.yml`'s
+project title and `main.md`'s own frontmatter title, per
+`devstudio-log-to-devnote-m`'s Step 2.5, must carry the exact same string.
+When a review cycle confirms the title, write the confirmed value into
+both files in the same pass.
+
 The project id is not assigned here. `devstudio-log-to-devnote-m` already
 generated a fresh uuid into `curvenote.yml` at the first cut, per its Step
 8.5. Read it, and make sure that it is not a uuid another DevNote already

@@ -215,6 +215,28 @@ literature on the specific organism/context, preferring solution-phase or functi
 evidence over crystal-packing annotations. Flag the discrepancy rather than picking
 silently — same "don't-guess, verify" category as `devstudio-verify-dna-constructs`.
 
+## Title frontmatter — every DevNote(M) page needs its own
+
+Every `main.md` opens with its own two-line frontmatter block:
+
+```yaml
+---
+title: '<exact string, matching curvenote.yml's project title>'
+---
+```
+
+MyST takes a page's displayed title from that page's own frontmatter, never
+from the project's. Skip this block and MyST falls back to the page's
+first heading instead, so the project title never renders for that page.
+Several real DevNotes shipped without it and showed "Abstract" or
+"Overview" where the title belonged, fixed later by adding this block.
+
+Write this block plainly, with no comment explaining it. It is an ordinary
+part of every DevNote(M) page, not a workaround. `devstudio-log-to-devnote-m`
+writes it at the first cut (its Step 2.5); `devstudio-devnote-g-to-devnote-m`
+keeps it in sync with `curvenote.yml`'s title whenever that title changes
+(its Step 3).
+
 ## Page-status frontmatter — confirmed NOT part of DevNote(M)
 
 **Verified against real content: DevNote frontmatter has no `status:` field** — checked

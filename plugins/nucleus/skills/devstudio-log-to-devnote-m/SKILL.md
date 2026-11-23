@@ -144,6 +144,26 @@ Frontmatter does not go in the body. Write the Specification and Authors
 fields into `curvenote.yml`, per Step 8.5, and write no Specification table
 and no Authors table into `main.md`.
 
+**Exception: `title` also opens `main.md` itself.** Write a two-line
+frontmatter block at the very top of `main.md`, before anything else:
+
+```yaml
+---
+title: '<same value as curvenote.yml's project title>'
+---
+```
+
+MyST renders a page's displayed title from that page's own frontmatter. It
+does not use the project's title for this. A `main.md` with no `title:` of
+its own falls back to its first heading as the displayed title instead.
+Confirmed against real DevNotes published without this block: they show
+their first heading ("Abstract" or "Overview") where the title belongs.
+Keep the two titles identical. Update both together whenever one changes.
+Do this even while the value is still `[PLEASE FILL IN]`; write the
+placeholder into both places. This frontmatter block is a normal, expected
+part of every DevNote(M) page. It needs no comment explaining why it is
+there.
+
 Write `[PLEASE FILL IN]` (all-caps, in brackets) as the value of every field
 not found in the source. No markup goes around it. Observed directly on
 2026-10-03: a rendered Curvenote preview shows `[PLEASE FILL IN]` as plain
